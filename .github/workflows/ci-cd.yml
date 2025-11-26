@@ -285,19 +285,29 @@ jobs:
           # Decode kubeconfig
           echo "${{ secrets.DEV_KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           
-          # Extract server IP from kubeconfig
-          SERVER_IP=$(grep -oP 'server:\s*\Khttps://[^:]+' /tmp/kubeconfig | sed 's|https://||' || echo "72.62.40.154")
-          echo "Kubernetes server IP: ${SERVER_IP}"
+          # Use external server IP for SSH connection (always use the actual server IP)
+          SSH_SERVER_IP="72.62.40.154"
           
-          # Update kubeconfig with external IP
-          sed -i "s|server: https://.*:6443|server: https://${SERVER_IP}:6443|g" /tmp/kubeconfig
+          # Extract Kubernetes API server from kubeconfig (might be localhost or internal IP)
+          K8S_SERVER=$(grep -oP 'server:\s*\Khttps://[^:]+' /tmp/kubeconfig | sed 's|https://||' || echo "127.0.0.1")
+          echo "Kubernetes API server from kubeconfig: ${K8S_SERVER}"
+          echo "SSH server IP: ${SSH_SERVER_IP}"
           
-          # Set up SSH tunnel
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -f -N -L 6443:${SERVER_IP}:6443 root@${SERVER_IP}
+          # Set up SSH tunnel: tunnel local port 6443 to K8S server on remote
+          # If K8S server is localhost/127.0.0.1, tunnel to 127.0.0.1:6443 on remote
+          # Otherwise tunnel to the K8S server IP
+          if [ "${K8S_SERVER}" = "127.0.0.1" ] || [ "${K8S_SERVER}" = "localhost" ]; then
+            REMOTE_K8S="127.0.0.1:6443"
+          else
+            REMOTE_K8S="${K8S_SERVER}:6443"
+          fi
+          
+          echo "Setting up SSH tunnel: localhost:6443 -> ${SSH_SERVER_IP}:${REMOTE_K8S}"
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -f -N -L 6443:${REMOTE_K8S} root@${SSH_SERVER_IP}
           sleep 2
           
           # Update kubeconfig to use localhost tunnel
-          sed -i "s|server: https://${SERVER_IP}:6443|server: https://127.0.0.1:6443|g" /tmp/kubeconfig
+          sed -i "s|server: https://.*:6443|server: https://127.0.0.1:6443|g" /tmp/kubeconfig
           
           export KUBECONFIG=/tmp/kubeconfig
           kubectl cluster-info
@@ -517,19 +527,29 @@ jobs:
           # Decode kubeconfig
           echo "${{ secrets.PROD_KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           
-          # Extract server IP from kubeconfig
-          SERVER_IP=$(grep -oP 'server:\s*\Khttps://[^:]+' /tmp/kubeconfig | sed 's|https://||' || echo "72.62.40.154")
-          echo "Kubernetes server IP: ${SERVER_IP}"
+          # Use external server IP for SSH connection (always use the actual server IP)
+          SSH_SERVER_IP="72.62.40.154"
           
-          # Update kubeconfig with external IP
-          sed -i "s|server: https://.*:6443|server: https://${SERVER_IP}:6443|g" /tmp/kubeconfig
+          # Extract Kubernetes API server from kubeconfig (might be localhost or internal IP)
+          K8S_SERVER=$(grep -oP 'server:\s*\Khttps://[^:]+' /tmp/kubeconfig | sed 's|https://||' || echo "127.0.0.1")
+          echo "Kubernetes API server from kubeconfig: ${K8S_SERVER}"
+          echo "SSH server IP: ${SSH_SERVER_IP}"
           
-          # Set up SSH tunnel
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -f -N -L 6443:${SERVER_IP}:6443 root@${SERVER_IP}
+          # Set up SSH tunnel: tunnel local port 6443 to K8S server on remote
+          # If K8S server is localhost/127.0.0.1, tunnel to 127.0.0.1:6443 on remote
+          # Otherwise tunnel to the K8S server IP
+          if [ "${K8S_SERVER}" = "127.0.0.1" ] || [ "${K8S_SERVER}" = "localhost" ]; then
+            REMOTE_K8S="127.0.0.1:6443"
+          else
+            REMOTE_K8S="${K8S_SERVER}:6443"
+          fi
+          
+          echo "Setting up SSH tunnel: localhost:6443 -> ${SSH_SERVER_IP}:${REMOTE_K8S}"
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -f -N -L 6443:${REMOTE_K8S} root@${SSH_SERVER_IP}
           sleep 2
           
           # Update kubeconfig to use localhost tunnel
-          sed -i "s|server: https://${SERVER_IP}:6443|server: https://127.0.0.1:6443|g" /tmp/kubeconfig
+          sed -i "s|server: https://.*:6443|server: https://127.0.0.1:6443|g" /tmp/kubeconfig
           
           export KUBECONFIG=/tmp/kubeconfig
           kubectl cluster-info
