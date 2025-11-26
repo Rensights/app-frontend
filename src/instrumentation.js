@@ -42,10 +42,17 @@ sdk.start();
 
 console.log('[OpenTelemetry] Instrumentation started for', process.env.OTEL_SERVICE_NAME || 'frontend');
 
-process.on('SIGTERM', () => {
-  sdk.shutdown()
-    .then(() => console.log('[OpenTelemetry] Terminated'))
-    .catch((error) => console.error('[OpenTelemetry] Error terminating', error))
-    .finally(() => process.exit(0));
-});
+// Only register signal handlers in Node.js runtime (not Edge Runtime)
+if (typeof process !== 'undefined' && process.on) {
+  process.on('SIGTERM', () => {
+    sdk.shutdown()
+      .then(() => console.log('[OpenTelemetry] Terminated'))
+      .catch((error) => console.error('[OpenTelemetry] Error terminating', error))
+      .finally(() => {
+        if (typeof process !== 'undefined' && process.exit) {
+          process.exit(0);
+        }
+      });
+  });
+}
 
