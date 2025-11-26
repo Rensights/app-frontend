@@ -1,0 +1,31 @@
+# Production environment overrides for frontend
+replicaCount: 2
+
+image:
+  repository: ghcr.io/rensights/app-frontend
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: "kong"
+  hosts:
+    - host: 72.62.40.154.nip.io
+      paths:
+        - path: /
+          pathType: Prefix
+  annotations:
+    konghq.com/strip-path: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    - secretName: frontend-72-62-40-154-nip-io-tls
+      hosts:
+        - 72.62.40.154.nip.io
+
+extraEnv:
+  NEXT_PUBLIC_API_URL: "https://api.72.62.40.154.nip.io"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_live_YOUR_LIVE_KEY"

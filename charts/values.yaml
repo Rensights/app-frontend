@@ -1,0 +1,38 @@
+# Default values for frontend
+replicaCount: 1
+
+image:
+  repository: ghcr.io/rensights/app-frontend
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: false
+  className: "kong"
+  annotations: {}
+  hosts:
+    - host: example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+extraEnv: {}
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""

@@ -1,0 +1,27 @@
+# Dev environment overrides for frontend
+replicaCount: 1
+
+image:
+  repository: ghcr.io/rensights/app-frontend
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: "kong"
+  hosts:
+    - host: dev.72.62.40.154.nip.io
+      paths:
+        - path: /
+          pathType: Prefix
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/protocols: "http"
+
+extraEnv:
+  NEXT_PUBLIC_API_URL: "http://dev-api.72.62.40.154.nip.io:31416"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
