@@ -19,8 +19,9 @@ ingress:
         - path: /
           pathType: Prefix
   annotations:
-    konghq.com/strip-path: "true"
+    konghq.com/strip-path: "false"
     konghq.com/protocols: "http"
+    konghq.com/preserve-host: "false"
 
 extraEnv:
   NEXT_PUBLIC_API_URL: "http://dev-api.72.62.40.154.nip.io:31416"
