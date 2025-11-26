@@ -33,10 +33,21 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Verify package-lock.json exists
+        run: |
+          if [ -f "src/package-lock.json" ]; then
+            echo "✅ Found src/package-lock.json"
+            ls -lh src/package-lock.json
+          else
+            echo "❌ src/package-lock.json not found!"
+            echo "Files in src/:"
+            ls -la src/ | head -20
+            exit 1
+          fi
+
       - name: Get npm cache directory
         id: npm-cache
         shell: bash
-        working-directory: src
         run: |
           echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
 
@@ -50,7 +61,11 @@ jobs:
 
       - name: Install dependencies
         working-directory: src
-        run: npm ci
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Checking for package-lock.json:"
+          ls -la package-lock.json || echo "package-lock.json not found in current directory"
+          npm ci
 
       - name: Run linter
         working-directory: src
