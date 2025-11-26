@@ -27,6 +27,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Check src directory structure
+        run: |
+          echo "Checking src directory..."
+          if [ -d "src" ]; then
+            echo "✅ src directory exists"
+            ls -la src/ | head -10
+            if [ -f "src/package-lock.json" ]; then
+              echo "✅ package-lock.json found in src/"
+            else
+              echo "⚠️  package-lock.json not found in src/"
+            fi
+          else
+            echo "❌ src directory does not exist"
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
