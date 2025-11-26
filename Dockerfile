@@ -9,9 +9,12 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
-COPY package*.json ./
+# Copy package files from src directory
+COPY src/package*.json ./
 RUN npm ci
-COPY . .
+
+# Copy source code from src directory
+COPY src/ ./
 
 # Build with the API URL embedded (NEXT_PUBLIC_* vars are embedded at build time)
 RUN npm run build
