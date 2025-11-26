@@ -22,6 +22,10 @@ ingress:
     konghq.com/strip-path: "false"
     konghq.com/protocols: "http"
     konghq.com/preserve-host: "false"
+    konghq.com/connect-timeout: "60000"
+    konghq.com/send-timeout: "60000"
+    konghq.com/read-timeout: "60000"
+    konghq.com/retries: "5"
 
 extraEnv:
   NEXT_PUBLIC_API_URL: "http://dev-api.72.62.40.154.nip.io:31416"
