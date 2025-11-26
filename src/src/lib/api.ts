@@ -1,0 +1,389 @@
+// API URL - embedded at build time via Docker build arg
+// Next.js replaces process.env.NEXT_PUBLIC_API_URL with actual value during build
+// This MUST be set as a build arg: --build-arg NEXT_PUBLIC_API_URL=...
+// Use NEXT_PUBLIC_API_URL directly (Next.js will replace it at build time)
+const getApiUrlFromEnv = (): string => {
+  // Check if we're in browser/client-side
+  if (typeof window !== 'undefined') {
+    // Client-side: Next.js replaces process.env.NEXT_PUBLIC_API_URL with actual value at build time
+    // Access via process.env.NEXT_PUBLIC_API_URL (Next.js will inline the value)
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url || url === '') {
+      // During build, this might be empty - use a fallback or allow empty for now
+      // The actual value will be injected at build time if provided
+      console.warn('NEXT_PUBLIC_API_URL is not set or empty. Using fallback or will be set at build time.');
+      // Return empty string during build, will be replaced by Next.js if set
+      return url || '';
+    }
+    return url;
+  } else {
+    // Server-side: Read from process.env (available at runtime from Kubernetes secret)
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url || url === '') {
+      // Server-side: Try to get from environment or use a default
+      console.warn('NEXT_PUBLIC_API_URL is not set on server-side. Check Kubernetes secret configuration.');
+      return url || '';
+    }
+    return url;
+  }
+};
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  deviceFingerprint?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+  deviceFingerprint?: string;
+}
+
+export interface LoginResponse {
+  requiresVerification: boolean;
+  token?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  deviceFingerprint?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface UserResponse {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  userTier: 'FREE' | 'PREMIUM' | 'ENTERPRISE';
+  customerId?: string; // Our internal customer ID (format: CUST-XXXXXXXX)
+  createdAt?: string; // ISO date string or empty string
+}
+
+export interface SubscriptionResponse {
+  id: string;
+  planType: 'FREE' | 'PREMIUM' | 'ENTERPRISE';
+  status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  startDate: string;
+  endDate?: string;
+  createdAt: string;
+}
+
+// Optimized: Request cache and deduplication
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  expiresAt: number;
+}
+
+class ApiClient {
+  private baseUrl: string | null = null;
+  private token: string | null = null;
+  // Optimized: Add request cache and deduplication
+  private cache = new Map<string, CacheEntry<any>>();
+  private pendingRequests = new Map<string, Promise<any>>();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.token = localStorage.getItem('token');
+    }
+  }
+
+  /**
+   * Get the API URL
+   * - Client-side: Uses process.env.NEXT_PUBLIC_API_URL (Next.js replaces it at build time)
+   * - Server-side: Reads from process.env.NEXT_PUBLIC_API_URL (from Kubernetes secret)
+   */
+  private getApiUrl(): string {
+    return getApiUrlFromEnv();
+  }
+
+  updateBaseUrl(newUrl: string) {
+    this.baseUrl = newUrl;
+  }
+
+  // Optimized: Request deduplication and caching
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    useCache: boolean = false
+  ): Promise<T> {
+    const apiUrl = this.baseUrl || this.getApiUrl();
+    const url = `${apiUrl}${endpoint}`;
+    const cacheKey = `${options.method || 'GET'}:${url}`;
+    
+    // Check cache for GET requests
+    if (useCache && (options.method === 'GET' || !options.method)) {
+      const cached = this.cache.get(cacheKey);
+      if (cached && Date.now() < cached.expiresAt) {
+        return cached.data;
+      }
+    }
+    
+    // Deduplicate concurrent requests
+    if (this.pendingRequests.has(cacheKey)) {
+      return this.pendingRequests.get(cacheKey)!;
+    }
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const requestPromise = fetch(url, {
+      ...options,
+      headers,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Unknown error');
+          let error;
+          try {
+            error = JSON.parse(errorText);
+          } catch {
+            error = { error: errorText || `Request failed with status ${response.status}` };
+          }
+          console.error(`API Error [${response.status}]: ${endpoint}`, error);
+          throw new Error(error.error || error.message || `Request failed with status ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data: T) => {
+        // Cache successful GET requests
+        if (useCache && (options.method === 'GET' || !options.method)) {
+          this.cache.set(cacheKey, {
+            data,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + this.CACHE_TTL,
+          });
+        }
+        return data;
+      })
+      .finally(() => {
+        this.pendingRequests.delete(cacheKey);
+      });
+    
+    this.pendingRequests.set(cacheKey, requestPromise);
+    return requestPromise;
+  }
+  
+  // Optimized: Clear cache when token changes
+  clearCache() {
+    this.cache.clear();
+  }
+
+  setToken(token: string) {
+    this.token = token;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', token);
+    }
+    this.clearCache(); // Clear cache on token change
+  }
+
+  clearToken() {
+    this.token = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('deviceFingerprint');
+    }
+    this.clearCache(); // Clear cache on logout
+  }
+
+  /**
+   * Optimized: Generate device fingerprint with memoization
+   */
+  private cachedFingerprint: string | null = null;
+  
+  getDeviceFingerprint(): string {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+    
+    // Return cached value if available
+    if (this.cachedFingerprint) {
+      return this.cachedFingerprint;
+    }
+    
+    // Check localStorage first
+    const stored = localStorage.getItem('deviceFingerprint');
+    if (stored) {
+      this.cachedFingerprint = stored;
+      return stored;
+    }
+    
+    // Optimized: Generate fingerprint using more efficient string operations
+    const parts = [
+      navigator.userAgent,
+      navigator.language,
+      navigator.platform,
+      `${screen.width}x${screen.height}`,
+      String(new Date().getTimezoneOffset()),
+    ];
+    
+    // Optimized: Use faster hash algorithm
+    let hash = 0;
+    const combined = parts.join('|');
+    for (let i = 0; i < combined.length; i++) {
+      const char = combined.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    const fingerprintStr = Math.abs(hash).toString();
+    this.cachedFingerprint = fingerprintStr;
+    localStorage.setItem('deviceFingerprint', fingerprintStr);
+    return fingerprintStr;
+  }
+
+  // Auth endpoints
+  async register(data: RegisterRequest): Promise<{ message: string } | AuthResponse> {
+    // Register may return token directly if email verification is disabled
+    return this.request<{ message: string } | AuthResponse>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async verifyEmail(email: string, code: string, deviceFingerprint?: string): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>('/api/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        email, 
+        code, 
+        deviceFingerprint: deviceFingerprint || this.getDeviceFingerprint() 
+      }),
+    });
+    if (response.token) {
+      this.setToken(response.token);
+    }
+    return response;
+  }
+
+  async login(data: LoginRequest): Promise<LoginResponse> {
+    // Add device fingerprint if not provided
+    if (!data.deviceFingerprint) {
+      data.deviceFingerprint = this.getDeviceFingerprint();
+    }
+    
+    const response = await this.request<LoginResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    
+    // If login successful with token, store it
+    if (response.token) {
+      this.setToken(response.token);
+    }
+    
+    return response;
+  }
+
+  async verifyDevice(email: string, code: string, deviceFingerprint: string): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>('/api/auth/verify-device', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, deviceFingerprint }),
+    });
+    if (response.token) {
+      this.setToken(response.token);
+    }
+    return response;
+  }
+
+  logout() {
+    this.clearToken();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+  }
+
+  // Device verification endpoints (for resending codes)
+  async resendVerificationCode(email: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/resend-verification-code', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  // User endpoints - Optimized: Enable caching for GET requests
+  async getCurrentUser(): Promise<UserResponse> {
+    return this.request<UserResponse>('/users/me', {}, true);
+  }
+
+  async updateUserProfile(data: { firstName?: string; lastName?: string }): Promise<UserResponse> {
+    const result = await this.request<UserResponse>('/users/me', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    // Invalidate user cache on update
+    this.cache.delete('GET:/users/me');
+    return result;
+  }
+
+  async getPaymentHistory(): Promise<SubscriptionResponse[]> {
+    return this.request<SubscriptionResponse[]>('/users/me/payment-history', {}, true);
+  }
+
+  // Subscription endpoints - Optimized: Enable caching
+  async getAvailablePlans(): Promise<('FREE' | 'PREMIUM' | 'ENTERPRISE')[]> {
+    return this.request<('FREE' | 'PREMIUM' | 'ENTERPRISE')[]>('/api/subscriptions/plans', {}, true);
+  }
+
+  async getCurrentSubscription(): Promise<SubscriptionResponse> {
+    return this.request<SubscriptionResponse>('/api/subscriptions', {}, true);
+  }
+
+  async purchasePlan(planType: 'FREE' | 'PREMIUM' | 'ENTERPRISE', paymentMethodId?: string): Promise<SubscriptionResponse> {
+    return this.request<SubscriptionResponse>('/api/subscriptions/purchase', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        planType,
+        paymentMethodId: paymentMethodId || undefined
+      }),
+    });
+  }
+
+  async createCheckoutSession(planType: 'PREMIUM' | 'ENTERPRISE'): Promise<{ url: string }> {
+    return this.request<{ url: string }>('/api/subscriptions/create-checkout-session', {
+      method: 'POST',
+      body: JSON.stringify({ planType }),
+    });
+  }
+
+  async cancelSubscription(): Promise<SubscriptionResponse> {
+    return this.request<SubscriptionResponse>('/api/subscriptions/cancel', {
+      method: 'PUT',
+    });
+  }
+
+  async checkoutSuccess(sessionId: string): Promise<SubscriptionResponse> {
+    return this.request<SubscriptionResponse>(`/api/subscriptions/checkout-success?session_id=${sessionId}`, {
+      method: 'GET',
+    });
+  }
+
+  // Dashboard endpoints
+  async getDashboardStats(): Promise<any> {
+    return this.request<any>('/dashboard/stats');
+  }
+
+  async getMarketInsights(): Promise<any> {
+    return this.request<any>('/dashboard/insights');
+  }
+}
+
+// Create API client - URL will be read lazily from window.__API_URL__ at request time
+// This ensures we always use the value injected by layout.tsx from the Kubernetes secret
+export const apiClient = new ApiClient();
