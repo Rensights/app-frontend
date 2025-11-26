@@ -357,17 +357,24 @@ jobs:
           RETRY_COUNT=0
           
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES..."
+            
+            # Check if global.yaml exists, if not skip it
+            VALUES_FILES="-f env-values/dev/frontend.yaml"
+            if [ -f "env-values/dev/global.yaml" ]; then
+              VALUES_FILES="-f env-values/dev/global.yaml -f env-values/dev/frontend.yaml"
+            fi
+            
             DEPLOY_OUTPUT=$(helm upgrade --install frontend ./charts \
             --namespace ${DEV_NAMESPACE} \
             --create-namespace \
-            -f env-values/dev/global.yaml \
-            -f env-values/dev/frontend.yaml \
-              --set image.tag=${IMAGE_TAG} \
+            ${VALUES_FILES} \
+            --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-              --wait --timeout=5m 2>&1)
+            --wait --timeout=5m 2>&1) || true
             
-            DEPLOY_EXIT_CODE=$?
+            DEPLOY_EXIT_CODE=${PIPESTATUS[0]}
             
             if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
               echo "✅ Deployment successful!"
@@ -384,12 +391,32 @@ jobs:
                 sleep 3
               else
                 echo "❌ Deployment failed after $MAX_RETRIES retries"
+                echo "Last error output:"
+                echo "$DEPLOY_OUTPUT"
                 exit 1
               fi
             else
               echo "❌ Deployment failed with error:"
               echo "$DEPLOY_OUTPUT"
-              exit 1
+              
+              # Show more debug info
+              echo ""
+              echo "Debug information:"
+              echo "Namespace: ${DEV_NAMESPACE}"
+              echo "Image tag: ${IMAGE_TAG}"
+              echo "Image repo: ${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}"
+              echo "Values files: ${VALUES_FILES}"
+              echo ""
+              echo "Checking Helm release status:"
+              helm status frontend -n ${DEV_NAMESPACE} || echo "Release not found"
+              
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+                exit 1
+              else
+                echo "Retrying in 5 seconds..."
+                sleep 5
+              fi
             fi
           done
 
