@@ -63,9 +63,18 @@ jobs:
         working-directory: src
         run: |
           echo "Current directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la | head -20
+          echo ""
           echo "Checking for package-lock.json:"
-          ls -la package-lock.json || echo "package-lock.json not found in current directory"
-          npm ci
+          if [ -f "package-lock.json" ]; then
+            echo "✅ package-lock.json found"
+            ls -lh package-lock.json
+            npm ci
+          else
+            echo "❌ package-lock.json not found, generating it..."
+            npm install
+          fi
 
       - name: Run linter
         working-directory: src
