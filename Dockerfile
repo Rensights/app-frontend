@@ -24,6 +24,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Runtime environment variables (set by Kubernetes)
+# These are available at runtime, not build time
+ENV API_URL=""
+ENV NEXT_PUBLIC_API_URL=""
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=""
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
