@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import getConfig from "next/config";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,16 +15,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Get API URL from environment (available at runtime from Kubernetes secret)
-  // Use regular env var (not NEXT_PUBLIC_*) so it's available at runtime
-  // NEXT_PUBLIC_* vars are replaced at build time, regular vars are available at runtime
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
+  // Get API URL from publicRuntimeConfig (available at runtime from Kubernetes secret)
+  // This is the proper way to access runtime env vars in Next.js
+  // Based on: https://medium.com/geekculture/accessing-environment-variables-from-kubernetes-helm-in-nextjs-app-on-the-client-side-281cf5b60a3a
+  const { publicRuntimeConfig } = getConfig();
+  const apiUrl = publicRuntimeConfig?.apiUrl || process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
   
   return (
     <html lang="en">
       <head>
         {/* Inject API URL into client-side JavaScript at runtime */}
-        {/* Always inject the script tag, even if empty, so client can read the value */}
+        {/* This allows client-side code to access the runtime value from Kubernetes secret */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__API_URL__ = ${JSON.stringify(apiUrl)};`,
