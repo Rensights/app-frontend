@@ -35,6 +35,14 @@ spec:
           env:
             {{- /* Add secrets first if configured */}}
             {{- if .Values.secrets.frontendConfig }}
+            {{- /* Use API_URL (not NEXT_PUBLIC_*) for runtime access in Server Components */}}
+            {{- /* NEXT_PUBLIC_* vars are replaced at build time, regular vars work at runtime */}}
+            - name: API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.frontendConfig }}
+                  key: NEXT_PUBLIC_API_URL
+                  optional: true
             - name: NEXT_PUBLIC_API_URL
               valueFrom:
                 secretKeyRef:

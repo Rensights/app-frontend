@@ -15,10 +15,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // Get API URL from environment (available at runtime from Kubernetes secret)
-  // In Next.js, process.env is available at runtime on the server side
-  // For client-side, we inject it via script tag
-  // Always read from process.env at runtime (not baked at build time)
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  // Use regular env var (not NEXT_PUBLIC_*) so it's available at runtime
+  // NEXT_PUBLIC_* vars are replaced at build time, regular vars are available at runtime
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
   
   return (
     <html lang="en">
