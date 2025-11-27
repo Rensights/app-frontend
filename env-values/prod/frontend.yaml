@@ -26,6 +26,10 @@ ingress:
       hosts:
         - 72.62.40.154.nip.io
 
+secrets:
+  frontendConfig: frontend-config
+
 extraEnv:
+  # Fallback values if secret doesn't exist (should be removed once secret is configured)
   NEXT_PUBLIC_API_URL: "https://api.72.62.40.154.nip.io"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_live_YOUR_LIVE_KEY"

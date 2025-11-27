@@ -33,9 +33,37 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
+            {{- if .Values.secrets.frontendConfig }}
+            - name: NEXT_PUBLIC_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.frontendConfig }}
+                  key: NEXT_PUBLIC_API_URL
+                  optional: true
+            - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.frontendConfig }}
+                  key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+                  optional: true
+            {{- end }}
             {{- range $key, $value := .Values.extraEnv }}
             - name: {{ $key }}
               value: {{ $value | quote }}
+            {{- end }}
+            {{- if .Values.secrets.frontendConfig }}
+            - name: NEXT_PUBLIC_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.frontendConfig }}
+                  key: NEXT_PUBLIC_API_URL
+                  optional: true
+            - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.frontendConfig }}
+                  key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+                  optional: true
             {{- end }}
           {{- if .Values.livenessProbe }}
           livenessProbe:
