@@ -24,13 +24,24 @@ export default function RootLayout({
   if (typeof window === 'undefined') {
     console.log('[Layout] API_URL:', process.env.API_URL);
     console.log('[Layout] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+    console.log('[Layout] All env vars with API:', Object.keys(process.env).filter(k => k.includes('API')));
   }
   
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
+  // Try multiple sources for API URL
+  const apiUrl = process.env.API_URL 
+    || process.env.NEXT_PUBLIC_API_URL 
+    || (typeof process !== 'undefined' && process.env && process.env.API_URL)
+    || '';
   
   // Debug: Log final value
-  if (typeof window === 'undefined' && !apiUrl) {
-    console.warn('[Layout] WARNING: No API URL found in environment variables!');
+  if (typeof window === 'undefined') {
+    if (!apiUrl) {
+      console.error('[Layout] ERROR: No API URL found!');
+      console.error('[Layout] API_URL:', process.env.API_URL);
+      console.error('[Layout] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+    } else {
+      console.log('[Layout] Using API URL:', apiUrl);
+    }
   }
   
   return (
