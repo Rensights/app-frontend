@@ -48,8 +48,14 @@ spec:
                   optional: true
             {{- end }}
             {{- range $key, $value := .Values.extraEnv }}
+            {{- if and (not (eq $key "NEXT_PUBLIC_API_URL")) (not (eq $key "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY")) }}
             - name: {{ $key }}
               value: {{ $value | quote }}
+            {{- else if not $.Values.secrets.frontendConfig }}
+            {{- /* Only add these from extraEnv if secret is not configured */}}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
             {{- end }}
             {{- if .Values.secrets.frontendConfig }}
             - name: NEXT_PUBLIC_API_URL
