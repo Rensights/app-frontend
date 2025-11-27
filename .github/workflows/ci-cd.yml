@@ -413,19 +413,23 @@ jobs:
             
             echo "Deploying with API_URL: $API_URL"
             
-            # Initialize extraEnv as empty dict first, then set nested values
+            # Create temporary values file with extraEnv to avoid --set parsing issues
+            cat > /tmp/extra-env-values.yaml <<EOF
+extraEnv:
+  API_URL: "${API_URL}"
+  NEXT_PUBLIC_API_URL: "${API_URL}"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "${STRIPE_KEY}"
+EOF
+            
             set +e  # Don't exit on error, we'll handle it
             DEPLOY_OUTPUT=$(helm upgrade --install frontend ./charts \
             --namespace ${DEV_NAMESPACE} \
             --create-namespace \
             ${VALUES_FILES} \
+            -f /tmp/extra-env-values.yaml \
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-            --set extraEnv={} \
-            --set extraEnv.API_URL="${API_URL}" \
-            --set extraEnv.NEXT_PUBLIC_API_URL="${API_URL}" \
-            --set extraEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${STRIPE_KEY}" \
             --wait --timeout=5m 2>&1)
             DEPLOY_EXIT_CODE=$?
             set -e  # Re-enable exit on error
@@ -728,19 +732,23 @@ jobs:
           
           echo "Deploying with API_URL: $API_URL"
           
-          # Initialize extraEnv as empty dict first, then set nested values
+          # Create temporary values file with extraEnv to avoid --set parsing issues
+          cat > /tmp/extra-env-values-prod.yaml <<EOF
+extraEnv:
+  API_URL: "${API_URL}"
+  NEXT_PUBLIC_API_URL: "${API_URL}"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "${STRIPE_KEY}"
+EOF
+          
           helm upgrade --install frontend ./charts \
             --namespace ${PROD_NAMESPACE} \
             --create-namespace \
             -f env-values/prod/global.yaml \
             -f env-values/prod/frontend.yaml \
+            -f /tmp/extra-env-values-prod.yaml \
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-            --set extraEnv={} \
-            --set extraEnv.API_URL="${API_URL}" \
-            --set extraEnv.NEXT_PUBLIC_API_URL="${API_URL}" \
-            --set extraEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${STRIPE_KEY}" \
             --wait --timeout=5m
 
       - name: Verify deployment
