@@ -54,3 +54,10 @@ serviceAccount:
   create: true
   annotations: {}
   name: ""
+
+networkPolicy:
+  enabled: true
+  # Kong namespace labels to match
+  # Default matches namespace with label "name: kong"
+  kongNamespaceLabels:
+    name: kong
