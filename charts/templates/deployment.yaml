@@ -33,6 +33,7 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
+            {{- /* Add secrets first if configured */}}
             {{- if .Values.secrets.frontendConfig }}
             - name: NEXT_PUBLIC_API_URL
               valueFrom:
@@ -47,12 +48,15 @@ spec:
                   key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
                   optional: true
             {{- end }}
+            {{- /* Add extraEnv, but skip NEXT_PUBLIC_API_URL and STRIPE_KEY if secret is configured */}}
             {{- range $key, $value := .Values.extraEnv }}
-            {{- if and (not (eq $key "NEXT_PUBLIC_API_URL")) (not (eq $key "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY")) }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- else if not $.Values.secrets.frontendConfig }}
-            {{- /* Only add these from extraEnv if secret is not configured */}}
+            {{- $skipKey := false }}
+            {{- if $.Values.secrets.frontendConfig }}
+              {{- if or (eq $key "NEXT_PUBLIC_API_URL") (eq $key "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY") }}
+                {{- $skipKey = true }}
+              {{- end }}
+            {{- end }}
+            {{- if not $skipKey }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
