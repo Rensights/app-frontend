@@ -15,21 +15,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // Get API URL from environment (available at runtime from Kubernetes secret)
-  // This is injected into the client-side JavaScript at runtime
+  // In Next.js, process.env is available at runtime on the server side
+  // For client-side, we inject it via script tag
+  // Always read from process.env at runtime (not baked at build time)
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
   
   return (
     <html lang="en">
       <head>
         {/* Inject API URL into client-side JavaScript at runtime */}
-        {/* This allows the API client to read it from window.__API_URL__ */}
-        {apiUrl && (
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `window.__API_URL__ = ${JSON.stringify(apiUrl)};`,
-            }}
-          />
-        )}
+        {/* Always inject the script tag, even if empty, so client can read the value */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__API_URL__ = ${JSON.stringify(apiUrl)};`,
+          }}
+        />
         {/* Optimized: Preconnect to API for faster requests */}
         {apiUrl && (
           <link rel="preconnect" href={apiUrl} crossOrigin="anonymous" />
