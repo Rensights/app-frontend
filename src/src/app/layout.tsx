@@ -7,7 +7,11 @@ export const metadata: Metadata = {
   description: "Property Intelligence Platform",
   // Optimized: Add performance metadata
   viewport: "width=device-width, initial-scale=1, maximum-scale=5",
-  themeColor: "#f39c12",
+  themeColor: "#f6b042", // Match the actual background color
+  other: {
+    "theme-color": "#f6b042", // For older browsers
+    "apple-mobile-web-app-status-bar-style": "default",
+  },
 };
 
 export default function RootLayout({

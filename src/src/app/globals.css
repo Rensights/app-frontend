@@ -2,11 +2,22 @@
 
 :root {
   color-scheme: light;
+  /* Ensure consistent color rendering across devices */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  /* Prevent mobile browsers from applying color filters */
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html,
 body {
   height: 100%;
+  /* Ensure consistent background color on all devices */
+  background-color: #f6b042 !important;
 }
 
 body {
@@ -15,4 +26,20 @@ body {
     Ubuntu, Cantarell, sans-serif;
   background-color: #f6b042;
   color: #333333;
+  /* Prevent color shifting on mobile */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure consistent background on mobile */
+@media screen and (max-width: 768px) {
+  html,
+  body {
+    background-color: #f6b042 !important;
+    background: #f6b042 !important;
+  }
+  
+  body {
+    background-color: #f6b042 !important;
+  }
 }
