@@ -22,9 +22,12 @@ const getApiUrlFromEnv = (): string => {
     return '';
   } else {
     // Server-side: Read from process.env (available at runtime from Kubernetes secret)
-    const url = process.env.NEXT_PUBLIC_API_URL;
+    // Try API_URL first (regular env var, available at runtime), then NEXT_PUBLIC_API_URL
+    const url = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
     if (!url || url === '') {
-      console.warn('NEXT_PUBLIC_API_URL is not set on server-side. Check Kubernetes secret configuration.');
+      console.warn('API_URL or NEXT_PUBLIC_API_URL is not set on server-side. Check Kubernetes secret configuration.');
+      console.warn('API_URL:', process.env.API_URL);
+      console.warn('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
       return '';
     }
     return url;
