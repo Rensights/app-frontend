@@ -19,7 +19,19 @@ export default function RootLayout({
   // Regular env vars (not NEXT_PUBLIC_*) are available at runtime, not build time
   // This approach is based on: https://medium.com/geekculture/accessing-environment-variables-from-kubernetes-helm-in-nextjs-app-on-the-client-side-281cf5b60a3a
   // For App Router, we use Server Components to inject runtime values into the client
+  
+  // Debug: Log available env vars (server-side only)
+  if (typeof window === 'undefined') {
+    console.log('[Layout] API_URL:', process.env.API_URL);
+    console.log('[Layout] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+  }
+  
   const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
+  
+  // Debug: Log final value
+  if (typeof window === 'undefined' && !apiUrl) {
+    console.warn('[Layout] WARNING: No API URL found in environment variables!');
+  }
   
   return (
     <html lang="en">
