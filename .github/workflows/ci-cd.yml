@@ -416,6 +416,8 @@ jobs:
             # Create temporary values file with extraEnv to avoid --set parsing issues
             printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
               "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values.yaml
+            echo "Created /tmp/extra-env-values.yaml with contents:"
+            cat /tmp/extra-env-values.yaml
             
             set +e  # Don't exit on error, we'll handle it
             DEPLOY_OUTPUT=$(helm upgrade --install frontend ./charts \
