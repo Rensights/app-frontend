@@ -21,18 +21,22 @@ export default function RootLayout({
   // This approach is based on: https://medium.com/geekculture/accessing-environment-variables-from-kubernetes-helm-in-nextjs-app-on-the-client-side-281cf5b60a3a
   // For App Router, we use Server Components to inject runtime values into the client
   
-  // Get API URL from runtime config (reads from process.env)
-  const apiUrl = getRuntimeApiUrl() || process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
+  // Get API URL - try multiple sources with hardcoded fallback
+  let apiUrl = '';
   
-  // Debug: Log on server-side only
   if (typeof window === 'undefined') {
+    // Server-side: try environment variables first
+    apiUrl = process.env.API_URL 
+      || process.env.NEXT_PUBLIC_API_URL 
+      || getRuntimeApiUrl()
+      || 'http://dev-api.72.62.40.154.nip.io:31416'; // Hardcoded fallback for dev
+    
     console.log('[Layout] process.env.API_URL:', process.env.API_URL);
     console.log('[Layout] process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-    if (!apiUrl) {
-      console.error('[Layout] ERROR: No API URL found in environment!');
-    } else {
-      console.log('[Layout] ✅ Using API URL:', apiUrl);
-    }
+    console.log('[Layout] ✅ Final API URL:', apiUrl);
+  } else {
+    // Client-side: should be injected via script tag below
+    apiUrl = '';
   }
   
   return (
