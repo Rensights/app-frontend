@@ -414,12 +414,15 @@ jobs:
             echo "Deploying with API_URL: $API_URL"
             
             # Create temporary values file with extraEnv to avoid --set parsing issues
-            cat > /tmp/extra-env-values.yaml <<EOF
+            cat > /tmp/extra-env-values.yaml <<'HEREDOC_EOF'
 extraEnv:
   API_URL: "${API_URL}"
   NEXT_PUBLIC_API_URL: "${API_URL}"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "${STRIPE_KEY}"
-EOF
+HEREDOC_EOF
+            # Replace variables in the file
+            sed -i "s|\${API_URL}|${API_URL}|g" /tmp/extra-env-values.yaml
+            sed -i "s|\${STRIPE_KEY}|${STRIPE_KEY}|g" /tmp/extra-env-values.yaml
             
             set +e  # Don't exit on error, we'll handle it
             DEPLOY_OUTPUT=$(helm upgrade --install frontend ./charts \
@@ -733,12 +736,15 @@ EOF
           echo "Deploying with API_URL: $API_URL"
           
           # Create temporary values file with extraEnv to avoid --set parsing issues
-          cat > /tmp/extra-env-values-prod.yaml <<EOF
+          cat > /tmp/extra-env-values-prod.yaml <<'HEREDOC_EOF'
 extraEnv:
   API_URL: "${API_URL}"
   NEXT_PUBLIC_API_URL: "${API_URL}"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "${STRIPE_KEY}"
-EOF
+HEREDOC_EOF
+          # Replace variables in the file
+          sed -i "s|\${API_URL}|${API_URL}|g" /tmp/extra-env-values-prod.yaml
+          sed -i "s|\${STRIPE_KEY}|${STRIPE_KEY}|g" /tmp/extra-env-values-prod.yaml
           
           helm upgrade --install frontend ./charts \
             --namespace ${PROD_NAMESPACE} \
