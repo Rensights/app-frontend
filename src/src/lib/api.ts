@@ -1,28 +1,31 @@
-// API URL - embedded at build time via Docker build arg
-// Next.js replaces process.env.NEXT_PUBLIC_API_URL with actual value during build
-// This MUST be set as a build arg: --build-arg NEXT_PUBLIC_API_URL=...
-// Use NEXT_PUBLIC_API_URL directly (Next.js will replace it at build time)
+// API URL - can be set at build time OR runtime
+// Runtime: Injected via window.__API_URL__ from server-side (Kubernetes secret)
+// Build time: NEXT_PUBLIC_API_URL (Next.js replaces it at build time)
+// Priority: window.__API_URL__ (runtime) > process.env.NEXT_PUBLIC_API_URL (build time)
 const getApiUrlFromEnv = (): string => {
   // Check if we're in browser/client-side
   if (typeof window !== 'undefined') {
-    // Client-side: Next.js replaces process.env.NEXT_PUBLIC_API_URL with actual value at build time
-    // Access via process.env.NEXT_PUBLIC_API_URL (Next.js will inline the value)
-    const url = process.env.NEXT_PUBLIC_API_URL;
-    if (!url || url === '') {
-      // During build, this might be empty - use a fallback or allow empty for now
-      // The actual value will be injected at build time if provided
-      console.warn('NEXT_PUBLIC_API_URL is not set or empty. Using fallback or will be set at build time.');
-      // Return empty string during build, will be replaced by Next.js if set
-      return url || '';
+    // Client-side: First check for runtime-injected value (from Kubernetes secret)
+    const runtimeUrl = (window as any).__API_URL__;
+    if (runtimeUrl && runtimeUrl !== '') {
+      return runtimeUrl;
     }
-    return url;
+    
+    // Fallback to build-time value (Next.js replaced process.env.NEXT_PUBLIC_API_URL)
+    const buildTimeUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (buildTimeUrl && buildTimeUrl !== '') {
+      return buildTimeUrl;
+    }
+    
+    // Neither runtime nor build-time URL available
+    console.warn('NEXT_PUBLIC_API_URL is not set. Check Kubernetes secret configuration.');
+    return '';
   } else {
     // Server-side: Read from process.env (available at runtime from Kubernetes secret)
     const url = process.env.NEXT_PUBLIC_API_URL;
     if (!url || url === '') {
-      // Server-side: Try to get from environment or use a default
       console.warn('NEXT_PUBLIC_API_URL is not set on server-side. Check Kubernetes secret configuration.');
-      return url || '';
+      return '';
     }
     return url;
   }
