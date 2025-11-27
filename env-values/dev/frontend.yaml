@@ -33,3 +33,5 @@ secrets:
 extraEnv:
   # Note: NEXT_PUBLIC_API_URL and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY are read from frontend-config secret
   # These are not needed here when secret is configured
+  API_URL: "http://dev-api.72.62.40.154.nip.io:31416"
+  NEXT_PUBLIC_API_URL: "http://dev-api.72.62.40.154.nip.io:31416"
