@@ -31,6 +31,5 @@ secrets:
   frontendConfig: frontend-config
 
 extraEnv:
-  # Fallback values if secret doesn't exist (should be removed once secret is configured)
-  NEXT_PUBLIC_API_URL: "http://dev-api.72.62.40.154.nip.io:31416"
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
+  # Note: NEXT_PUBLIC_API_URL and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY are read from frontend-config secret
+  # These are not needed here when secret is configured
