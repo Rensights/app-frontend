@@ -58,7 +58,10 @@ const nextConfig: NextConfig = {
   // Turbopack config (empty for now - uses defaults)
   turbopack: {},
   
-  // Expose environment variables to client side (build-time)
+  // Expose environment variables to client side
+  // NOTE: This env object is evaluated at BUILD TIME, not runtime
+  // For runtime values from Kubernetes secrets, use Server Components to inject them
+  // See layout.tsx for runtime injection via window.__API_URL__
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '',
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l',
