@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { getRuntimeApiUrl } from "../lib/runtime-config";
 
 export const metadata: Metadata = {
   title: "Rensights",
@@ -20,27 +21,17 @@ export default function RootLayout({
   // This approach is based on: https://medium.com/geekculture/accessing-environment-variables-from-kubernetes-helm-in-nextjs-app-on-the-client-side-281cf5b60a3a
   // For App Router, we use Server Components to inject runtime values into the client
   
-  // Debug: Log available env vars (server-side only)
-  if (typeof window === 'undefined') {
-    console.log('[Layout] API_URL:', process.env.API_URL);
-    console.log('[Layout] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-    console.log('[Layout] All env vars with API:', Object.keys(process.env).filter(k => k.includes('API')));
-  }
+  // Get API URL from runtime config (reads from process.env)
+  const apiUrl = getRuntimeApiUrl() || process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
   
-  // Try multiple sources for API URL
-  const apiUrl = process.env.API_URL 
-    || process.env.NEXT_PUBLIC_API_URL 
-    || (typeof process !== 'undefined' && process.env && process.env.API_URL)
-    || '';
-  
-  // Debug: Log final value
+  // Debug: Log on server-side only
   if (typeof window === 'undefined') {
+    console.log('[Layout] process.env.API_URL:', process.env.API_URL);
+    console.log('[Layout] process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
     if (!apiUrl) {
-      console.error('[Layout] ERROR: No API URL found!');
-      console.error('[Layout] API_URL:', process.env.API_URL);
-      console.error('[Layout] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+      console.error('[Layout] ERROR: No API URL found in environment!');
     } else {
-      console.log('[Layout] Using API URL:', apiUrl);
+      console.log('[Layout] ✅ Using API URL:', apiUrl);
     }
   }
   
