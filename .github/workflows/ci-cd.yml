@@ -414,6 +414,7 @@ jobs:
             echo "Deploying with API_URL: $API_URL"
             
             # Initialize extraEnv as empty dict first, then set nested values
+            set +e  # Don't exit on error, we'll handle it
             DEPLOY_OUTPUT=$(helm upgrade --install frontend ./charts \
             --namespace ${DEV_NAMESPACE} \
             --create-namespace \
@@ -426,7 +427,10 @@ jobs:
             --set extraEnv.NEXT_PUBLIC_API_URL="${API_URL}" \
             --set extraEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${STRIPE_KEY}" \
             --wait --timeout=5m 2>&1)
-            DEPLOY_EXIT_CODE=${PIPESTATUS[0]}
+            DEPLOY_EXIT_CODE=$?
+            set -e  # Re-enable exit on error
+            
+            echo "Helm deployment exit code: $DEPLOY_EXIT_CODE"
             
             if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
               echo "✅ Deployment successful!"
@@ -448,25 +452,37 @@ jobs:
                 exit 1
               fi
             else
-              echo "❌ Deployment failed with error:"
+              echo "❌ Deployment failed with exit code: $DEPLOY_EXIT_CODE"
+              echo ""
+              echo "=== Helm Error Output ==="
               echo "$DEPLOY_OUTPUT"
+              echo "=== End Error Output ==="
+              echo ""
               
               # Show more debug info
-              echo ""
-              echo "Debug information:"
+              echo "=== Debug Information ==="
               echo "Namespace: ${DEV_NAMESPACE}"
               echo "Image tag: ${IMAGE_TAG}"
               echo "Image repo: ${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}"
               echo "Values files: ${VALUES_FILES}"
+              echo "API_URL: ${API_URL}"
+              echo "STRIPE_KEY: ${STRIPE_KEY:0:20}..." # Show first 20 chars only
               echo ""
-              echo "Checking Helm release status:"
-              helm status frontend -n ${DEV_NAMESPACE} || echo "Release not found"
+              
+              echo "=== Helm Release Status ==="
+              helm status frontend -n ${DEV_NAMESPACE} 2>&1 || echo "Release not found"
+              echo ""
+              
+              echo "=== Pod Status ==="
+              kubectl get pods -n ${DEV_NAMESPACE} -l app.kubernetes.io/name=frontend 2>&1 || echo "No pods found"
+              echo ""
               
               RETRY_COUNT=$((RETRY_COUNT + 1))
               if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+                echo "❌ Deployment failed after $MAX_RETRIES attempts. Exiting."
                 exit 1
               else
-                echo "Retrying in 5 seconds..."
+                echo "⚠️  Retrying in 5 seconds... (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
                 sleep 5
               fi
             fi
