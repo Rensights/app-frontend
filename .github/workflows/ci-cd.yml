@@ -329,6 +329,31 @@ jobs:
             --namespace ${DEV_NAMESPACE} \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Setup frontend-config secret for dev
+        run: |
+          export KUBECONFIG=/tmp/kubeconfig
+          echo "Setting up frontend-config secret with backend URL..."
+          # Get backend URL from ingress or use default
+          BACKEND_URL="http://dev-api.72.62.40.154.nip.io:31416"
+          
+          # Try to get from backend ingress if it exists
+          if kubectl get ingress backend -n ${DEV_NAMESPACE} &>/dev/null; then
+            BACKEND_HOST=$(kubectl get ingress backend -n ${DEV_NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "")
+            if [ -n "$BACKEND_HOST" ]; then
+              BACKEND_URL="http://${BACKEND_HOST}:31416"
+              echo "Found backend host from ingress: $BACKEND_HOST"
+            fi
+          fi
+          
+          echo "Using backend URL: $BACKEND_URL"
+          STRIPE_KEY="pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
+          kubectl create secret generic frontend-config \
+            --from-literal=NEXT_PUBLIC_API_URL="$BACKEND_URL" \
+            --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
+            --namespace ${DEV_NAMESPACE} \
+            --dry-run=client -o yaml | kubectl apply -f -
+          echo "✅ Frontend config secret updated"
+
       - name: Deploy frontend to dev
         run: |
           export KUBECONFIG=/tmp/kubeconfig
@@ -597,6 +622,31 @@ jobs:
             --docker-password=${{ secrets.CONTAINER_TOKEN }} \
             --namespace ${PROD_NAMESPACE} \
             --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Setup frontend-config secret for prod
+        run: |
+          export KUBECONFIG=/tmp/kubeconfig
+          echo "Setting up frontend-config secret with backend URL..."
+          # Get backend URL from ingress or use default
+          BACKEND_URL="https://api.72.62.40.154.nip.io"
+          
+          # Try to get from backend ingress if it exists
+          if kubectl get ingress backend -n ${PROD_NAMESPACE} &>/dev/null; then
+            BACKEND_HOST=$(kubectl get ingress backend -n ${PROD_NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "")
+            if [ -n "$BACKEND_HOST" ]; then
+              BACKEND_URL="https://${BACKEND_HOST}"
+              echo "Found backend host from ingress: $BACKEND_HOST"
+            fi
+          fi
+          
+          echo "Using backend URL: $BACKEND_URL"
+          STRIPE_KEY="pk_live_YOUR_LIVE_KEY"
+          kubectl create secret generic frontend-config \
+            --from-literal=NEXT_PUBLIC_API_URL="$BACKEND_URL" \
+            --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
+            --namespace ${PROD_NAMESPACE} \
+            --dry-run=client -o yaml | kubectl apply -f -
+          echo "✅ Frontend config secret updated"
 
       - name: Deploy frontend to prod
         run: |
