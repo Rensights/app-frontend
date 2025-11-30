@@ -163,7 +163,12 @@ class ApiClient {
             error = { error: errorText || `Request failed with status ${response.status}` };
           }
           console.error(`API Error [${response.status}]: ${endpoint}`, error);
-          throw new Error(error.error || error.message || `Request failed with status ${response.status}`);
+          // Handle different error response formats
+          const errorMessage = error.error || error.message || error.details || errorText || `Request failed with status ${response.status}`;
+          const apiError = new Error(errorMessage);
+          (apiError as any).status = response.status;
+          (apiError as any).response = error;
+          throw apiError;
         }
         return response.json();
       })
