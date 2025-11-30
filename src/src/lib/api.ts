@@ -323,6 +323,28 @@ class ApiClient {
     });
   }
 
+  // Password reset endpoints
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async verifyResetCode(email: string, code: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/verify-reset-code', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, newPassword }),
+    });
+  }
+
   // User endpoints - Optimized: Enable caching for GET requests
   async getCurrentUser(): Promise<UserResponse> {
     return this.request<UserResponse>('/users/me', {}, true);

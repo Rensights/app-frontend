@@ -363,13 +363,8 @@ export default function Home() {
             <div className="forgot-password">
               <div className="forgot-links">
                 <a
-                  href="#"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    alert(
-                      "Forgot password functionality would be implemented here."
-                    );
-                  }}
+                  href="/forgot-password"
+                  style={{ color: "#f39c12", textDecoration: "none" }}
                 >
                   Forgot your password?
           </a>
