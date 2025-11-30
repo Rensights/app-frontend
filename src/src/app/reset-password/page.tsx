@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import "../login.css";
 
 const CODE_LENGTH = 6;
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -336,6 +336,14 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="login-container"><div className="login-box"><div className="login-header"><h1>Loading...</h1></div></div></div>}>
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }
 
