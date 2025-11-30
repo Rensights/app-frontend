@@ -98,3 +98,9 @@ echo "4. Kong annotations are correct (strip-path, protocols)"
 echo "5. Kong can reach the service from its pod"
 echo ""
 
+
+
+
+
+
+

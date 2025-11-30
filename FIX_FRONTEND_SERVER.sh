@@ -48,3 +48,9 @@ if [ -n "$SVC_IP" ]; then
   kubectl run test-frontend --rm -i --tty --image=curlimages/curl --restart=Never -- curl -s http://${SVC_IP}:3000/ | head -20 || echo "Failed to connect to service"
 fi
 
+
+
+
+
+
+

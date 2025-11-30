@@ -152,3 +152,9 @@ echo "  2. Check if Next.js started:"
 echo "     kubectl logs -n dev -l app.kubernetes.io/name=frontend | grep -i 'ready\|started'"
 echo ""
 
+
+
+
+
+
+

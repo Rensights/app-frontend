@@ -1,12 +1,11 @@
 "use client";
 
- 
-
 import { useEffect, useMemo, useRef, useState } from "react";
-import Script from "next/script";
+import dynamic from "next/dynamic";
 import "./analysis-request.css";
 
-declare const google: any;
+// Dynamically import Leaflet to avoid SSR issues
+const MapComponent = dynamic(() => import("./MapComponent"), { ssr: false });
 
 type FormState = {
   city: string;
@@ -77,8 +76,6 @@ export default function AnalysisRequestPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mapRef = useRef<HTMLDivElement | null>(null);
-  const mapInstance = useRef<any>(null);
-  const markerRef = useRef<any>(null);
   const [coordinates, setCoordinates] = useState<{ lat: string; lng: string } | null>(null);
 
   const plotVisible = useMemo(
@@ -86,86 +83,16 @@ export default function AnalysisRequestPage() {
     [formState.propertyType]
   );
 
-  const handleScriptLoad = () => {
-    if (!mapRef.current) {
-      console.error("Map ref is not available");
-      return;
-    }
-    
-    if (typeof google === "undefined" || !google.maps) {
-      console.error("Google Maps API is not loaded");
-      return;
-    }
-
-    try {
-      mapInstance.current = new google.maps.Map(mapRef.current, {
-        center: defaultCenters.dubai,
-        zoom: 11,
-        mapTypeControl: true,
-        streetViewControl: false,
-        fullscreenControl: true,
-      });
-      
-      mapInstance.current.addListener("click", (event: any) => {
-        if (!event.latLng) return;
-        placeMarker(event.latLng);
-      });
-      
-      console.log("Google Maps initialized successfully");
-    } catch (error) {
-      console.error("Error initializing Google Maps:", error);
-    }
-  };
-
-  const handleScriptError = () => {
-    console.error("Failed to load Google Maps script");
-    if (mapRef.current) {
-      mapRef.current.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa; color: #666; border-radius: 10px;">
-          <div style="text-align: center; padding: 20px;">
-            <div style="font-size: 2rem; margin-bottom: 10px;">🗺️</div>
-            <div style="font-weight: 600; margin-bottom: 5px;">Map unavailable</div>
-            <div style="font-size: 0.9rem;">Please check your internet connection</div>
-          </div>
-        </div>
-      `;
-    }
-  };
-
-  const placeMarker = (location: { lat: () => number; lng: () => number }) => {
-    if (!mapInstance.current || typeof google === "undefined") return;
-    if (markerRef.current) {
-      markerRef.current.setMap(null);
-    }
-    markerRef.current = new google.maps.Marker({
-      position: location,
-      map: mapInstance.current,
-      animation: google.maps.Animation.DROP,
-    });
-    const lat = location.lat().toFixed(6);
-    const lng = location.lng().toFixed(6);
-    setCoordinates({ lat, lng });
-  };
-
-  useEffect(() => {
-    // Retry map initialization if script loads but map isn't initialized
-    if (!mapInstance.current && typeof google !== "undefined" && mapRef.current) {
-      handleScriptLoad();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!mapInstance.current || !formState.city || typeof google === "undefined") return;
-    try {
-      const center =
-        defaultCenters[formState.city as keyof typeof defaultCenters] ||
-        defaultCenters.dubai;
-      mapInstance.current.setCenter(center);
-      mapInstance.current.setZoom(11);
-    } catch (error) {
-      console.error("Error updating map center:", error);
-    }
+  const currentCenter = useMemo(() => {
+    return defaultCenters[formState.city as keyof typeof defaultCenters] || defaultCenters.dubai;
   }, [formState.city]);
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setCoordinates({
+      lat: lat.toFixed(6),
+      lng: lng.toFixed(6),
+    });
+  };
 
   const handleInputChange = (field: keyof FormState, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
@@ -228,12 +155,6 @@ export default function AnalysisRequestPage() {
 
   return (
     <div className="analysis-page">
-      <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg'}&libraries=places`}
-        strategy="afterInteractive"
-        onLoad={handleScriptLoad}
-        onError={handleScriptError}
-      />
       <div className="container">
         <header className="header">
           <div className="header-left">
@@ -386,6 +307,12 @@ export default function AnalysisRequestPage() {
                   accurate pricing analysis based on the specific area.
                 </div>
                 <div id="map" ref={mapRef} />
+                <MapComponent
+                  mapRef={mapRef}
+                  center={currentCenter}
+                  onLocationSelect={handleLocationSelect}
+                  coordinates={coordinates}
+                />
                 {coordinates && (
                   <div className="location-display">
                     <strong>Selected Location:</strong>{" "}

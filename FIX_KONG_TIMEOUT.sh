@@ -61,3 +61,9 @@ echo "2. Frontend pod is ready: kubectl get pods -n dev -l app.kubernetes.io/nam
 echo "3. Frontend is responding: kubectl exec -n dev <pod-name> -- curl http://localhost:3000/"
 echo "4. Kong can reach service: kubectl exec -n <kong-ns> <kong-pod> -- curl http://<frontend-svc-ip>:3000/"
 
+
+
+
+
+
+

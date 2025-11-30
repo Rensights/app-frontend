@@ -211,3 +211,9 @@ else
   echo -e "${RED}❌ Frontend has issues - check logs above${NC}"
 fi
 
+
+
+
+
+
+
