@@ -84,6 +84,9 @@ function ResetPasswordPageContent() {
   };
 
   const handleVerifyCode = async () => {
+    setError("");
+    setCodeError("");
+    
     if (!email) {
       setError("Email is required");
       return;
@@ -96,12 +99,13 @@ function ResetPasswordPageContent() {
     }
 
     setIsSubmitting(true);
-    setCodeError("");
     try {
       await apiClient.verifyResetCode(email, code);
       setStep("password");
     } catch (err: any) {
-      setCodeError(err.message || "Invalid or expired code. Please try again.");
+      console.error("Verify reset code error:", err);
+      const errorMessage = err?.message || err?.error || "Invalid or expired code. Please try again.";
+      setCodeError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -137,13 +141,18 @@ function ResetPasswordPageContent() {
       await apiClient.resetPassword(email, code, newPassword);
       setStep("success");
     } catch (err: any) {
-      setError(err.message || "Failed to reset password. Please try again.");
+      console.error("Reset password error:", err);
+      const errorMessage = err?.message || err?.error || "Failed to reset password. Please try again.";
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleResendCode = async () => {
+    setError("");
+    setCodeError("");
+    
     if (!email) {
       setError("Email is required");
       return;
@@ -156,28 +165,32 @@ function ResetPasswordPageContent() {
       setCodeError("");
       setTimeout(() => codeRefs.current[0]?.focus(), 200);
     } catch (err: any) {
-      setError(err.message || "Failed to resend code. Please try again.");
+      console.error("Resend code error:", err);
+      const errorMessage = err?.message || err?.error || "Failed to resend code. Please try again.";
+      setError(errorMessage);
     }
   };
 
   if (step === "success") {
     return (
-      <div className="login-container">
-        <div className="login-box">
-          <div className="login-header">
-            <h1>Password Reset Successful</h1>
-            <p>Your password has been reset successfully</p>
-          </div>
-          <div className="success-message">
-            <p>You can now log in with your new password.</p>
-            <button
-              type="button"
-              onClick={() => router.push("/")}
-              className="submit-btn"
-              style={{ marginTop: "20px" }}
-            >
-              Go to Login
-            </button>
+      <div className="login-page">
+        <div className="login-container">
+          <div className="login-box">
+            <div className="login-header">
+              <h1>Password Reset Successful</h1>
+              <p>Your password has been reset successfully</p>
+            </div>
+            <div className="success-message">
+              <p>You can now log in with your new password.</p>
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="btn"
+                style={{ marginTop: "20px" }}
+              >
+                Go to Login
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -186,61 +199,73 @@ function ResetPasswordPageContent() {
 
   if (step === "password") {
     return (
-      <div className="login-container">
-        <div className="login-box">
-          <div className="login-header">
-            <h1>Reset Password</h1>
-            <p>Enter your new password</p>
-          </div>
-
-          <form onSubmit={handleResetPassword}>
-            <div className="form-group">
-              <label htmlFor="newPassword">New Password</label>
-              <input
-                type="password"
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password (min 6 characters)"
-                disabled={isSubmitting}
-                required
-                minLength={6}
-              />
+      <div className="login-page">
+        <div className="login-container">
+          <div className="login-box">
+            <div className="login-header">
+              <h1>Reset Password</h1>
+              <p>Enter your new password</p>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
+            <form onSubmit={handleResetPassword}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="newPassword">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  className={`form-input ${error && !newPassword ? "error" : ""}`}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 characters)"
+                  disabled={isSubmitting}
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="confirmPassword">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  className={`form-input ${error && newPassword !== confirmPassword ? "error" : ""}`}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  disabled={isSubmitting}
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              {error && (
+                <div className="error-message show">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="btn"
                 disabled={isSubmitting}
-                required
-                minLength={6}
-              />
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
-
-            <button
-              type="submit"
-              className="submit-btn"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Resetting..." : "Reset Password"}
-            </button>
-          </form>
-
-          <div className="forgot-password">
-            <div className="forgot-links">
-              <a
-                href="/"
-                style={{ color: "#f39c12", textDecoration: "none" }}
               >
-                Back to Login
-              </a>
+                {isSubmitting ? "Resetting..." : "Reset Password"}
+              </button>
+            </form>
+
+            <div className="forgot-password">
+              <div className="forgot-links">
+                <a
+                  href="/"
+                  style={{ color: "#f39c12", textDecoration: "none" }}
+                >
+                  Back to Login
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -249,8 +274,9 @@ function ResetPasswordPageContent() {
   }
 
   return (
-    <div className="login-container">
-      <div className="login-box">
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-box">
         <div className="login-header">
           <h1>Reset Password</h1>
           <p>Enter the 6-digit code sent to your email</p>
@@ -258,20 +284,28 @@ function ResetPasswordPageContent() {
 
         <form onSubmit={(e) => { e.preventDefault(); handleVerifyCode(); }}>
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label className="form-label" htmlFor="email">
+              Email Address
+            </label>
             <input
               type="email"
               id="email"
+              className={`form-input ${error && !email ? "error" : ""}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               disabled={isSubmitting || !!searchParams?.get("email")}
               required
             />
+            {error && !codeError && (
+              <div className="error-message show">
+                {error}
+              </div>
+            )}
           </div>
 
           <div className="form-group">
-            <label>Verification Code</label>
+            <label className="form-label">Verification Code</label>
             <div className="code-input-container">
               {codeDigits.map((digit, index) => (
                 <input
@@ -284,19 +318,21 @@ function ResetPasswordPageContent() {
                   onChange={(e) => handleCodeChange(index, e.target.value)}
                   onKeyDown={(e) => handleCodeKeyDown(index, e)}
                   onPaste={index === 0 ? handleCodePaste : undefined}
-                  className="code-input"
+                  className={`code-input ${codeError ? "error" : ""}`}
                   disabled={isSubmitting}
                 />
               ))}
             </div>
-            {codeError && <div className="error-message" style={{ marginTop: "10px" }}>{codeError}</div>}
+            {codeError && (
+              <div className="error-message show" style={{ marginTop: "10px" }}>
+                {codeError}
+              </div>
+            )}
           </div>
-
-          {error && <div className="error-message">{error}</div>}
 
           <button
             type="submit"
-            className="submit-btn"
+            className="btn"
             disabled={isSubmitting}
           >
             {isSubmitting ? "Verifying..." : "Verify Code"}
@@ -336,12 +372,23 @@ function ResetPasswordPageContent() {
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="login-container"><div className="login-box"><div className="login-header"><h1>Loading...</h1></div></div></div>}>
+    <Suspense fallback={
+      <div className="login-page">
+        <div className="login-container">
+          <div className="login-box">
+            <div className="login-header">
+              <h1>Loading...</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
       <ResetPasswordPageContent />
     </Suspense>
   );

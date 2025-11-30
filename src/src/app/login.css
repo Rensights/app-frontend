@@ -303,6 +303,11 @@
   box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
 }
 
+.code-input.error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
 .resend-section {
   text-align: center;
   margin-top: 20px;
