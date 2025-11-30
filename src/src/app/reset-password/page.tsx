@@ -276,7 +276,7 @@ export default function ResetPasswordPage() {
               {codeDigits.map((digit, index) => (
                 <input
                   key={index}
-                  ref={(el) => (codeRefs.current[index] = el)}
+                  ref={(el) => { codeRefs.current[index] = el; }}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
