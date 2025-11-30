@@ -41,26 +41,30 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
 
     // Add click handler
     mapInstance.current.on("click", (e: L.LeafletMouseEvent) => {
+      if (!mapInstance.current) return;
+      
       const { lat, lng } = e.latlng;
       onLocationSelect(lat, lng);
 
       // Remove existing marker
-      if (markerRef.current) {
-        mapInstance.current?.removeLayer(markerRef.current);
+      if (markerRef.current && mapInstance.current) {
+        mapInstance.current.removeLayer(markerRef.current);
       }
 
       // Add new marker
-      markerRef.current = L.marker([lat, lng], {
-        icon: L.icon({
-          iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-          iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-          shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-        }),
-      }).addTo(mapInstance.current);
+      if (mapInstance.current) {
+        markerRef.current = L.marker([lat, lng], {
+          icon: L.icon({
+            iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+            iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+            shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41],
+          }),
+        }).addTo(mapInstance.current);
+      }
 
       // Add bounce animation
       markerRef.current.setIcon(
@@ -97,24 +101,26 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
       const lat = parseFloat(coordinates.lat);
       const lng = parseFloat(coordinates.lng);
       
-      if (!isNaN(lat) && !isNaN(lng)) {
+      if (!isNaN(lat) && !isNaN(lng) && mapInstance.current) {
         // Remove existing marker
-        if (markerRef.current) {
+        if (markerRef.current && mapInstance.current) {
           mapInstance.current.removeLayer(markerRef.current);
         }
 
         // Add new marker
-        markerRef.current = L.marker([lat, lng], {
-          icon: L.icon({
-            iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-            iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-            shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41],
-          }),
-        }).addTo(mapInstance.current);
+        if (mapInstance.current) {
+          markerRef.current = L.marker([lat, lng], {
+            icon: L.icon({
+              iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+              iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+              shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41],
+            }),
+          }).addTo(mapInstance.current);
+        }
       }
     }
   }, [coordinates]);
