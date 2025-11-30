@@ -269,7 +269,12 @@ export default function DashboardPage() {
             <button className="btn">View Report</button>
 
             <div className="report-actions">
-              <button className="btn btn-outline">Request New Report</button>
+              <button 
+                className="btn btn-outline"
+                onClick={() => router.push("/analysis-request")}
+              >
+                Request New Report
+              </button>
               <div className="report-note">
                 3 reports remaining this month
               </div>
