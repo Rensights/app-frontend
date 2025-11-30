@@ -13,7 +13,7 @@ L.Icon.Default.mergeOptions({
 });
 
 interface MapComponentProps {
-  mapRef: React.RefObject<HTMLDivElement>;
+  mapRef: React.RefObject<HTMLDivElement | null>;
   center: { lat: number; lng: number };
   onLocationSelect: (lat: number, lng: number) => void;
   coordinates: { lat: string; lng: string } | null;
