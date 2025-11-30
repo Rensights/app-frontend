@@ -253,6 +253,14 @@ textarea {
   border-radius: 10px;
   border: 2px solid #e1e5e9;
   margin-top: 10px;
+  z-index: 0;
+}
+
+/* Leaflet map container styling */
+#map .leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 10px;
 }
 
 .location-display {
