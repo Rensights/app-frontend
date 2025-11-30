@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api";
 import "./analysis-request.css";
 
 // Dynamically import Leaflet to avoid SSR issues
 const MapComponent = dynamic(() => import("./MapComponent"), { ssr: false });
 
 type FormState = {
+  email: string;
   city: string;
   area: string;
   buildingName: string;
@@ -31,6 +34,7 @@ type FormState = {
 };
 
 const initialFormState: FormState = {
+  email: "",
   city: "",
   area: "",
   buildingName: "",
@@ -70,6 +74,7 @@ const defaultCenters = {
 };
 
 export default function AnalysisRequestPage() {
+  const router = useRouter();
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [features, setFeatures] = useState<string[]>([]);
   const [filesMessage, setFilesMessage] = useState("");
@@ -136,21 +141,98 @@ export default function AnalysisRequestPage() {
     return true;
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validateForm()) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      // Create FormData for multipart/form-data
+      const formData = new FormData();
+      
+      // Get email from form or authenticated user
+      let userEmail = formState.email;
+      
+      // If user is authenticated and email is not provided, try to get from user profile
+      if (!userEmail) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (token) {
+          try {
+            const user = await apiClient.getCurrentUser();
+            userEmail = user.email;
+          } catch (e) {
+            // If not authenticated, email is required from form
+          }
+        }
+      }
+      
+      if (!userEmail) {
+        alert("Please provide your email address");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Add all form fields
+      formData.append('email', userEmail);
+      formData.append('city', formState.city);
+      formData.append('area', formState.area);
+      formData.append('buildingName', formState.buildingName);
+      if (formState.listingUrl) formData.append('listingUrl', formState.listingUrl);
+      formData.append('propertyType', formState.propertyType);
+      formData.append('bedrooms', formState.bedrooms);
+      if (formState.size) formData.append('size', formState.size);
+      if (formState.plotSize) formData.append('plotSize', formState.plotSize);
+      if (formState.floor) formData.append('floor', formState.floor);
+      if (formState.totalFloors) formData.append('totalFloors', formState.totalFloors);
+      formData.append('buildingStatus', formState.buildingStatus);
+      formData.append('condition', formState.condition);
+      
+      if (coordinates) {
+        formData.append('latitude', coordinates.lat);
+        formData.append('longitude', coordinates.lng);
+      }
+      
+      formData.append('askingPrice', formState.askingPrice);
+      if (formState.serviceCharge) formData.append('serviceCharge', formState.serviceCharge);
+      if (formState.handoverDate) formData.append('handoverDate', formState.handoverDate);
+      if (formState.developer) formData.append('developer', formState.developer);
+      if (formState.paymentPlan) formData.append('paymentPlan', formState.paymentPlan);
+      
+      if (features.length > 0) {
+        formData.append('features', JSON.stringify(features));
+      }
+      
+      if (formState.view) formData.append('view', formState.view);
+      if (formState.furnishing) formData.append('furnishing', formState.furnishing);
+      if (formState.additionalNotes) formData.append('additionalNotes', formState.additionalNotes);
+      
+      // Add files if any
+      const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        for (let i = 0; i < fileInput.files.length; i++) {
+          formData.append('files', fileInput.files[i]);
+        }
+      }
+      
+      // Submit to API
+      const response = await apiClient.submitAnalysisRequest(formData);
+      
       alert(
-        "🎉 Your property price analysis request has been submitted successfully!\n\nYou will receive a comprehensive price analysis report via email within 24-48 hours.\n\nThank you for choosing Rensights!"
+        "🎉 " + response.message + "\n\nThank you for choosing Rensights!"
       );
-      setIsSubmitting(false);
+      
+      // Reset form
       setFormState(initialFormState);
       setFeatures([]);
       setFilesMessage("");
       setAgreeTerms(false);
       setCoordinates(null);
-    }, 1500);
+      if (fileInput) fileInput.value = '';
+    } catch (error: any) {
+      alert("❌ Failed to submit request: " + (error.message || "Please try again later."));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

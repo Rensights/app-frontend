@@ -401,6 +401,42 @@ class ApiClient {
     });
   }
 
+  // Analysis request endpoints
+  async submitAnalysisRequest(formData: FormData): Promise<{ message: string }> {
+    const apiUrl = this.baseUrl || this.getApiUrl();
+    const url = `${apiUrl}/api/analysis-requests`;
+    
+    const headers: Record<string, string> = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    // Don't set Content-Type for FormData - browser will set it with boundary
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      let error;
+      try {
+        error = JSON.parse(errorText);
+      } catch {
+        error = { error: errorText || `Request failed with status ${response.status}` };
+      }
+      console.error(`API Error [${response.status}]: /api/analysis-requests`, error);
+      const errorMessage = error.error || error.message || error.details || errorText || `Request failed with status ${response.status}`;
+      const apiError = new Error(errorMessage);
+      (apiError as any).status = response.status;
+      (apiError as any).response = error;
+      throw apiError;
+    }
+    
+    return response.json();
+  }
+
   async checkoutSuccess(sessionId: string): Promise<SubscriptionResponse> {
     return this.request<SubscriptionResponse>(`/api/subscriptions/checkout-success?session_id=${sessionId}`, {
       method: 'GET',
