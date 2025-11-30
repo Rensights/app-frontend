@@ -87,17 +87,49 @@ export default function AnalysisRequestPage() {
   );
 
   const handleScriptLoad = () => {
-    if (!mapRef.current || typeof google === "undefined") return;
-    mapInstance.current = new google.maps.Map(mapRef.current, {
-      center: defaultCenters.dubai,
-      zoom: 11,
-      mapTypeControl: true,
-      streetViewControl: false,
-    });
-    mapInstance.current.addListener("click", (event: any) => {
-      if (!event.latLng) return;
-      placeMarker(event.latLng);
-    });
+    if (!mapRef.current) {
+      console.error("Map ref is not available");
+      return;
+    }
+    
+    if (typeof google === "undefined" || !google.maps) {
+      console.error("Google Maps API is not loaded");
+      return;
+    }
+
+    try {
+      mapInstance.current = new google.maps.Map(mapRef.current, {
+        center: defaultCenters.dubai,
+        zoom: 11,
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+      
+      mapInstance.current.addListener("click", (event: any) => {
+        if (!event.latLng) return;
+        placeMarker(event.latLng);
+      });
+      
+      console.log("Google Maps initialized successfully");
+    } catch (error) {
+      console.error("Error initializing Google Maps:", error);
+    }
+  };
+
+  const handleScriptError = () => {
+    console.error("Failed to load Google Maps script");
+    if (mapRef.current) {
+      mapRef.current.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa; color: #666; border-radius: 10px;">
+          <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 2rem; margin-bottom: 10px;">🗺️</div>
+            <div style="font-weight: 600; margin-bottom: 5px;">Map unavailable</div>
+            <div style="font-size: 0.9rem;">Please check your internet connection</div>
+          </div>
+        </div>
+      `;
+    }
   };
 
   const placeMarker = (location: { lat: () => number; lng: () => number }) => {
@@ -116,12 +148,23 @@ export default function AnalysisRequestPage() {
   };
 
   useEffect(() => {
-    if (!mapInstance.current || !formState.city) return;
-    const center =
-      defaultCenters[formState.city as keyof typeof defaultCenters] ||
-      defaultCenters.dubai;
-    mapInstance.current.setCenter(center);
-    mapInstance.current.setZoom(11);
+    // Retry map initialization if script loads but map isn't initialized
+    if (!mapInstance.current && typeof google !== "undefined" && mapRef.current) {
+      handleScriptLoad();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mapInstance.current || !formState.city || typeof google === "undefined") return;
+    try {
+      const center =
+        defaultCenters[formState.city as keyof typeof defaultCenters] ||
+        defaultCenters.dubai;
+      mapInstance.current.setCenter(center);
+      mapInstance.current.setZoom(11);
+    } catch (error) {
+      console.error("Error updating map center:", error);
+    }
   }, [formState.city]);
 
   const handleInputChange = (field: keyof FormState, value: string) => {
@@ -186,9 +229,10 @@ export default function AnalysisRequestPage() {
   return (
     <div className="analysis-page">
       <Script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg"
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg'}&libraries=places`}
         strategy="afterInteractive"
-        onReady={handleScriptLoad}
+        onLoad={handleScriptLoad}
+        onError={handleScriptError}
       />
       <div className="container">
         <header className="header">
