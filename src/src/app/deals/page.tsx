@@ -445,8 +445,9 @@ export default function DealsPage() {
     setFilters({ status: "all", area: "all", bedroom: "all", price: "all" });
   };
 
-  const handleViewDetails = (id: number) =>
-    alert(`Opening property ${id}...`);
+  const handleViewDetails = (id: number) => {
+    router.push(`/property-details?id=${id}`);
+  };
 
   if (loading) {
     return (

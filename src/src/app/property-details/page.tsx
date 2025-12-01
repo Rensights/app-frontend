@@ -1,7 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { apiClient } from "@/lib/api";
+import "../dashboard/dashboard.css";
 import "./property-details.css";
+
+const MENU_ITEMS = [
+  { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
+  { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
+  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/deals" },
+  { id: "account", label: "Account", icon: "⚙️", path: "/account" },
+];
 
 type TabId = "listed" | "transactions";
 
@@ -110,23 +120,127 @@ const comparableTransactions = [
 ];
 
 export default function PropertyDetailsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabId>("listed");
-  const handleGoBack = () => alert("Returning to deals list...");
+  const propertyId = searchParams.get("id");
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await apiClient.getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        router.push("/");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUser();
+  }, [router]);
+
+  const handleLogout = useCallback(() => {
+    apiClient.logout();
+  }, []);
+
+  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[0]) => {
+    if (item.id === "account") {
+      router.push("/account");
+      return;
+    }
+    router.push(item.path);
+    setIsSidebarOpen(false);
+  }, [router]);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
+
+  const handleGoBack = () => router.push("/deals");
   const handleViewProperty = () => alert("Opening property listing page...");
   const handleViewAll = () => alert("Loading all comparable properties...");
 
+  if (loading) {
+    return (
+      <div className="dashboard-page">
+        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="property-page">
-      <div className="container">
-        <header className="header">
-          <div className="header-left">
-            <button className="back-btn" onClick={handleGoBack}>
-              Back to Deals
+    <div className="dashboard-page property-page">
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <div className="logo-section">
+          <div className="logo">Rensights</div>
+          <div className="logo-subtitle">Dubai Property Intelligence</div>
+          <button
+            className="sidebar-close"
+            type="button"
+            aria-label="Close navigation"
+            onClick={closeSidebar}
+          >
+            ×
+          </button>
+        </div>
+
+        <nav className="menu">
+          {MENU_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="menu-item"
+              onClick={() => handleSectionChange(item)}
+            >
+              <span className="menu-icon" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="menu-text">{item.label}</span>
             </button>
-            <div className="logo">Rensights</div>
-          </div>
-          <div className="verified-badge">Verified Listing</div>
-        </header>
+          ))}
+        </nav>
+
+        <div className="logout-section">
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      <div
+        className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
+        onClick={closeSidebar}
+      />
+
+      <main className="main-content">
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          onClick={toggleSidebar}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <div className="container">
+          <header className="header">
+            <div className="header-left">
+              <button className="back-btn" onClick={handleGoBack}>
+                ← Back to Deals
+              </button>
+              <div className="logo">Rensights</div>
+            </div>
+            <div className="verified-badge">Verified Listing</div>
+          </header>
 
         <div className="main-content">
           <div className="property-overview">
@@ -382,7 +496,8 @@ export default function PropertyDetailsPage() {
             </div>
           </aside>
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
