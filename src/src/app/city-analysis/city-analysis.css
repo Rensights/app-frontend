@@ -23,6 +23,7 @@ html {
   flex: 1;
   min-height: 100vh;
   padding: 0;
+  background: var(--bg-sand);
 }
 
 .top-bar {
@@ -35,6 +36,7 @@ html {
   position: sticky;
   top: 0;
   z-index: 50;
+  margin-bottom: 0;
 }
 
 .top-bar-left {
