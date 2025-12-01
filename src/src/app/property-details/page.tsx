@@ -169,8 +169,16 @@ function PropertyDetailsPageContent() {
 
   if (loading) {
     return (
-      <div className="dashboard-page">
-        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+      <div className="dashboard-page property-page">
+        <aside className="sidebar">
+          <div className="logo-section">
+            <div className="logo">Rensights</div>
+            <div className="logo-subtitle">Dubai Property Intelligence</div>
+          </div>
+        </aside>
+        <main className="main-content">
+          <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+        </main>
       </div>
     );
   }
