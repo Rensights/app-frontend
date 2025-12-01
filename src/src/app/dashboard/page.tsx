@@ -219,9 +219,7 @@ export default function DashboardPage() {
             <div className="city-analysis-cta">
               <button 
                 className="city-cta-button"
-                onClick={() => {
-                  alert('Loading comprehensive Dubai real estate analysis...\n\nThis will include:\n• Interactive area maps\n• Historical trend charts\n• Predictive analytics\n• Investment recommendations\n• Market forecasts');
-                }}
+                onClick={() => router.push('/city-analysis')}
               >
                 See Full City Analysis
               </button>
