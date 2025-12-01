@@ -374,7 +374,7 @@ function PropertyDetailsPageContent() {
             </section>
           </div>
 
-          <aside className="sidebar">
+          <div className="sidebar">
             <div className="sidebar-card">
               <div className="card-title">
                 <div className="card-icon">🏠</div>
@@ -502,7 +502,7 @@ function PropertyDetailsPageContent() {
                 world-class gym, and 24/7 concierge services.
               </p>
             </div>
-          </aside>
+          </div>
           </div>
         </div>
       </main>
