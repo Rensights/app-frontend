@@ -1,7 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api";
+import "../dashboard/dashboard.css";
 import "./deals.css";
+
+const MENU_ITEMS = [
+  { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
+  { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
+  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/deals" },
+  { id: "account", label: "Account", icon: "⚙️", path: "/account" },
+];
 
 type Deal = {
   id: number;
@@ -327,6 +337,10 @@ const dealsData: Record<"dubai" | "abudhabi", Deal[]> = {
 };
 
 export default function DealsPage() {
+  const router = useRouter();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [city, setCity] = useState<"dubai" | "abudhabi">("dubai");
   const [filters, setFilters] = useState({
     status: "all",
@@ -334,6 +348,41 @@ export default function DealsPage() {
     bedroom: "all",
     price: "all",
   });
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await apiClient.getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        router.push("/");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUser();
+  }, [router]);
+
+  const handleLogout = useCallback(() => {
+    apiClient.logout();
+  }, []);
+
+  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[0]) => {
+    if (item.id === "account") {
+      router.push("/account");
+      return;
+    }
+    router.push(item.path);
+    setIsSidebarOpen(false);
+  }, [router]);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
 
   const filteredDeals = useMemo(() => {
     return dealsData[city].filter((deal) => {
@@ -398,16 +447,80 @@ export default function DealsPage() {
 
   const handleViewDetails = (id: number) =>
     alert(`Opening property ${id}...`);
-  const handleGoBack = () => alert("Returning to dashboard...");
+
+  if (loading) {
+    return (
+      <div className="dashboard-page">
+        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="deals-page">
-      <div className="container">
-        <header className="header">
-          <div className="header-left">
-            <button className="back-btn" onClick={handleGoBack}>
-              Back to Dashboard
+    <div className="dashboard-page deals-page">
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <div className="logo-section">
+          <div className="logo">Rensights</div>
+          <div className="logo-subtitle">Dubai Property Intelligence</div>
+          <button
+            className="sidebar-close"
+            type="button"
+            aria-label="Close navigation"
+            onClick={closeSidebar}
+          >
+            ×
+          </button>
+        </div>
+
+        <nav className="menu">
+          {MENU_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={item.id === "alerts" ? "page" : undefined}
+              className={`menu-item ${
+                item.id === "alerts" ? "active" : ""
+              }`}
+              onClick={() => handleSectionChange(item)}
+            >
+              <span className="menu-icon" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="menu-text">{item.label}</span>
             </button>
+          ))}
+        </nav>
+
+        <div className="logout-section">
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      <div
+        className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
+        onClick={closeSidebar}
+      />
+
+      <main className="main-content">
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          onClick={toggleSidebar}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <div className="container">
+          <header className="header">
+            <div className="header-left">
+              <button className="back-btn" onClick={() => router.push('/dashboard')}>
+                ← Back to Dashboard
+              </button>
             <div className="logo">Rensights</div>
             <div className="page-title">Underpriced Property Deals</div>
           </div>
@@ -559,7 +672,8 @@ export default function DealsPage() {
             <button onClick={() => alert("Next page...")}>Next</button>
           </div>
         </section>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -326,7 +326,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <button className="btn">View This Week&apos;s Alerts</button>
+            <button className="btn" onClick={() => router.push('/deals')}>View This Week&apos;s Alerts</button>
           </div>
 
           <div className="section-card">
