@@ -374,7 +374,7 @@ function PropertyDetailsPageContent() {
             </section>
           </div>
 
-          <div className="sidebar">
+          <div className="property-sidebar">
             <div className="sidebar-card">
               <div className="card-title">
                 <div className="card-icon">🏠</div>

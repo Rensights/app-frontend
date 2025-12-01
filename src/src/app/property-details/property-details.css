@@ -303,7 +303,7 @@
   line-height: 1.5;
 }
 
-.sidebar {
+.property-sidebar {
   display: flex;
   flex-direction: column;
   gap: 20px;
