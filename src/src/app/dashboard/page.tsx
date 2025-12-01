@@ -242,31 +242,6 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
-                {
-                  icon: "🌴",
-                  title: "Palm Jumeirah",
-                  subtitle: "Premium segment leader • Luxury market",
-                },
-              ].map((area) => (
-                <div key={area.title} className="top-area">
-                  <strong>
-                    {area.icon} {area.title}
-                  </strong>
-                  <span>{area.subtitle}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="section-card">
-            <div className="section-title">Dubai Market Insights</div>
-            <div className="market-insights">
-              <div>🚀 Dubai real estate up 12% YoY</div>
-              <div>🗝️ New projects: Business Bay & Bluewaters</div>
-              <div>💎 Luxury market: Strong investor demand</div>
-              <div>🏙️ Dubai avg: AED 1,450/sq ft</div>
-            </div>
-          </div>
         </section>
 
         <section
