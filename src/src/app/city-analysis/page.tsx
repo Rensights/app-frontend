@@ -3,24 +3,55 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import "../dashboard/dashboard.css";
 import "./city-analysis.css";
+
+const MENU_ITEMS = [
+  { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
+  { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
+  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/deals" },
+  { id: "account", label: "Account", icon: "⚙️", path: "/account" },
+];
 
 export default function CityAnalysisPage() {
   const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/');
-      return;
-    }
+    const loadUser = async () => {
+      try {
+        const userData = await apiClient.getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        router.push("/");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUser();
   }, [router]);
 
   const handleLogout = useCallback(() => {
-    if (confirm('Are you sure you want to logout?')) {
-      apiClient.logout();
+    apiClient.logout();
+  }, []);
+
+  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[0]) => {
+    if (item.id === "account") {
+      router.push("/account");
+      return;
     }
+    router.push(item.path);
+    setIsSidebarOpen(false);
+  }, [router]);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
   }, []);
 
   const handleSectionClick = (sectionId: string) => {
@@ -45,42 +76,73 @@ export default function CityAnalysisPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="dashboard-page">
+        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="city-analysis-page">
-      <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-brand">
-          <h1>Rensight</h1>
-          <p>Dubai Property Intelligence</p>
+    <div className="dashboard-page city-analysis-page">
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <div className="logo-section">
+          <div className="logo">Rensights</div>
+          <div className="logo-subtitle">Dubai Property Intelligence</div>
+          <button
+            className="sidebar-close"
+            type="button"
+            aria-label="Close navigation"
+            onClick={closeSidebar}
+          >
+            ×
+          </button>
         </div>
 
-        <nav className="sidebar-nav">
-          <div className="nav-item active">
-            <svg className="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
-            </svg>
-            <div>City Analysis</div>
-          </div>
-          <div className="nav-item" onClick={() => router.push('/dashboard')}>
-            <svg className="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd"/>
-              <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
-            </svg>
-            <div>Property Reports</div>
-          </div>
-          <div className="nav-item" onClick={() => router.push('/deals')}>
-            <svg className="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd"/>
-            </svg>
-            <div>Weekly Deals</div>
-          </div>
+        <nav className="menu">
+          {MENU_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={item.id === "analysis" ? "page" : undefined}
+              className={`menu-item ${
+                item.id === "analysis" ? "active" : ""
+              }`}
+              onClick={() => handleSectionChange(item)}
+            >
+              <span className="menu-icon" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="menu-text">{item.label}</span>
+            </button>
+          ))}
         </nav>
 
-        <div className="sidebar-footer">
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
+        <div className="logout-section">
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
-      </div>
+      </aside>
 
-      <div className="main-content">
+      <div
+        className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
+        onClick={closeSidebar}
+      />
+
+      <main className="main-content">
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          onClick={toggleSidebar}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
         <div className="top-bar">
           <div className="top-bar-left">
             <select className="filter-select">
@@ -417,7 +479,7 @@ export default function CityAnalysisPage() {
             <button className="contact-cta" onClick={handleContactUs}>Contact Us</button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
