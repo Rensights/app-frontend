@@ -240,7 +240,7 @@ export default function AnalysisRequestPage() {
       <div className="container">
         <header className="header">
           <div className="header-left">
-            <button className="back-btn">← Back to Dashboard</button>
+            <button className="back-btn" onClick={() => router.push('/dashboard')}>← Back to Dashboard</button>
             <div className="logo">Rensights</div>
             <div className="page-title">Property Price Analysis Request</div>
           </div>
