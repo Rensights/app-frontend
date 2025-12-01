@@ -142,31 +142,16 @@ export default function DashboardPage() {
       />
 
       <main className="main-content">
-        <header className="header">
-          <button
-            className="menu-toggle"
-            type="button"
-            aria-label="Toggle navigation"
-            onClick={toggleSidebar}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-          <div>
-            <div className="welcome-title">Welcome back!</div>
-            <div className="welcome-subtitle">
-              Access your Dubai property intelligence tools from the menu
-            </div>
-            {subscription && subscriptionBadgeStyle && (
-              <div className="subscription-badge" style={subscriptionBadgeStyle}>
-                {subscription.planType === 'FREE' && '⚠️ Free Tier - Upgrade to unlock premium features'}
-                {subscription.planType === 'PREMIUM' && '⭐ Premium Plan'}
-                {subscription.planType === 'ENTERPRISE' && '💎 Enterprise Plan'}
-              </div>
-            )}
-          </div>
-        </header>
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          onClick={toggleSidebar}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
 
         <section
           className={`content-section ${
