@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import "../dashboard/dashboard.css";
@@ -119,7 +119,7 @@ const comparableTransactions = [
   },
 ];
 
-export default function PropertyDetailsPage() {
+function PropertyDetailsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -499,6 +499,18 @@ export default function PropertyDetailsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function PropertyDetailsPage() {
+  return (
+    <Suspense fallback={
+      <div className="dashboard-page">
+        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+      </div>
+    }>
+      <PropertyDetailsPageContent />
+    </Suspense>
   );
 }
 
