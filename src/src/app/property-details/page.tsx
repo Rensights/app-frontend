@@ -250,8 +250,8 @@ function PropertyDetailsPageContent() {
             <div className="verified-badge">Verified Listing</div>
           </header>
 
-        <div className="main-content">
-          <div className="property-overview">
+          <div className="main-content">
+            <div className="property-overview">
             <div className="property-header">
               <h1 className="property-title">Marina Pinnacle Tower</h1>
               <p className="property-location">Dubai Marina, Dubai</p>
@@ -503,6 +503,7 @@ function PropertyDetailsPageContent() {
               </p>
             </div>
           </aside>
+          </div>
         </div>
       </main>
     </div>
