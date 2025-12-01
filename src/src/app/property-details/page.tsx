@@ -504,7 +504,6 @@ function PropertyDetailsPageContent() {
             </div>
           </aside>
         </div>
-        </div>
       </main>
     </div>
   );
