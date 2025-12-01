@@ -34,6 +34,17 @@ export default function CityAnalysisPage() {
     alert('Contact Form\n\nOur team will get back to you within 24 hours.\n\nEmail: support@rensight.com\nPhone: +971 4 XXX XXXX');
   };
 
+  const handleFilterClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const clickedPill = e.currentTarget;
+    const parent = clickedPill.parentElement;
+    if (parent) {
+      parent.querySelectorAll('.filter-pill').forEach((pill) => {
+        pill.classList.remove('active');
+      });
+      clickedPill.classList.add('active');
+    }
+  };
+
   return (
     <div className="city-analysis-page">
       <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
@@ -168,10 +179,10 @@ export default function CityAnalysisPage() {
                 Dubai Properties Analysis by Areas
               </h3>
               <div className="section-filters">
-                <div className="filter-pill active">All Dubai</div>
-                <div className="filter-pill">Marina</div>
-                <div className="filter-pill">Downtown</div>
-                <div className="filter-pill">Business Bay</div>
+                <div className="filter-pill active" onClick={handleFilterClick}>All Dubai</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Marina</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Downtown</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Business Bay</div>
               </div>
             </div>
             <div className="section-content">
@@ -208,9 +219,9 @@ export default function CityAnalysisPage() {
                 Dubai Properties Analysis by Property Types
               </h3>
               <div className="section-filters">
-                <div className="filter-pill active">All Types</div>
-                <div className="filter-pill">Off-Plan</div>
-                <div className="filter-pill">Ready</div>
+                <div className="filter-pill active" onClick={handleFilterClick}>All Types</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Off-Plan</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Ready</div>
               </div>
             </div>
             <div className="section-content">
@@ -247,10 +258,10 @@ export default function CityAnalysisPage() {
                 Dubai Properties Analysis by Size
               </h3>
               <div className="section-filters">
-                <div className="filter-pill active">All Sizes</div>
-                <div className="filter-pill">Studio</div>
-                <div className="filter-pill">1-Bed</div>
-                <div className="filter-pill">2-Bed</div>
+                <div className="filter-pill active" onClick={handleFilterClick}>All Sizes</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Studio</div>
+                <div className="filter-pill" onClick={handleFilterClick}>1-Bed</div>
+                <div className="filter-pill" onClick={handleFilterClick}>2-Bed</div>
               </div>
             </div>
             <div className="section-content">
@@ -287,9 +298,9 @@ export default function CityAnalysisPage() {
                 Which Property or Project to Buy?
               </h3>
               <div className="section-filters">
-                <div className="filter-pill active">All Recommendations</div>
-                <div className="filter-pill">High ROI</div>
-                <div className="filter-pill">Near Metro</div>
+                <div className="filter-pill active" onClick={handleFilterClick}>All Recommendations</div>
+                <div className="filter-pill" onClick={handleFilterClick}>High ROI</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Near Metro</div>
               </div>
             </div>
             <div className="section-content">
@@ -327,9 +338,9 @@ export default function CityAnalysisPage() {
                 Price Negotiation Intelligence
               </h3>
               <div className="section-filters">
-                <div className="filter-pill active">All Markets</div>
-                <div className="filter-pill">Off-Plan</div>
-                <div className="filter-pill">Resale</div>
+                <div className="filter-pill active" onClick={handleFilterClick}>All Markets</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Off-Plan</div>
+                <div className="filter-pill" onClick={handleFilterClick}>Resale</div>
               </div>
             </div>
             <div className="section-content">
@@ -367,10 +378,10 @@ export default function CityAnalysisPage() {
                 Overall Analysis by Investor Budget
               </h3>
               <div className="section-filters">
-                <div className="filter-pill active">All Budgets</div>
-                <div className="filter-pill">&lt;800K</div>
-                <div className="filter-pill">800K-1.5M</div>
-                <div className="filter-pill">&gt;3M</div>
+                <div className="filter-pill active" onClick={handleFilterClick}>All Budgets</div>
+                <div className="filter-pill" onClick={handleFilterClick}>&lt;800K</div>
+                <div className="filter-pill" onClick={handleFilterClick}>800K-1.5M</div>
+                <div className="filter-pill" onClick={handleFilterClick}>&gt;3M</div>
               </div>
             </div>
             <div className="section-content">
