@@ -250,7 +250,7 @@ function PropertyDetailsPageContent() {
             <div className="verified-badge">Verified Listing</div>
           </header>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr", gap: "30px" }}>
+          <div className="property-content-grid">
             <div className="property-overview">
             <div className="property-header">
               <h1 className="property-title">Marina Pinnacle Tower</h1>
