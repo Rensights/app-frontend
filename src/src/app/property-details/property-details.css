@@ -554,7 +554,7 @@
 }
 
 @media (max-width: 768px) {
-  .main-content {
+  .property-content-grid {
     grid-template-columns: 1fr;
   }
 
