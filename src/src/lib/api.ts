@@ -480,6 +480,8 @@ export interface Deal {
   size: string;
   listedPrice: string;
   priceValue: number;
+  estimateMin?: number;
+  estimateMax?: number;
   estimateRange?: string;
   discount?: string;
   rentalYield?: string;
