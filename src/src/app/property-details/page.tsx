@@ -15,110 +15,6 @@ const MENU_ITEMS = [
 
 type TabId = "listed" | "transactions";
 
-const comparableListed = [
-  {
-    title: "Marina Gate Tower",
-    details: "1BR • 720 sq ft • Marina Views",
-    price: "AED 1,650,000",
-    psf: "AED 2,292/sq ft",
-    status: "Listed 8 days ago",
-  },
-  {
-    title: "Torch Tower Residence",
-    details: "1BR • 780 sq ft • City Views",
-    price: "AED 1,580,000",
-    psf: "AED 2,026/sq ft",
-    status: "Listed 12 days ago",
-  },
-  {
-    title: "Marina Walk Apartment",
-    details: "1BR • 695 sq ft • Waterfront",
-    price: "AED 1,750,000",
-    psf: "AED 2,518/sq ft",
-    status: "Listed 5 days ago",
-  },
-  {
-    title: "Al Sahab Tower",
-    details: "1BR • 755 sq ft • Partial Sea View",
-    price: "AED 1,690,000",
-    psf: "AED 2,238/sq ft",
-    status: "Listed 15 days ago",
-  },
-  {
-    title: "Marina Diamond",
-    details: "1BR • 765 sq ft • Full Marina View",
-    price: "AED 1,895,000",
-    psf: "AED 2,477/sq ft",
-    status: "Listed 3 days ago",
-  },
-  {
-    title: "Silverene Tower",
-    details: "1BR • 740 sq ft • Marina & Sea View",
-    price: "AED 1,785,000",
-    psf: "AED 2,412/sq ft",
-    status: "Listed 7 days ago",
-  },
-];
-
-const comparableTransactions = [
-  {
-    title: "Marina Heights",
-    details: "1BR • 730 sq ft • Marina Views",
-    price: "AED 1,620,000",
-    psf: "AED 2,219/sq ft",
-    status: "Sold 2 months ago",
-  },
-  {
-    title: "Al Majara Residence",
-    details: "1BR • 760 sq ft • Full Sea View",
-    price: "AED 1,850,000",
-    psf: "AED 2,434/sq ft",
-    status: "Sold 1 month ago",
-  },
-  {
-    title: "Marina Pearl",
-    details: "1BR • 715 sq ft • Waterfront Location",
-    price: "AED 1,580,000",
-    psf: "AED 2,210/sq ft",
-    status: "Sold 3 weeks ago",
-  },
-  {
-    title: "Marina Crown",
-    details: "1BR • 785 sq ft • Premium Finishes",
-    price: "AED 1,920,000",
-    psf: "AED 2,446/sq ft",
-    status: "Sold 6 weeks ago",
-  },
-  {
-    title: "Ocean Heights",
-    details: "1BR • 745 sq ft • Iconic Tower",
-    price: "AED 1,680,000",
-    psf: "AED 2,255/sq ft",
-    status: "Sold 8 weeks ago",
-  },
-  {
-    title: "Marina Arcade",
-    details: "1BR • 710 sq ft • Marina Walk",
-    price: "AED 1,595,000",
-    psf: "AED 2,246/sq ft",
-    status: "Sold 10 weeks ago",
-  },
-  {
-    title: "Emirates Crown",
-    details: "1BR • 770 sq ft • Premium Location",
-    price: "AED 1,750,000",
-    psf: "AED 2,273/sq ft",
-    status: "Sold 12 weeks ago",
-  },
-  {
-    title: "Marina Quays",
-    details: "1BR • 725 sq ft • Water Views",
-    price: "AED 1,640,000",
-    psf: "AED 2,262/sq ft",
-    status: "Sold 14 weeks ago",
-  },
-];
-
 function PropertyDetailsPageContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -126,7 +22,9 @@ function PropertyDetailsPageContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [deal, setDeal] = useState<Deal | null>(null);
+  const [comparableDeals, setComparableDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingComparables, setLoadingComparables] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("listed");
   const propertyId = searchParams.get("id");
@@ -142,6 +40,31 @@ function PropertyDetailsPageContent() {
       setError(null);
       const dealData = await apiClient.getDealById(propertyId);
       setDeal(dealData);
+      
+      // Load comparable deals (similar area and bedrooms, excluding current deal)
+      if (dealData) {
+        setLoadingComparables(true);
+        try {
+          const comparablesResponse = await apiClient.getDeals(
+            0,
+            10,
+            dealData.city,
+            dealData.area,
+            dealData.bedroomCount,
+            undefined
+          );
+          // Filter out the current deal and limit to 8
+          const filtered = comparablesResponse.content
+            .filter(d => d.id !== dealData.id)
+            .slice(0, 8);
+          setComparableDeals(filtered);
+        } catch (err) {
+          console.error("Error loading comparable deals:", err);
+          // Don't fail the whole page if comparables fail
+        } finally {
+          setLoadingComparables(false);
+        }
+      }
     } catch (error: any) {
       console.error("Error loading deal:", error);
       setError(error.message || "Failed to load property details");
@@ -469,19 +392,29 @@ function PropertyDetailsPageContent() {
                   tab === "listed" ? "active" : ""
                 }`}
               >
-                {comparableListed.map((item) => (
-                  <ComparableCard key={item.title} {...item} />
-                ))}
-              </div>
-
-              <div
-                className={`tab-content comparable-section ${
-                  tab === "transactions" ? "active" : ""
-                }`}
-              >
-                {comparableTransactions.map((item) => (
-                  <ComparableCard key={item.title} {...item} sold />
-                ))}
+                {loadingComparables ? (
+                  <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
+                    Loading similar properties...
+                  </div>
+                ) : comparableDeals.length === 0 ? (
+                  <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
+                    No similar properties found.
+                  </div>
+                ) : (
+                  comparableDeals.map((item) => {
+                    const psf = item.priceValue / parseFloat(item.size.replace(/[^0-9]/g, ""));
+                    return (
+                      <ComparableCard
+                        key={item.id}
+                        title={item.name}
+                        details={`${item.bedrooms} • ${item.size} • ${item.location}`}
+                        price={item.listedPrice}
+                        psf={`AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`}
+                        status="Available"
+                      />
+                    );
+                  })
+                )}
               </div>
 
             <button
@@ -496,76 +429,84 @@ function PropertyDetailsPageContent() {
             <div className="sidebar-card">
               <div className="card-title">
                 <div className="card-icon">⭐</div>
-                Rensights Score & Investment Appeal
+                Investment Analysis
               </div>
 
               <div className="score-section">
-                <div className="score-value">
-                  8.7<span>/10</span>
-                </div>
-                <div className="score-subtitle">
-                  Excellent Investment Opportunity
-                </div>
-                <p>
-                  Based on price analysis, market trends, location score, rental
-                  potential, and liquidity in Dubai Marina market.
-                </p>
-                <div className="score-breakdown">
-                  <p>
-                    <strong>Market Position:</strong> Top 8% of 1BR units in
-                    Dubai Marina
-                  </p>
-                  <p>
-                    <strong>Dubai Comparison:</strong> Only 156 1BR units
-                    scoring 8.5+ available citywide
-                  </p>
-                  <p>
-                    <strong>Price Range:</strong> 1 of 12 high-scoring
-                    properties under AED 1.5M
-                  </p>
-                </div>
+                {deal.discount && (
+                  <>
+                    <div className="score-value">
+                      {discountPercent.toFixed(1)}%<span> Below Market</span>
+                    </div>
+                    <div className="score-subtitle">
+                      {discountPercent >= 15 ? "Excellent" : discountPercent >= 10 ? "Good" : "Fair"} Investment Opportunity
+                    </div>
+                    <p>
+                      Based on price analysis, market trends, location score, rental
+                      potential, and liquidity in {deal.location} market.
+                    </p>
+                    <div className="score-breakdown">
+                      <p>
+                        <strong>Listed Price:</strong> {deal.listedPrice}
+                      </p>
+                      {deal.estimateRange && (
+                        <p>
+                          <strong>Market Estimate:</strong> {deal.estimateRange}
+                        </p>
+                      )}
+                      {savingsMin > 0 && savingsMax > 0 && (
+                        <p>
+                          <strong>Potential Savings:</strong> AED {savingsMin.toLocaleString()} - {savingsMax.toLocaleString()}
+                        </p>
+                      )}
+                      {deal.rentalYield && (
+                        <p>
+                          <strong>Rental Yield:</strong> {deal.rentalYield}
+                        </p>
+                      )}
+                    </div>
 
-                <ul className="score-components">
-                  <li>
-                    <span>Location & Transport</span>
-                    <strong>9.3/10</strong>
-                  </li>
-                  <li>
-                    <span>Price vs Market</span>
-                    <strong>9.1/10</strong>
-                  </li>
-                  <li>
-                    <span>Rental Potential</span>
-                    <strong>8.4/10</strong>
-                  </li>
-                  <li>
-                    <span>Liquidity Score</span>
-                    <strong>8.2/10</strong>
-                  </li>
-                </ul>
+                    <ul className="score-components">
+                      <li>
+                        <span>Price vs Market</span>
+                        <strong>{discountPercent.toFixed(1)}%</strong>
+                      </li>
+                      {deal.rentalYield && (
+                        <li>
+                          <span>Rental Yield</span>
+                          <strong>{deal.rentalYield}</strong>
+                        </li>
+                      )}
+                      <li>
+                        <span>Building Status</span>
+                        <strong>{deal.buildingStatus === "READY" ? "Ready" : "Off-Plan"}</strong>
+                      </li>
+                    </ul>
+                  </>
+                )}
               </div>
 
-              <div className="investment-metrics">
-                <div className="metric-box">
-                  <div>7.8%</div>
-                  <span>Rental Yield</span>
+              {deal.rentalYield && (
+                <div className="investment-metrics">
+                  <div className="metric-box">
+                    <div>{deal.rentalYield}</div>
+                    <span>Rental Yield</span>
+                  </div>
+                  <div className="metric-box">
+                    <div>{deal.listedPrice}</div>
+                    <span>Listed Price</span>
+                  </div>
+                  <div className="metric-box wide">
+                    <div>{deal.location}</div>
+                    <span>Location</span>
+                  </div>
                 </div>
-                <div className="metric-box">
-                  <div>AED 90K</div>
-                  <span>Annual Rent</span>
-                </div>
-                <div className="metric-box wide">
-                  <div>Dubai Mall</div>
-                  <span>Nearest Landmark</span>
-                </div>
-              </div>
+              )}
 
               <p className="benefits-text">
-                <strong>Key Benefits:</strong> Premium Dubai Marina location
-                with direct beach access and Metro connectivity. High rental
-                demand from professionals working in DIFC and Downtown Dubai.
-                Modern building with luxury amenities including infinity pool,
-                world-class gym, and 24/7 concierge services.
+                <strong>Key Benefits:</strong> Property located in {deal.location}, {deal.city}. 
+                {deal.buildingStatus === "READY" ? " Ready property allows immediate occupancy and rental income." : " Off-plan property offers potential for capital appreciation."}
+                {deal.rentalYield && ` Rental yield of ${deal.rentalYield} provides attractive returns for investors.`}
               </p>
             </div>
           </div>
