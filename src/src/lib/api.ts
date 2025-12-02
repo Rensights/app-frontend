@@ -451,6 +451,47 @@ class ApiClient {
   async getMarketInsights(): Promise<any> {
     return this.request<any>('/dashboard/insights');
   }
+
+  // Deal endpoints
+  async getDeals(page: number = 0, size: number = 20, city?: string, area?: string, bedroomCount?: string, buildingStatus?: string): Promise<PaginatedDealResponse> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('size', size.toString());
+    if (city) params.append('city', city);
+    if (area) params.append('area', area);
+    if (bedroomCount) params.append('bedroomCount', bedroomCount);
+    if (buildingStatus) params.append('buildingStatus', buildingStatus);
+    return this.request<PaginatedDealResponse>(`/api/deals?${params.toString()}`, {}, true);
+  }
+
+  async getDealById(dealId: string): Promise<Deal> {
+    return this.request<Deal>(`/api/deals/${dealId}`, {}, true);
+  }
+}
+
+export interface Deal {
+  id: string;
+  name: string;
+  location: string;
+  city: string;
+  area: string;
+  bedrooms: string;
+  bedroomCount?: string;
+  size: string;
+  listedPrice: string;
+  priceValue: number;
+  estimateRange?: string;
+  discount?: string;
+  rentalYield?: string;
+  buildingStatus: string;
+}
+
+export interface PaginatedDealResponse {
+  content: Deal[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
 }
 
 // Create API client - URL will be read lazily from window.__API_URL__ at request time
