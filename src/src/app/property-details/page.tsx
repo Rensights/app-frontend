@@ -375,15 +375,7 @@ function PropertyDetailsPageContent() {
                   className={`tab-button ${tab === "listed" ? "active" : ""}`}
                   onClick={() => setTab("listed")}
                 >
-                  Listed Deals (6)
-                </button>
-                <button
-                  className={`tab-button ${
-                    tab === "transactions" ? "active" : ""
-                  }`}
-                  onClick={() => setTab("transactions")}
-                >
-                  Recent Sales (8)
+                  Similar Deals ({comparableDeals.length})
                 </button>
               </div>
 
