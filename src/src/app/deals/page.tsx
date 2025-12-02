@@ -373,13 +373,13 @@ export default function DealsPage() {
                     <div className="price-current">{deal.listedPrice}</div>
                   </td>
                   <td>
-                    <div className="price-estimate">{deal.estimateRange}</div>
+                      <div className="price-estimate">{deal.estimateRange || "N/A"}</div>
                   </td>
                   <td>
-                    <span className="delta-positive">-{deal.discount}</span>
+                      <span className="delta-positive">-{deal.discount || "N/A"}</span>
                   </td>
                   <td>
-                    <span className="yield-info">{deal.rentalYield}</span>
+                      <span className="yield-info">{deal.rentalYield || "N/A"}</span>
                   </td>
                   <td>
                     <button
@@ -393,7 +393,8 @@ export default function DealsPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
 
