@@ -67,3 +67,5 @@ echo "4. Kong can reach service: kubectl exec -n <kong-ns> <kong-pod> -- curl ht
 
 
 
+
+

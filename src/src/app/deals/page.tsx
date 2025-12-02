@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { apiClient, Deal, PaginatedDealResponse } from "@/lib/api";
 import "../dashboard/dashboard.css";
 import "./deals.css";
@@ -15,6 +15,7 @@ const MENU_ITEMS = [
 
 export default function DealsPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -69,11 +70,11 @@ export default function DealsPage() {
       }
     };
     loadUser();
-  }, [router]);
+  }, [pathname, router]);
 
   useEffect(() => {
     loadDeals();
-  }, [loadDeals]);
+  }, [pathname, loadDeals]);
 
   const handleLogout = useCallback(() => {
     apiClient.logout();

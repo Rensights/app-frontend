@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import "../dashboard/dashboard.css";
 import "./city-analysis.css";
@@ -15,6 +15,7 @@ const MENU_ITEMS = [
 
 export default function CityAnalysisPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,7 @@ export default function CityAnalysisPage() {
       }
     };
     loadUser();
-  }, [router]);
+  }, [pathname, router]);
 
   const handleLogout = useCallback(() => {
     apiClient.logout();

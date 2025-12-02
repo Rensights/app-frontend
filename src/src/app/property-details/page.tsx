@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { apiClient } from "@/lib/api";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { apiClient, Deal } from "@/lib/api";
 import "../dashboard/dashboard.css";
 import "./property-details.css";
 
@@ -121,12 +121,34 @@ const comparableTransactions = [
 
 function PropertyDetailsPageContent() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [deal, setDeal] = useState<Deal | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("listed");
   const propertyId = searchParams.get("id");
+
+  const loadDeal = useCallback(async () => {
+    if (!propertyId) {
+      setError("Property ID is required");
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const dealData = await apiClient.getDealById(propertyId);
+      setDeal(dealData);
+    } catch (error: any) {
+      console.error("Error loading deal:", error);
+      setError(error.message || "Failed to load property details");
+    } finally {
+      setLoading(false);
+    }
+  }, [propertyId]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -135,12 +157,16 @@ function PropertyDetailsPageContent() {
         setUser(userData);
       } catch (error) {
         router.push("/");
-      } finally {
-        setLoading(false);
       }
     };
     loadUser();
-  }, [router]);
+  }, [pathname, router]);
+
+  useEffect(() => {
+    if (propertyId) {
+      loadDeal();
+    }
+  }, [pathname, propertyId, loadDeal]);
 
   const handleLogout = useCallback(() => {
     apiClient.logout();
@@ -177,11 +203,42 @@ function PropertyDetailsPageContent() {
           </div>
         </aside>
         <main className="main-content">
-          <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+          <div style={{ padding: "2rem", textAlign: "center" }}>
+            Loading property details...
+          </div>
         </main>
       </div>
     );
   }
+
+  if (error || !deal) {
+    return (
+      <div className="dashboard-page property-page">
+        <aside className="sidebar">
+          <div className="logo-section">
+            <div className="logo">Rensights</div>
+            <div className="logo-subtitle">Dubai Property Intelligence</div>
+          </div>
+        </aside>
+        <main className="main-content">
+          <div style={{ padding: "2rem", textAlign: "center" }}>
+            <p style={{ color: "#c33", marginBottom: "1rem" }}>
+              {error || "Property not found"}
+            </p>
+            <button onClick={() => router.push("/deals")} style={{ padding: "10px 20px", background: "#f39c12", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}>
+              Back to Deals
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Calculate derived values from deal data
+  const pricePerSqft = deal.priceValue / parseFloat(deal.size.replace(/[^0-9]/g, ""));
+  const savingsMin = deal.estimateMin ? deal.estimateMin - deal.priceValue : 0;
+  const savingsMax = deal.estimateMax ? deal.estimateMax - deal.priceValue : 0;
+  const discountPercent = deal.discount ? parseFloat(deal.discount.replace("%", "")) : 0;
 
   return (
     <div className="dashboard-page property-page">
@@ -250,22 +307,30 @@ function PropertyDetailsPageContent() {
             <div className="verified-badge">Verified Listing</div>
           </header>
 
+          {error && (
+            <div style={{ padding: "1rem", background: "#fee", color: "#c33", borderRadius: "8px", marginBottom: "1rem" }}>
+              {error}
+            </div>
+          )}
+
           <div className="property-content-grid">
             <div className="property-overview">
             <div className="property-header">
-              <h1 className="property-title">Marina Pinnacle Tower</h1>
-              <p className="property-location">Dubai Marina, Dubai</p>
-              <div className="discount-highlight">
-                18.2% Below Market Value
-              </div>
+              <h1 className="property-title">{deal.name || "Property"}</h1>
+              <p className="property-location">{deal.location}, {deal.city}</p>
+              {deal.discount && (
+                <div className="discount-highlight">
+                  {deal.discount} Below Market Value
+                </div>
+              )}
             </div>
 
             <section className="key-metrics">
               {[
-                { value: "1BR", label: "Bedrooms" },
-                { value: "750", label: "sq ft" },
-                { value: "Ready", label: "Handover" },
-                { value: "7.8%", label: "Rental Yield" },
+                { value: deal.bedrooms || "N/A", label: "Bedrooms" },
+                { value: deal.size || "N/A", label: "Size" },
+                { value: deal.buildingStatus === "READY" ? "Ready" : "Off-Plan", label: "Handover" },
+                { value: deal.rentalYield || "N/A", label: "Rental Yield" },
               ].map((metric) => (
                 <div key={metric.label} className="metric-card">
                   <div className="metric-value">{metric.value}</div>
@@ -279,26 +344,28 @@ function PropertyDetailsPageContent() {
               <div className="price-grid">
                 <div className="price-section">
                   <div className="price-label">Listed Price</div>
-                  <div className="price-value">AED 1,450,000</div>
+                  <div className="price-value">{deal.listedPrice || "N/A"}</div>
                 </div>
                 <div className="price-section">
                   <div className="price-label">Our Estimate Range</div>
                   <div className="price-value price-estimate">
-                    AED 1,750,000 - 1,820,000
+                    {deal.estimateRange || "N/A"}
                   </div>
                 </div>
-                <div className="price-section">
-                  <div className="price-label">Potential Savings</div>
-                  <div className="price-value">
-                    <span className="savings-amount">
-                      AED 300,000 - 370,000
-                    </span>
+                {savingsMin > 0 && savingsMax > 0 && (
+                  <div className="price-section">
+                    <div className="price-label">Potential Savings</div>
+                    <div className="price-value">
+                      <span className="savings-amount">
+                        AED {savingsMin.toLocaleString()} - {savingsMax.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="price-section">
                   <div className="price-label">Price per sq ft</div>
-                  <div className="price-value">AED 1,933 /sq ft</div>
-                  <small>18.2% below market avg</small>
+                  <div className="price-value">AED {pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })} /sq ft</div>
+                  {deal.discount && <small>{deal.discount} below market avg</small>}
                 </div>
               </div>
             </section>
@@ -307,27 +374,25 @@ function PropertyDetailsPageContent() {
               <h3>Property Description</h3>
               <div className="description-card">
                 <p>
-                  This modern 1-bedroom apartment offers luxurious living in the
-                  heart of Dubai Marina. The unit features floor-to-ceiling
-                  windows with stunning marina views, premium finishes, and an
-                  efficient layout that maximizes the 750 sq ft space. The
-                  property boasts breathtaking water and city views with
-                  abundant natural light throughout the day.
+                  This {deal.bedrooms?.toLowerCase() || "property"} offers luxurious living in the
+                  heart of {deal.location}. The unit features premium finishes and an
+                  efficient layout that maximizes the {deal.size} space. The
+                  property is located in {deal.area} area of {deal.city}.
                 </p>
                 <div className="description-grid">
                   <DescriptionStat
                     label="Price per sq ft:"
-                    value="AED 1,933/sq ft"
+                    value={`AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`}
                   />
                   <DescriptionStat
-                    label="Building Features:"
-                    value="Concierge, Gym, Pool, Spa"
+                    label="Building Status:"
+                    value={deal.buildingStatus === "READY" ? "Ready" : "Off-Plan"}
                   />
                   <DescriptionStat
-                    label="Service Charge:"
-                    value="AED 18/sq ft annually"
+                    label="Listed Price:"
+                    value={deal.listedPrice || "N/A"}
                   />
-                  <DescriptionStat label="Developer:" value="Emaar Properties" />
+                  <DescriptionStat label="Rental Yield:" value={deal.rentalYield || "N/A"} />
                 </div>
                 <div className="description-footer">
                   <button
@@ -344,12 +409,13 @@ function PropertyDetailsPageContent() {
               <h3>Market Comparison</h3>
               {[
                 {
-                  label: "Average 1BR Price (Dubai Marina)",
-                  value: "AED 2,360/sq ft",
+                  label: `This Property (${deal.bedrooms})`,
+                  value: `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`,
                 },
-                { label: "This Property", value: "AED 1,933/sq ft" },
-                { label: "Market Position", value: "18.2% Below Average" },
-                { label: "Rental Yield Estimate", value: "7.2% - 8.1%" },
+                { label: "Listed Price", value: deal.listedPrice || "N/A" },
+                { label: "Market Position", value: deal.discount ? `${deal.discount} Below Average` : "N/A" },
+                { label: "Rental Yield", value: deal.rentalYield || "N/A" },
+                { label: "Estimate Range", value: deal.estimateRange || "N/A" },
               ].map((row) => (
                 <div key={row.label} className="comparison-row">
                   <span className="comparison-label">{row.label}</span>

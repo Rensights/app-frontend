@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import "./dashboard.css";
 
@@ -14,6 +14,7 @@ const MENU_ITEMS = [
 
 export default function DashboardPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>("analysis");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -38,7 +39,7 @@ export default function DashboardPage() {
       }
     };
     loadUser();
-  }, [router]);
+  }, [pathname, router]);
   
   // Optimized: Memoize handlers
   const handleSectionChange = useCallback((sectionId: string) => {
