@@ -338,7 +338,26 @@ export default function DealsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredDeals.map((deal) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "2rem" }}>
+                    Loading deals...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "2rem", color: "#c33" }}>
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredDeals.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "2rem" }}>
+                    No deals found matching your filters.
+                  </td>
+                </tr>
+              ) : (
+                filteredDeals.map((deal) => (
                 <tr key={deal.id} onClick={() => handleViewDetails(deal.id)}>
                   <td>
                     <div className="property-name">{deal.name}</div>
