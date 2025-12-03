@@ -82,3 +82,11 @@ echo ""
 echo "=== ✅ If endpoints show addresses above, Kong should now work ==="
 echo "=== Test frontend at: http://dev.72.62.40.154.nip.io:31416 ==="
 
+
+
+
+
+
+
+
+

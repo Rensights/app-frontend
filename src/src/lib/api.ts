@@ -1,28 +1,34 @@
-// API URL - embedded at build time via Docker build arg
-// Next.js replaces process.env.NEXT_PUBLIC_API_URL with actual value during build
-// This MUST be set as a build arg: --build-arg NEXT_PUBLIC_API_URL=...
-// Use NEXT_PUBLIC_API_URL directly (Next.js will replace it at build time)
+// API URL - can be set at build time OR runtime
+// Runtime: Injected via window.__API_URL__ from server-side (Kubernetes secret)
+// Build time: NEXT_PUBLIC_API_URL (Next.js replaces it at build time)
+// Priority: window.__API_URL__ (runtime) > process.env.NEXT_PUBLIC_API_URL (build time)
 const getApiUrlFromEnv = (): string => {
   // Check if we're in browser/client-side
   if (typeof window !== 'undefined') {
-    // Client-side: Next.js replaces process.env.NEXT_PUBLIC_API_URL with actual value at build time
-    // Access via process.env.NEXT_PUBLIC_API_URL (Next.js will inline the value)
-    const url = process.env.NEXT_PUBLIC_API_URL;
-    if (!url || url === '') {
-      // During build, this might be empty - use a fallback or allow empty for now
-      // The actual value will be injected at build time if provided
-      console.warn('NEXT_PUBLIC_API_URL is not set or empty. Using fallback or will be set at build time.');
-      // Return empty string during build, will be replaced by Next.js if set
-      return url || '';
+    // Client-side: First check for runtime-injected value (from Kubernetes secret)
+    const runtimeUrl = (window as any).__API_URL__;
+    if (runtimeUrl && runtimeUrl !== '') {
+      return runtimeUrl;
     }
-    return url;
+    
+    // Fallback to build-time value (Next.js replaced process.env.NEXT_PUBLIC_API_URL)
+    const buildTimeUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (buildTimeUrl && buildTimeUrl !== '') {
+      return buildTimeUrl;
+    }
+    
+    // Neither runtime nor build-time URL available
+    console.warn('NEXT_PUBLIC_API_URL is not set. Check Kubernetes secret configuration.');
+    return '';
   } else {
     // Server-side: Read from process.env (available at runtime from Kubernetes secret)
-    const url = process.env.NEXT_PUBLIC_API_URL;
+    // Try API_URL first (regular env var, available at runtime), then NEXT_PUBLIC_API_URL
+    const url = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
     if (!url || url === '') {
-      // Server-side: Try to get from environment or use a default
-      console.warn('NEXT_PUBLIC_API_URL is not set on server-side. Check Kubernetes secret configuration.');
-      return url || '';
+      console.warn('API_URL or NEXT_PUBLIC_API_URL is not set on server-side. Check Kubernetes secret configuration.');
+      console.warn('API_URL:', process.env.API_URL);
+      console.warn('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+      return '';
     }
     return url;
   }
@@ -157,7 +163,12 @@ class ApiClient {
             error = { error: errorText || `Request failed with status ${response.status}` };
           }
           console.error(`API Error [${response.status}]: ${endpoint}`, error);
-          throw new Error(error.error || error.message || `Request failed with status ${response.status}`);
+          // Handle different error response formats
+          const errorMessage = error.error || error.message || error.details || errorText || `Request failed with status ${response.status}`;
+          const apiError = new Error(errorMessage);
+          (apiError as any).status = response.status;
+          (apiError as any).response = error;
+          throw apiError;
         }
         return response.json();
       })
@@ -317,6 +328,28 @@ class ApiClient {
     });
   }
 
+  // Password reset endpoints
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async verifyResetCode(email: string, code: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/verify-reset-code', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, newPassword }),
+    });
+  }
+
   // User endpoints - Optimized: Enable caching for GET requests
   async getCurrentUser(): Promise<UserResponse> {
     return this.request<UserResponse>('/users/me', {}, true);
@@ -368,6 +401,42 @@ class ApiClient {
     });
   }
 
+  // Analysis request endpoints
+  async submitAnalysisRequest(formData: FormData): Promise<{ message: string }> {
+    const apiUrl = this.baseUrl || this.getApiUrl();
+    const url = `${apiUrl}/api/analysis-requests`;
+    
+    const headers: Record<string, string> = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    // Don't set Content-Type for FormData - browser will set it with boundary
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      let error;
+      try {
+        error = JSON.parse(errorText);
+      } catch {
+        error = { error: errorText || `Request failed with status ${response.status}` };
+      }
+      console.error(`API Error [${response.status}]: /api/analysis-requests`, error);
+      const errorMessage = error.error || error.message || error.details || errorText || `Request failed with status ${response.status}`;
+      const apiError = new Error(errorMessage);
+      (apiError as any).status = response.status;
+      (apiError as any).response = error;
+      throw apiError;
+    }
+    
+    return response.json();
+  }
+
   async checkoutSuccess(sessionId: string): Promise<SubscriptionResponse> {
     return this.request<SubscriptionResponse>(`/api/subscriptions/checkout-success?session_id=${sessionId}`, {
       method: 'GET',
@@ -382,6 +451,49 @@ class ApiClient {
   async getMarketInsights(): Promise<any> {
     return this.request<any>('/dashboard/insights');
   }
+
+  // Deal endpoints
+  async getDeals(page: number = 0, size: number = 20, city?: string, area?: string, bedroomCount?: string, buildingStatus?: string): Promise<PaginatedDealResponse> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('size', size.toString());
+    if (city) params.append('city', city);
+    if (area) params.append('area', area);
+    if (bedroomCount) params.append('bedroomCount', bedroomCount);
+    if (buildingStatus) params.append('buildingStatus', buildingStatus);
+    return this.request<PaginatedDealResponse>(`/api/deals?${params.toString()}`, {}, true);
+  }
+
+  async getDealById(dealId: string): Promise<Deal> {
+    return this.request<Deal>(`/api/deals/${dealId}`, {}, true);
+  }
+}
+
+export interface Deal {
+  id: string;
+  name: string;
+  location: string;
+  city: string;
+  area: string;
+  bedrooms: string;
+  bedroomCount?: string;
+  size: string;
+  listedPrice: string;
+  priceValue: number;
+  estimateMin?: number;
+  estimateMax?: number;
+  estimateRange?: string;
+  discount?: string;
+  rentalYield?: string;
+  buildingStatus: string;
+}
+
+export interface PaginatedDealResponse {
+  content: Deal[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
 }
 
 // Create API client - URL will be read lazily from window.__API_URL__ at request time

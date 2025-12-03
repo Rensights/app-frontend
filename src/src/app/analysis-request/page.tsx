@@ -1,14 +1,16 @@
 "use client";
 
- 
-
 import { useEffect, useMemo, useRef, useState } from "react";
-import Script from "next/script";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api";
 import "./analysis-request.css";
 
-declare const google: any;
+// Dynamically import Leaflet to avoid SSR issues
+const MapComponent = dynamic(() => import("./MapComponent"), { ssr: false });
 
 type FormState = {
+  email: string;
   city: string;
   area: string;
   buildingName: string;
@@ -32,6 +34,7 @@ type FormState = {
 };
 
 const initialFormState: FormState = {
+  email: "",
   city: "",
   area: "",
   buildingName: "",
@@ -71,14 +74,13 @@ const defaultCenters = {
 };
 
 export default function AnalysisRequestPage() {
+  const router = useRouter();
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [features, setFeatures] = useState<string[]>([]);
   const [filesMessage, setFilesMessage] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mapRef = useRef<HTMLDivElement | null>(null);
-  const mapInstance = useRef<any>(null);
-  const markerRef = useRef<any>(null);
   const [coordinates, setCoordinates] = useState<{ lat: string; lng: string } | null>(null);
 
   const plotVisible = useMemo(
@@ -86,43 +88,16 @@ export default function AnalysisRequestPage() {
     [formState.propertyType]
   );
 
-  const handleScriptLoad = () => {
-    if (!mapRef.current || typeof google === "undefined") return;
-    mapInstance.current = new google.maps.Map(mapRef.current, {
-      center: defaultCenters.dubai,
-      zoom: 11,
-      mapTypeControl: true,
-      streetViewControl: false,
-    });
-    mapInstance.current.addListener("click", (event: any) => {
-      if (!event.latLng) return;
-      placeMarker(event.latLng);
-    });
-  };
-
-  const placeMarker = (location: { lat: () => number; lng: () => number }) => {
-    if (!mapInstance.current || typeof google === "undefined") return;
-    if (markerRef.current) {
-      markerRef.current.setMap(null);
-    }
-    markerRef.current = new google.maps.Marker({
-      position: location,
-      map: mapInstance.current,
-      animation: google.maps.Animation.DROP,
-    });
-    const lat = location.lat().toFixed(6);
-    const lng = location.lng().toFixed(6);
-    setCoordinates({ lat, lng });
-  };
-
-  useEffect(() => {
-    if (!mapInstance.current || !formState.city) return;
-    const center =
-      defaultCenters[formState.city as keyof typeof defaultCenters] ||
-      defaultCenters.dubai;
-    mapInstance.current.setCenter(center);
-    mapInstance.current.setZoom(11);
+  const currentCenter = useMemo(() => {
+    return defaultCenters[formState.city as keyof typeof defaultCenters] || defaultCenters.dubai;
   }, [formState.city]);
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setCoordinates({
+      lat: lat.toFixed(6),
+      lng: lng.toFixed(6),
+    });
+  };
 
   const handleInputChange = (field: keyof FormState, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
@@ -166,34 +141,106 @@ export default function AnalysisRequestPage() {
     return true;
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validateForm()) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      // Create FormData for multipart/form-data
+      const formData = new FormData();
+      
+      // Get email from form or authenticated user
+      let userEmail = formState.email;
+      
+      // If user is authenticated and email is not provided, try to get from user profile
+      if (!userEmail) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (token) {
+          try {
+            const user = await apiClient.getCurrentUser();
+            userEmail = user.email;
+          } catch (e) {
+            // If not authenticated, email is required from form
+          }
+        }
+      }
+      
+      if (!userEmail) {
+        alert("Please provide your email address");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Add all form fields
+      formData.append('email', userEmail);
+      formData.append('city', formState.city);
+      formData.append('area', formState.area);
+      formData.append('buildingName', formState.buildingName);
+      if (formState.listingUrl) formData.append('listingUrl', formState.listingUrl);
+      formData.append('propertyType', formState.propertyType);
+      formData.append('bedrooms', formState.bedrooms);
+      if (formState.size) formData.append('size', formState.size);
+      if (formState.plotSize) formData.append('plotSize', formState.plotSize);
+      if (formState.floor) formData.append('floor', formState.floor);
+      if (formState.totalFloors) formData.append('totalFloors', formState.totalFloors);
+      formData.append('buildingStatus', formState.buildingStatus);
+      formData.append('condition', formState.condition);
+      
+      if (coordinates) {
+        formData.append('latitude', coordinates.lat);
+        formData.append('longitude', coordinates.lng);
+      }
+      
+      formData.append('askingPrice', formState.askingPrice);
+      if (formState.serviceCharge) formData.append('serviceCharge', formState.serviceCharge);
+      if (formState.handoverDate) formData.append('handoverDate', formState.handoverDate);
+      if (formState.developer) formData.append('developer', formState.developer);
+      if (formState.paymentPlan) formData.append('paymentPlan', formState.paymentPlan);
+      
+      if (features.length > 0) {
+        formData.append('features', JSON.stringify(features));
+      }
+      
+      if (formState.view) formData.append('view', formState.view);
+      if (formState.furnishing) formData.append('furnishing', formState.furnishing);
+      if (formState.additionalNotes) formData.append('additionalNotes', formState.additionalNotes);
+      
+      // Add files if any
+      const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        for (let i = 0; i < fileInput.files.length; i++) {
+          formData.append('files', fileInput.files[i]);
+        }
+      }
+      
+      // Submit to API
+      const response = await apiClient.submitAnalysisRequest(formData);
+      
       alert(
-        "🎉 Your property price analysis request has been submitted successfully!\n\nYou will receive a comprehensive price analysis report via email within 24-48 hours.\n\nThank you for choosing Rensights!"
+        "🎉 " + response.message + "\n\nThank you for choosing Rensights!"
       );
-      setIsSubmitting(false);
+      
+      // Reset form
       setFormState(initialFormState);
       setFeatures([]);
       setFilesMessage("");
       setAgreeTerms(false);
       setCoordinates(null);
-    }, 1500);
+      if (fileInput) fileInput.value = '';
+    } catch (error: any) {
+      alert("❌ Failed to submit request: " + (error.message || "Please try again later."));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="analysis-page">
-      <Script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg"
-        strategy="afterInteractive"
-        onReady={handleScriptLoad}
-      />
       <div className="container">
         <header className="header">
           <div className="header-left">
-            <button className="back-btn">← Back to Dashboard</button>
+            <button className="back-btn" onClick={() => router.push('/dashboard')}>← Back to Dashboard</button>
             <div className="logo">Rensights</div>
             <div className="page-title">Property Price Analysis Request</div>
           </div>
@@ -342,6 +389,12 @@ export default function AnalysisRequestPage() {
                   accurate pricing analysis based on the specific area.
                 </div>
                 <div id="map" ref={mapRef} />
+                <MapComponent
+                  mapRef={mapRef}
+                  center={currentCenter}
+                  onLocationSelect={handleLocationSelect}
+                  coordinates={coordinates}
+                />
                 {coordinates && (
                   <div className="location-display">
                     <strong>Selected Location:</strong>{" "}

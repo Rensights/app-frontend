@@ -30,3 +30,11 @@ else
   echo "No frontend pod found"
 fi
 
+
+
+
+
+
+
+
+

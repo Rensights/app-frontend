@@ -329,6 +329,38 @@ jobs:
             --namespace ${DEV_NAMESPACE} \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Setup frontend-config secret for dev
+        id: frontend-config
+        run: |
+          export KUBECONFIG=/tmp/kubeconfig
+          echo "Setting up frontend-config secret with backend URL..."
+          # Get backend URL from ingress or use default
+          BACKEND_URL="http://dev-api.72.62.40.154.nip.io:31416"
+          
+          # Try to get from backend ingress if it exists
+          if kubectl get ingress backend -n ${DEV_NAMESPACE} &>/dev/null; then
+            BACKEND_HOST=$(kubectl get ingress backend -n ${DEV_NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "")
+            if [ -n "$BACKEND_HOST" ]; then
+              BACKEND_URL="http://${BACKEND_HOST}:31416"
+              echo "Found backend host from ingress: $BACKEND_HOST"
+            fi
+          fi
+          
+          echo "Using backend URL: $BACKEND_URL"
+          STRIPE_KEY="pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
+          
+          # Store values for use in Helm deployment
+          echo "api_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
+          echo "stripe_key=${STRIPE_KEY}" >> $GITHUB_OUTPUT
+          
+          # Also create/update the secret as fallback
+          kubectl create secret generic frontend-config \
+            --from-literal=NEXT_PUBLIC_API_URL="$BACKEND_URL" \
+            --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
+            --namespace ${DEV_NAMESPACE} \
+            --dry-run=client -o yaml | kubectl apply -f -
+          echo "✅ Frontend config secret updated"
+
       - name: Deploy frontend to dev
         run: |
           export KUBECONFIG=/tmp/kubeconfig
@@ -357,17 +389,50 @@ jobs:
           RETRY_COUNT=0
           
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES..."
+            
+            # Check if global.yaml exists, if not skip it
+            VALUES_FILES="-f env-values/dev/frontend.yaml"
+            if [ -f "env-values/dev/global.yaml" ]; then
+              VALUES_FILES="-f env-values/dev/global.yaml -f env-values/dev/frontend.yaml"
+            fi
+            
+            # Get values from step output (with fallbacks)
+            API_URL="${{ steps.frontend-config.outputs.api_url }}"
+            STRIPE_KEY="${{ steps.frontend-config.outputs.stripe_key }}"
+            
+            # Ensure values are not empty
+            if [ -z "$API_URL" ]; then
+              API_URL="http://dev-api.72.62.40.154.nip.io:31416"
+              echo "⚠️  API_URL not found in step output, using default: $API_URL"
+            fi
+            if [ -z "$STRIPE_KEY" ]; then
+              STRIPE_KEY="pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
+              echo "⚠️  STRIPE_KEY not found in step output, using default"
+            fi
+            
+            echo "Deploying with API_URL: $API_URL"
+            
+            # Create temporary values file with extraEnv to avoid --set parsing issues
+            printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
+              "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values.yaml
+            echo "Created /tmp/extra-env-values.yaml with contents:"
+            cat /tmp/extra-env-values.yaml
+            
+            set +e  # Don't exit on error, we'll handle it
             DEPLOY_OUTPUT=$(helm upgrade --install frontend ./charts \
             --namespace ${DEV_NAMESPACE} \
             --create-namespace \
-            -f env-values/dev/global.yaml \
-            -f env-values/dev/frontend.yaml \
-              --set image.tag=${IMAGE_TAG} \
+            ${VALUES_FILES} \
+            -f /tmp/extra-env-values.yaml \
+            --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-              --wait --timeout=5m 2>&1)
-            
+            --wait --timeout=5m 2>&1)
             DEPLOY_EXIT_CODE=$?
+            set -e  # Re-enable exit on error
+            
+            echo "Helm deployment exit code: $DEPLOY_EXIT_CODE"
             
             if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
               echo "✅ Deployment successful!"
@@ -384,12 +449,44 @@ jobs:
                 sleep 3
               else
                 echo "❌ Deployment failed after $MAX_RETRIES retries"
+                echo "Last error output:"
+                echo "$DEPLOY_OUTPUT"
                 exit 1
               fi
             else
-              echo "❌ Deployment failed with error:"
+              echo "❌ Deployment failed with exit code: $DEPLOY_EXIT_CODE"
+              echo ""
+              echo "=== Helm Error Output ==="
               echo "$DEPLOY_OUTPUT"
-              exit 1
+              echo "=== End Error Output ==="
+              echo ""
+              
+              # Show more debug info
+              echo "=== Debug Information ==="
+              echo "Namespace: ${DEV_NAMESPACE}"
+              echo "Image tag: ${IMAGE_TAG}"
+              echo "Image repo: ${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}"
+              echo "Values files: ${VALUES_FILES}"
+              echo "API_URL: ${API_URL}"
+              echo "STRIPE_KEY: ${STRIPE_KEY:0:20}..." # Show first 20 chars only
+              echo ""
+              
+              echo "=== Helm Release Status ==="
+              helm status frontend -n ${DEV_NAMESPACE} 2>&1 || echo "Release not found"
+              echo ""
+              
+              echo "=== Pod Status ==="
+              kubectl get pods -n ${DEV_NAMESPACE} -l app.kubernetes.io/name=frontend 2>&1 || echo "No pods found"
+              echo ""
+              
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+                echo "❌ Deployment failed after $MAX_RETRIES attempts. Exiting."
+                exit 1
+              else
+                echo "⚠️  Retrying in 5 seconds... (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
+                sleep 5
+              fi
             fi
           done
 
@@ -571,6 +668,38 @@ jobs:
             --namespace ${PROD_NAMESPACE} \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Setup frontend-config secret for prod
+        id: frontend-config-prod
+        run: |
+          export KUBECONFIG=/tmp/kubeconfig
+          echo "Setting up frontend-config secret with backend URL..."
+          # Get backend URL from ingress or use default
+          BACKEND_URL="https://api.72.62.40.154.nip.io"
+          
+          # Try to get from backend ingress if it exists
+          if kubectl get ingress backend -n ${PROD_NAMESPACE} &>/dev/null; then
+            BACKEND_HOST=$(kubectl get ingress backend -n ${PROD_NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "")
+            if [ -n "$BACKEND_HOST" ]; then
+              BACKEND_URL="https://${BACKEND_HOST}"
+              echo "Found backend host from ingress: $BACKEND_HOST"
+            fi
+          fi
+          
+          echo "Using backend URL: $BACKEND_URL"
+          STRIPE_KEY="pk_live_YOUR_LIVE_KEY"
+          
+          # Store values for use in Helm deployment
+          echo "api_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
+          echo "stripe_key=${STRIPE_KEY}" >> $GITHUB_OUTPUT
+          
+          # Also create/update the secret as fallback
+          kubectl create secret generic frontend-config \
+            --from-literal=NEXT_PUBLIC_API_URL="$BACKEND_URL" \
+            --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
+            --namespace ${PROD_NAMESPACE} \
+            --dry-run=client -o yaml | kubectl apply -f -
+          echo "✅ Frontend config secret updated"
+
       - name: Deploy frontend to prod
         run: |
           export KUBECONFIG=/tmp/kubeconfig
@@ -585,11 +714,32 @@ jobs:
           fi
           echo "🚀 Deploying to PRODUCTION with tag: ${IMAGE_TAG}"
           
+          # Get values from step output (with fallbacks)
+          API_URL="${{ steps.frontend-config-prod.outputs.api_url }}"
+          STRIPE_KEY="${{ steps.frontend-config-prod.outputs.stripe_key }}"
+          
+          # Ensure values are not empty
+          if [ -z "$API_URL" ]; then
+            API_URL="https://api.72.62.40.154.nip.io"
+            echo "⚠️  API_URL not found in step output, using default: $API_URL"
+          fi
+          if [ -z "$STRIPE_KEY" ]; then
+            STRIPE_KEY="pk_live_YOUR_LIVE_KEY"
+            echo "⚠️  STRIPE_KEY not found in step output, using default"
+          fi
+          
+          echo "Deploying with API_URL: $API_URL"
+          
+          # Create temporary values file with extraEnv to avoid --set parsing issues
+          printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
+            "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values-prod.yaml
+          
           helm upgrade --install frontend ./charts \
             --namespace ${PROD_NAMESPACE} \
             --create-namespace \
             -f env-values/prod/global.yaml \
             -f env-values/prod/frontend.yaml \
+            -f /tmp/extra-env-values-prod.yaml \
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \

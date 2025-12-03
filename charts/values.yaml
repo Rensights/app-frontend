@@ -50,7 +50,20 @@ readinessProbe:
 
 extraEnv: {}
 
+secrets:
+  # Secret name containing frontend configuration
+  # Expected keys: NEXT_PUBLIC_API_URL, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  frontendConfig: frontend-config
+
 serviceAccount:
   create: true
   annotations: {}
   name: ""
+
+networkPolicy:
+  enabled: true
+  # Kong namespace labels to match
+  # Default matches namespace with label "name: kong"
+  kongNamespaceLabels:
+    name: kong
+# Dummy commit to trigger CI/CD

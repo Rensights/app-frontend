@@ -33,9 +33,48 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
+            {{- /* Set API_URL: prefer extraEnv, fallback to secret, always set */}}
+            {{- if hasKey .Values.extraEnv "API_URL" }}
+            - name: API_URL
+              value: {{ index .Values.extraEnv "API_URL" | quote }}
+            {{- else if .Values.secrets.frontendConfig }}
+            - name: API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.frontendConfig }}
+                  key: NEXT_PUBLIC_API_URL
+                  optional: false
+            {{- end }}
+            {{- /* Set NEXT_PUBLIC_API_URL: prefer extraEnv, fallback to secret, always set */}}
+            {{- if hasKey .Values.extraEnv "NEXT_PUBLIC_API_URL" }}
+            - name: NEXT_PUBLIC_API_URL
+              value: {{ index .Values.extraEnv "NEXT_PUBLIC_API_URL" | quote }}
+            {{- else if .Values.secrets.frontendConfig }}
+            - name: NEXT_PUBLIC_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.frontendConfig }}
+                  key: NEXT_PUBLIC_API_URL
+                  optional: false
+            {{- end }}
+            {{- /* Set STRIPE_KEY: prefer extraEnv, fallback to secret */}}
+            {{- if hasKey .Values.extraEnv "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" }}
+            - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+              value: {{ index .Values.extraEnv "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" | quote }}
+            {{- else if .Values.secrets.frontendConfig }}
+            - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.frontendConfig }}
+                  key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+                  optional: true
+            {{- end }}
+            {{- /* Add all other extraEnv variables (excluding the ones we already handled) */}}
             {{- range $key, $value := .Values.extraEnv }}
+            {{- if and (ne $key "API_URL") (ne $key "NEXT_PUBLIC_API_URL") (ne $key "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY") }}
             - name: {{ $key }}
               value: {{ $value | quote }}
+            {{- end }}
             {{- end }}
           {{- if .Values.livenessProbe }}
           livenessProbe:

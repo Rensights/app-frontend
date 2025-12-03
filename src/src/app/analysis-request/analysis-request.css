@@ -253,6 +253,14 @@ textarea {
   border-radius: 10px;
   border: 2px solid #e1e5e9;
   margin-top: 10px;
+  z-index: 0;
+}
+
+/* Leaflet map container styling */
+#map .leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 10px;
 }
 
 .location-display {
@@ -315,7 +323,10 @@ textarea {
   margin-top: 40px;
   padding-top: 30px;
   border-top: 2px solid #f8f9fa;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
 .terms-checkbox {
@@ -323,9 +334,17 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 25px;
   color: #333;
   font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.terms-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #f39c12;
 }
 
 .submit-btn {

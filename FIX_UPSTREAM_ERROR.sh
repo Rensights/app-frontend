@@ -125,3 +125,11 @@ kubectl get endpoints -n dev -l app.kubernetes.io/name=frontend
 echo ""
 echo "=== ✅ If pod is ready and endpoints exist, test frontend at: http://dev.72.62.40.154.nip.io:31416 ==="
 
+
+
+
+
+
+
+
+

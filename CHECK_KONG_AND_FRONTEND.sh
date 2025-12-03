@@ -52,3 +52,11 @@ if [ -n "$KONG_POD" ]; then
   kubectl logs -n kong-system $KONG_POD --tail=30 | grep -i "frontend\|ring-balancer\|peer" || echo "No relevant Kong logs found"
 fi
 
+
+
+
+
+
+
+
+
