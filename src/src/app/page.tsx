@@ -198,51 +198,6 @@ export default function Home() {
     }
   }, [email, router, codeDigits, rememberThisDevice, showSuccess]);
 
-    setIsSubmitting(true);
-    setErrors((prev) => ({ ...prev, code: "" }));
-    
-    try {
-      // Get device fingerprint (should always be available for login verification)
-      const deviceFingerprint = typeof window !== 'undefined' 
-        ? (localStorage.getItem('pendingDeviceFingerprint') || apiClient.getDeviceFingerprint())
-        : apiClient.getDeviceFingerprint();
-      
-      if (!deviceFingerprint) {
-        throw new Error("Device fingerprint not available");
-      }
-      
-      // For login verification, try verifyEmail first (for unverified email)
-      // If that fails with "not found" or similar, try verifyDevice (for new device)
-      try {
-        await apiClient.verifyEmail(email, code, deviceFingerprint);
-      } catch (emailVerifyError: any) {
-        // If verifyEmail fails (e.g., user already verified but new device), try verifyDevice
-        if (emailVerifyError.message && emailVerifyError.message.includes("not found")) {
-          await apiClient.verifyDevice(email, code, deviceFingerprint);
-        } else {
-          throw emailVerifyError;
-        }
-      }
-      
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('pendingDeviceFingerprint');
-      }
-      
-      rememberThisDevice();
-      showSuccess();
-      // Redirect to dashboard after a short delay
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
-    } catch (error: any) {
-      setErrors((prev) => ({
-        ...prev,
-        code: error.message || "Invalid verification code. Please try again.",
-      }));
-      setIsSubmitting(false);
-    }
-  }, [email, router]);
-
   const rememberThisDevice = useCallback(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem(DEVICE_STORAGE_KEY, "true");
