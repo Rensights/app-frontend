@@ -1,9 +1,17 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import "../dashboard/dashboard.css";
 import "./account.css";
+
+const MENU_ITEMS = [
+  { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
+  { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
+  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/deals" },
+  { id: "account", label: "Account", icon: "⚙️", path: "/account" },
+];
 
 function AccountPageContent() {
   const router = useRouter();
@@ -16,6 +24,7 @@ function AccountPageContent() {
   const [editForm, setEditForm] = useState({ firstName: "", lastName: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -150,23 +159,102 @@ function AccountPageContent() {
     }
   };
 
+  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[0]) => {
+    router.push(item.path);
+    setIsSidebarOpen(false);
+  }, [router]);
+
+  const handleLogout = useCallback(() => {
+    apiClient.logout();
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
+
   if (loading) {
     return (
-      <div className="account-page">
-        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+      <div className="dashboard-page account-page">
+        <aside className="sidebar">
+          <div className="logo-section">
+            <div className="logo">Rensights</div>
+            <div className="logo-subtitle">Dubai Property Intelligence</div>
+          </div>
+        </aside>
+        <main className="main-content">
+          <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="account-page">
-      <div className="account-container">
-        <div className="account-header">
-          <button className="back-btn" onClick={() => router.push("/dashboard")}>
-            ← Back to Dashboard
+    <div className="dashboard-page account-page">
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <div className="logo-section">
+          <div className="logo">Rensights</div>
+          <div className="logo-subtitle">Dubai Property Intelligence</div>
+          <button
+            className="sidebar-close"
+            type="button"
+            aria-label="Close navigation"
+            onClick={closeSidebar}
+          >
+            ×
           </button>
-          <h1 className="account-title">Account Settings</h1>
         </div>
+
+        <nav className="menu">
+          {MENU_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-current={item.id === "account" ? "page" : undefined}
+              className={`menu-item ${
+                item.id === "account" ? "active" : ""
+              }`}
+              onClick={() => handleSectionChange(item)}
+            >
+              <span className="menu-icon" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="menu-text">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="logout-section">
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      <div
+        className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
+        onClick={closeSidebar}
+      />
+
+      <main className="main-content">
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          onClick={toggleSidebar}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <div className="account-container">
+          <div className="account-header">
+            <h1 className="account-title">Account Settings</h1>
+          </div>
 
         {error && (
           <div className="error-message" style={{
@@ -396,7 +484,7 @@ function AccountPageContent() {
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

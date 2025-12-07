@@ -9,12 +9,23 @@
     Ubuntu, Cantarell, sans-serif;
   background: linear-gradient(135deg, #f6b042 0%, #f39c12 100%);
   min-height: 100vh;
-  padding: 30px 20px;
+}
+
+.account-page .main-content {
+  padding: 30px;
 }
 
 .account-container {
   max-width: 1000px;
   margin: 0 auto;
+}
+
+.account-page .account-header {
+  margin-bottom: 30px;
+}
+
+.account-page .back-btn {
+  display: none;
 }
 
 .account-header {

@@ -1,10 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import "../dashboard/dashboard.css";
 import "./analysis-request.css";
+
+const MENU_ITEMS = [
+  { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
+  { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
+  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/deals" },
+  { id: "account", label: "Account", icon: "⚙️", path: "/account" },
+];
 
 // Dynamically import Leaflet to avoid SSR issues
 const MapComponent = dynamic(() => import("./MapComponent"), { ssr: false });
@@ -82,6 +90,7 @@ export default function AnalysisRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: string; lng: string } | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const plotVisible = useMemo(
     () => formState.propertyType === "villa",
@@ -235,17 +244,87 @@ export default function AnalysisRequestPage() {
     }
   };
 
+  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[0]) => {
+    router.push(item.path);
+    setIsSidebarOpen(false);
+  }, [router]);
+
+  const handleLogout = useCallback(() => {
+    apiClient.logout();
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
+
   return (
-    <div className="analysis-page">
-      <div className="container">
-        <header className="header">
-          <div className="header-left">
-            <button className="back-btn" onClick={() => router.push('/dashboard')}>← Back to Dashboard</button>
-            <div className="logo">Rensights</div>
-            <div className="page-title">Property Price Analysis Request</div>
-          </div>
-          <div className="verified-badge">✓ Expert Analysis</div>
-        </header>
+    <div className="dashboard-page analysis-page">
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <div className="logo-section">
+          <div className="logo">Rensights</div>
+          <div className="logo-subtitle">Dubai Property Intelligence</div>
+          <button
+            className="sidebar-close"
+            type="button"
+            aria-label="Close navigation"
+            onClick={closeSidebar}
+          >
+            ×
+          </button>
+        </div>
+
+        <nav className="menu">
+          {MENU_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="menu-item"
+              onClick={() => handleSectionChange(item)}
+            >
+              <span className="menu-icon" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="menu-text">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="logout-section">
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      <div
+        className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
+        onClick={closeSidebar}
+      />
+
+      <main className="main-content">
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          onClick={toggleSidebar}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <div className="container">
+          <header className="header">
+            <div className="header-left">
+              <div className="logo">Rensights</div>
+              <div className="page-title">Property Price Analysis Request</div>
+            </div>
+            <div className="verified-badge">✓ Expert Analysis</div>
+          </header>
 
         <div className="form-container">
           <form onSubmit={handleSubmit}>
@@ -598,7 +677,7 @@ export default function AnalysisRequestPage() {
             </div>
           </form>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
