@@ -130,6 +130,14 @@ export default function Home() {
     setTimeout(() => codeRefs.current[0]?.focus(), 200);
   }, []);
 
+  const rememberThisDevice = useCallback(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(DEVICE_STORAGE_KEY, "true");
+    setHasKnownDevice(true);
+  }, []);
+
+  const showSuccess = useCallback(() => setStep("success"), []);
+
   const handleVerifyCode = useCallback(async () => {
     // Clean the code - remove any non-digits
     const code = codeDigits.join("").replace(/\D/g, '');
@@ -197,14 +205,6 @@ export default function Home() {
       setIsSubmitting(false);
     }
   }, [email, router, codeDigits, rememberThisDevice, showSuccess]);
-
-  const rememberThisDevice = useCallback(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(DEVICE_STORAGE_KEY, "true");
-    setHasKnownDevice(true);
-  }, []);
-
-  const showSuccess = useCallback(() => setStep("success"), []);
 
   const handleResendCode = useCallback(async () => {
     if (resendTimer) return;
