@@ -677,6 +677,7 @@ export default function AnalysisRequestPage() {
             </div>
           </form>
         </div>
+        </div>
       </main>
     </div>
   );

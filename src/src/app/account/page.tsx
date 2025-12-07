@@ -484,6 +484,7 @@ function AccountPageContent() {
             )}
           </div>
         </div>
+        </div>
       </main>
     </div>
   );
