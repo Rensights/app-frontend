@@ -408,12 +408,6 @@ function AccountPageContent() {
                     >
                       Upgrade to Premium
                     </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => handleUpgrade("ENTERPRISE")}
-                    >
-                      Upgrade to Enterprise
-                    </button>
                   </div>
                 ) : (
                   <div className="subscription-management">
