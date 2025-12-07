@@ -21,6 +21,7 @@ jobs:
   test:
     name: 1️⃣ Run Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       packages: read
@@ -28,71 +29,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          fetch-depth: 1
           submodules: recursive
           token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Check src directory structure
-        run: |
-          echo "Checking src directory..."
-          if [ -d "src" ]; then
-            echo "✅ src directory exists"
-            ls -la src/ | head -10
-            if [ -f "src/package-lock.json" ]; then
-              echo "✅ package-lock.json found in src/"
-            else
-              echo "⚠️  package-lock.json not found in src/"
-            fi
-          else
-            echo "❌ src directory does not exist"
-          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Verify package-lock.json exists
-        run: |
-          if [ -f "src/package-lock.json" ]; then
-            echo "✅ Found src/package-lock.json"
-            ls -lh src/package-lock.json
-          else
-            echo "❌ src/package-lock.json not found!"
-            echo "Files in src/:"
-            ls -la src/ | head -20
-            exit 1
-          fi
-
-      - name: Get npm cache directory
-        id: npm-cache
-        shell: bash
-        run: |
-          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('src/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          cache: 'npm'
+          cache-dependency-path: src/package-lock.json
 
       - name: Install dependencies
         working-directory: src
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Files in current directory:"
-          ls -la | head -20
-          echo ""
-          echo "Checking for package-lock.json:"
-          if [ -f "package-lock.json" ]; then
-            echo "✅ package-lock.json found"
-            ls -lh package-lock.json
-            npm ci
-          else
-            echo "❌ package-lock.json not found, generating it..."
-            npm install
-          fi
+        run: npm ci --prefer-offline --no-audit
 
       - name: Run linter
         working-directory: src
@@ -108,17 +58,24 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.test.result == 'success'
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
     outputs:
-      image_tag: ${{ github.run_number }} # Output the run number as the image tag
+      image_tag: ${{ github.run_number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -135,32 +92,38 @@ jobs:
           echo "repo_owner=${REPO_OWNER}" >> $GITHUB_OUTPUT
           echo "repo_name=${REPO_NAME}" >> $GITHUB_OUTPUT
 
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}
+          tags: |
+            type=raw,value=${{ github.run_number }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:${{ github.run_number }}
-            ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-          cache-from: type=registry,ref=ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:latest
-          cache-to: type=inline
+          cache-from: |
+            type=gha
+            type=registry,ref=ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:buildcache
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:buildcache,mode=max
           build-args: |
+            BUILDKIT_INLINE_CACHE=1
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
 
       - name: Output image info
         run: |
           echo "✅ Image pushed:"
-          echo "   ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:${{ github.run_number }}"
-          echo "   ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:latest"
-
-      - name: Verify image was pushed
-        run: |
-          IMAGE="ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:${{ github.run_number }}"
-          sleep 5
-          docker pull ${IMAGE} || echo "⚠️  Image verification skipped"
+          echo "${{ steps.meta.outputs.tags }}" | sed 's/^/   /'
 
   # Step 3: Deploy to Dev (Automatic)
   deploy-dev:
@@ -168,6 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && needs.build.result == 'success'
+    timeout-minutes: 15
     environment: dev
     permissions:
       contents: read
@@ -175,12 +139,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
 
       - name: Set image repository (lowercase)
         id: image-repo
@@ -192,123 +162,37 @@ jobs:
 
       - name: Set up SSH with Passphrase
         run: |
-          # Start ssh-agent
           eval "$(ssh-agent -s)"
           echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
-          echo "SSH_AGENT_PID=$SSH_AGENT_PID" >> $GITHUB_ENV
-          
-          # Write private key to file (use absolute path)
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
           SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
-          mkdir -p "$HOME/.ssh"
           printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > "$SSH_KEY_PATH"
           chmod 600 "$SSH_KEY_PATH"
-          
-          # Verify file was created
-          if [ ! -f "$SSH_KEY_PATH" ]; then
-            echo "❌ Error: SSH key file was not created at $SSH_KEY_PATH"
-            exit 1
-          fi
-          echo "✅ SSH key file created: $(ls -lh "$SSH_KEY_PATH")"
-          
-          # Install expect if not available
           sudo apt-get update -qq && sudo apt-get install -y -qq expect || true
-          
-          # Create expect script to handle passphrase (use absolute path)
           cat > /tmp/ssh-add.exp << 'EXPECT_SCRIPT'
           #!/usr/bin/expect -f
           set timeout 30
-          set key_path "$env(HOME)/.ssh/id_ed25519"
-          puts "Attempting to add key from: $key_path"
-          
-          if {![file exists $key_path]} {
-            puts "ERROR: Key file does not exist at $key_path"
-            exit 1
-          }
-          
-          spawn ssh-add "$key_path"
+          spawn ssh-add "$env(HOME)/.ssh/id_ed25519"
           expect {
-            "Enter passphrase" {
-              puts "Passphrase prompt detected, sending passphrase..."
-              send "$env(SSH_PASSPHRASE)\r"
-              exp_continue
-            }
-            "Identity added" {
-              puts "✅ Identity added successfully"
-              expect eof
-            }
-            "Bad passphrase" {
-              puts "❌ ERROR: Bad passphrase"
-              exit 1
-            }
-            "Permission denied" {
-              puts "❌ ERROR: Permission denied"
-              exit 1
-            }
-            timeout {
-              puts "❌ ERROR: Timeout waiting for response"
-              exit 1
-            }
-            eof {
-              puts "Process ended"
-            }
-          }
-          catch wait result
-          set exit_code [lindex $result 3]
-          if {$exit_code != 0} {
-            puts "❌ ssh-add exited with code: $exit_code"
-            exit $exit_code
+            "Enter passphrase" { send "$env(SSH_PASSPHRASE)\r"; exp_continue }
+            "Identity added" { expect eof }
+            timeout { exit 1 }
           }
           EXPECT_SCRIPT
-          
           chmod +x /tmp/ssh-add.exp
-          
-          # Add key with passphrase (export variables for expect)
           export SSH_PASSPHRASE="${{ secrets.SSH_PASSPHRASE }}"
-          export HOME="$HOME"
-          echo "HOME=$HOME" >> $GITHUB_ENV
-          
-          # Run expect script with output
-          echo "Running expect script..."
-          /tmp/ssh-add.exp || {
-            echo "❌ Expect script failed with exit code: $?"
-            exit 1
-          }
-          
-          # Verify key was added
-          ssh-add -l
-          
-          # Test connection
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@72.62.40.154 "echo 'SSH connection successful'"
+          /tmp/ssh-add.exp
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@72.62.40.154 "echo 'SSH connection successful'" || exit 1
 
       - name: Configure kubectl via SSH tunnel
         run: |
-          # Decode kubeconfig
           echo "${{ secrets.DEV_KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
-          
-          # Use external server IP for SSH connection (always use the actual server IP)
           SSH_SERVER_IP="72.62.40.154"
-          
-          # Extract Kubernetes API server from kubeconfig (might be localhost or internal IP)
           K8S_SERVER=$(grep -oP 'server:\s*\Khttps://[^:]+' /tmp/kubeconfig | sed 's|https://||' || echo "127.0.0.1")
-          echo "Kubernetes API server from kubeconfig: ${K8S_SERVER}"
-          echo "SSH server IP: ${SSH_SERVER_IP}"
-          
-          # Set up SSH tunnel: tunnel local port 6443 to K8S server on remote
-          # If K8S server is localhost/127.0.0.1, tunnel to 127.0.0.1:6443 on remote
-          # Otherwise tunnel to the K8S server IP
-          if [ "${K8S_SERVER}" = "127.0.0.1" ] || [ "${K8S_SERVER}" = "localhost" ]; then
-            REMOTE_K8S="127.0.0.1:6443"
-          else
-            REMOTE_K8S="${K8S_SERVER}:6443"
-          fi
-          
-          echo "Setting up SSH tunnel: localhost:6443 -> ${SSH_SERVER_IP}:${REMOTE_K8S}"
+          REMOTE_K8S="$([ "${K8S_SERVER}" = "127.0.0.1" ] || [ "${K8S_SERVER}" = "localhost" ] && echo "127.0.0.1:6443" || echo "${K8S_SERVER}:6443")"
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -f -N -L 6443:${REMOTE_K8S} root@${SSH_SERVER_IP}
           sleep 2
-          
-          # Update kubeconfig to use localhost tunnel
           sed -i "s|server: https://.*:6443|server: https://127.0.0.1:6443|g" /tmp/kubeconfig
-          
           export KUBECONFIG=/tmp/kubeconfig
           kubectl cluster-info
 
@@ -333,94 +217,46 @@ jobs:
         id: frontend-config
         run: |
           export KUBECONFIG=/tmp/kubeconfig
-          echo "Setting up frontend-config secret with backend URL..."
-          # Get backend URL from ingress or use default
           BACKEND_URL="http://dev-api.72.62.40.154.nip.io:31416"
-          
-          # Try to get from backend ingress if it exists
           if kubectl get ingress backend -n ${DEV_NAMESPACE} &>/dev/null; then
             BACKEND_HOST=$(kubectl get ingress backend -n ${DEV_NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "")
-            if [ -n "$BACKEND_HOST" ]; then
-              BACKEND_URL="http://${BACKEND_HOST}:31416"
-              echo "Found backend host from ingress: $BACKEND_HOST"
-            fi
+            [ -n "$BACKEND_HOST" ] && BACKEND_URL="http://${BACKEND_HOST}:31416"
           fi
-          
-          echo "Using backend URL: $BACKEND_URL"
           STRIPE_KEY="pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
-          
-          # Store values for use in Helm deployment
           echo "api_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
           echo "stripe_key=${STRIPE_KEY}" >> $GITHUB_OUTPUT
-          
-          # Also create/update the secret as fallback
           kubectl create secret generic frontend-config \
             --from-literal=NEXT_PUBLIC_API_URL="$BACKEND_URL" \
             --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
             --namespace ${DEV_NAMESPACE} \
             --dry-run=client -o yaml | kubectl apply -f -
-          echo "✅ Frontend config secret updated"
 
       - name: Deploy frontend to dev
         run: |
           export KUBECONFIG=/tmp/kubeconfig
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}"
-          if [ -z "$IMAGE_TAG" ]; then
-            echo "⚠️  Image tag from build job not found, falling back to github.run_number"
-            IMAGE_TAG="${{ github.run_number }}"
-          fi
-          echo "🚀 Deploying to DEV with tag: ${IMAGE_TAG}"
+          API_URL="${{ steps.frontend-config.outputs.api_url }}"
+          STRIPE_KEY="${{ steps.frontend-config.outputs.stripe_key }}"
           
           # Check for stuck Helm releases
-          echo "Checking for stuck Helm releases..."
-          RELEASE_STATUS=$(helm status frontend -n ${DEV_NAMESPACE} 2>&1 || echo "not-found")
-          
-          if echo "$RELEASE_STATUS" | grep -qE "(pending-install|pending-upgrade|pending-rollback)"; then
-            echo "⚠️  Found stuck Helm release, attempting cleanup..."
-            helm rollback frontend -n ${DEV_NAMESPACE} || true
-            sleep 2
-            helm delete frontend -n ${DEV_NAMESPACE} || true
-            sleep 2
+          if helm list -n ${DEV_NAMESPACE} -q | grep -q "^frontend$"; then
+            STATUS=$(helm status frontend -n ${DEV_NAMESPACE} -o json 2>/dev/null | jq -r '.info.status' 2>/dev/null || echo "unknown")
+            if [[ "$STATUS" =~ ^(pending-install|pending-upgrade|pending-rollback|failed)$ ]]; then
+              echo "⚠️  Cleaning up stuck release (status: $STATUS)..."
+              helm rollback frontend -n ${DEV_NAMESPACE} --force 2>&1 || true
+              sleep 3
+              helm delete frontend -n ${DEV_NAMESPACE} 2>&1 || true
+              sleep 3
+            fi
           fi
           
-          # Deploy new version
-          echo "🚀 Deploying new version..."
-          MAX_RETRIES=3
-          RETRY_COUNT=0
+          VALUES_FILES="-f env-values/dev/frontend.yaml"
+          [ -f "env-values/dev/global.yaml" ] && VALUES_FILES="-f env-values/dev/global.yaml -f env-values/dev/frontend.yaml"
           
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES..."
-            
-            # Check if global.yaml exists, if not skip it
-            VALUES_FILES="-f env-values/dev/frontend.yaml"
-            if [ -f "env-values/dev/global.yaml" ]; then
-              VALUES_FILES="-f env-values/dev/global.yaml -f env-values/dev/frontend.yaml"
-            fi
-            
-            # Get values from step output (with fallbacks)
-            API_URL="${{ steps.frontend-config.outputs.api_url }}"
-            STRIPE_KEY="${{ steps.frontend-config.outputs.stripe_key }}"
-            
-            # Ensure values are not empty
-            if [ -z "$API_URL" ]; then
-              API_URL="http://dev-api.72.62.40.154.nip.io:31416"
-              echo "⚠️  API_URL not found in step output, using default: $API_URL"
-            fi
-            if [ -z "$STRIPE_KEY" ]; then
-              STRIPE_KEY="pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
-              echo "⚠️  STRIPE_KEY not found in step output, using default"
-            fi
-            
-            echo "Deploying with API_URL: $API_URL"
-            
-            # Create temporary values file with extraEnv to avoid --set parsing issues
-            printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
-              "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values.yaml
-            echo "Created /tmp/extra-env-values.yaml with contents:"
-            cat /tmp/extra-env-values.yaml
-            
-            set +e  # Don't exit on error, we'll handle it
-            DEPLOY_OUTPUT=$(helm upgrade --install frontend ./charts \
+          printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
+            "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values.yaml
+          
+          helm upgrade --install frontend ./charts \
             --namespace ${DEV_NAMESPACE} \
             --create-namespace \
             ${VALUES_FILES} \
@@ -428,75 +264,12 @@ jobs:
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-            --wait --timeout=5m 2>&1)
-            DEPLOY_EXIT_CODE=$?
-            set -e  # Re-enable exit on error
-            
-            echo "Helm deployment exit code: $DEPLOY_EXIT_CODE"
-            
-            if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
-              echo "✅ Deployment successful!"
-              echo "$DEPLOY_OUTPUT"
-              break
-            elif echo "$DEPLOY_OUTPUT" | grep -q "another operation (install/upgrade/rollback) is in progress"; then
-              echo "⚠️  Helm upgrade failed, checking for stuck release..."
-              RETRY_COUNT=$((RETRY_COUNT + 1))
-              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                echo "Attempting cleanup and retry ($RETRY_COUNT/$MAX_RETRIES)..."
-                helm rollback frontend -n ${DEV_NAMESPACE} || true
-                sleep 3
-                helm delete frontend -n ${DEV_NAMESPACE} || true
-                sleep 3
-              else
-                echo "❌ Deployment failed after $MAX_RETRIES retries"
-                echo "Last error output:"
-                echo "$DEPLOY_OUTPUT"
-                exit 1
-              fi
-            else
-              echo "❌ Deployment failed with exit code: $DEPLOY_EXIT_CODE"
-              echo ""
-              echo "=== Helm Error Output ==="
-              echo "$DEPLOY_OUTPUT"
-              echo "=== End Error Output ==="
-              echo ""
-              
-              # Show more debug info
-              echo "=== Debug Information ==="
-              echo "Namespace: ${DEV_NAMESPACE}"
-              echo "Image tag: ${IMAGE_TAG}"
-              echo "Image repo: ${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}"
-              echo "Values files: ${VALUES_FILES}"
-              echo "API_URL: ${API_URL}"
-              echo "STRIPE_KEY: ${STRIPE_KEY:0:20}..." # Show first 20 chars only
-              echo ""
-              
-              echo "=== Helm Release Status ==="
-              helm status frontend -n ${DEV_NAMESPACE} 2>&1 || echo "Release not found"
-              echo ""
-              
-              echo "=== Pod Status ==="
-              kubectl get pods -n ${DEV_NAMESPACE} -l app.kubernetes.io/name=frontend 2>&1 || echo "No pods found"
-              echo ""
-              
-              RETRY_COUNT=$((RETRY_COUNT + 1))
-              if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-                echo "❌ Deployment failed after $MAX_RETRIES attempts. Exiting."
-                exit 1
-              else
-                echo "⚠️  Retrying in 5 seconds... (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
-                sleep 5
-              fi
-            fi
-          done
+            --atomic --timeout=8m
 
       - name: Verify deployment
         run: |
           export KUBECONFIG=/tmp/kubeconfig
-          echo "📊 Deployment status:"
           kubectl get pods -n ${DEV_NAMESPACE} -l app.kubernetes.io/name=frontend
-          echo ""
-          echo "📊 Service status:"
           kubectl get svc -n ${DEV_NAMESPACE} -l app.kubernetes.io/name=frontend
 
   # Step 4: Deploy to Prod (Requires Approval)
@@ -505,21 +278,27 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 15
     environment: 
       name: production
-      # Add required reviewers in GitHub repository settings → Environments → production
     permissions:
       contents: read
       packages: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
 
       - name: Set image repository (lowercase)
         id: image-repo
@@ -531,123 +310,37 @@ jobs:
 
       - name: Set up SSH with Passphrase
         run: |
-          # Start ssh-agent
           eval "$(ssh-agent -s)"
           echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
-          echo "SSH_AGENT_PID=$SSH_AGENT_PID" >> $GITHUB_ENV
-          
-          # Write private key to file (use absolute path)
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
           SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
-          mkdir -p "$HOME/.ssh"
           printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > "$SSH_KEY_PATH"
           chmod 600 "$SSH_KEY_PATH"
-          
-          # Verify file was created
-          if [ ! -f "$SSH_KEY_PATH" ]; then
-            echo "❌ Error: SSH key file was not created at $SSH_KEY_PATH"
-            exit 1
-          fi
-          echo "✅ SSH key file created: $(ls -lh "$SSH_KEY_PATH")"
-          
-          # Install expect if not available
           sudo apt-get update -qq && sudo apt-get install -y -qq expect || true
-          
-          # Create expect script to handle passphrase (use absolute path)
           cat > /tmp/ssh-add.exp << 'EXPECT_SCRIPT'
           #!/usr/bin/expect -f
           set timeout 30
-          set key_path "$env(HOME)/.ssh/id_ed25519"
-          puts "Attempting to add key from: $key_path"
-          
-          if {![file exists $key_path]} {
-            puts "ERROR: Key file does not exist at $key_path"
-            exit 1
-          }
-          
-          spawn ssh-add "$key_path"
+          spawn ssh-add "$env(HOME)/.ssh/id_ed25519"
           expect {
-            "Enter passphrase" {
-              puts "Passphrase prompt detected, sending passphrase..."
-              send "$env(SSH_PASSPHRASE)\r"
-              exp_continue
-            }
-            "Identity added" {
-              puts "✅ Identity added successfully"
-              expect eof
-            }
-            "Bad passphrase" {
-              puts "❌ ERROR: Bad passphrase"
-              exit 1
-            }
-            "Permission denied" {
-              puts "❌ ERROR: Permission denied"
-              exit 1
-            }
-            timeout {
-              puts "❌ ERROR: Timeout waiting for response"
-              exit 1
-            }
-            eof {
-              puts "Process ended"
-            }
-          }
-          catch wait result
-          set exit_code [lindex $result 3]
-          if {$exit_code != 0} {
-            puts "❌ ssh-add exited with code: $exit_code"
-            exit $exit_code
+            "Enter passphrase" { send "$env(SSH_PASSPHRASE)\r"; exp_continue }
+            "Identity added" { expect eof }
+            timeout { exit 1 }
           }
           EXPECT_SCRIPT
-          
           chmod +x /tmp/ssh-add.exp
-          
-          # Add key with passphrase (export variables for expect)
           export SSH_PASSPHRASE="${{ secrets.SSH_PASSPHRASE }}"
-          export HOME="$HOME"
-          echo "HOME=$HOME" >> $GITHUB_ENV
-          
-          # Run expect script with output
-          echo "Running expect script..."
-          /tmp/ssh-add.exp || {
-            echo "❌ Expect script failed with exit code: $?"
-            exit 1
-          }
-          
-          # Verify key was added
-          ssh-add -l
-          
-          # Test connection
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@72.62.40.154 "echo 'SSH connection successful'"
+          /tmp/ssh-add.exp
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@72.62.40.154 "echo 'SSH connection successful'" || exit 1
 
       - name: Configure kubectl via SSH tunnel
         run: |
-          # Decode kubeconfig
           echo "${{ secrets.PROD_KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
-          
-          # Use external server IP for SSH connection (always use the actual server IP)
           SSH_SERVER_IP="72.62.40.154"
-          
-          # Extract Kubernetes API server from kubeconfig (might be localhost or internal IP)
           K8S_SERVER=$(grep -oP 'server:\s*\Khttps://[^:]+' /tmp/kubeconfig | sed 's|https://||' || echo "127.0.0.1")
-          echo "Kubernetes API server from kubeconfig: ${K8S_SERVER}"
-          echo "SSH server IP: ${SSH_SERVER_IP}"
-          
-          # Set up SSH tunnel: tunnel local port 6443 to K8S server on remote
-          # If K8S server is localhost/127.0.0.1, tunnel to 127.0.0.1:6443 on remote
-          # Otherwise tunnel to the K8S server IP
-          if [ "${K8S_SERVER}" = "127.0.0.1" ] || [ "${K8S_SERVER}" = "localhost" ]; then
-            REMOTE_K8S="127.0.0.1:6443"
-          else
-            REMOTE_K8S="${K8S_SERVER}:6443"
-          fi
-          
-          echo "Setting up SSH tunnel: localhost:6443 -> ${SSH_SERVER_IP}:${REMOTE_K8S}"
+          REMOTE_K8S="$([ "${K8S_SERVER}" = "127.0.0.1" ] || [ "${K8S_SERVER}" = "localhost" ] && echo "127.0.0.1:6443" || echo "${K8S_SERVER}:6443")"
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -f -N -L 6443:${REMOTE_K8S} root@${SSH_SERVER_IP}
           sleep 2
-          
-          # Update kubeconfig to use localhost tunnel
           sed -i "s|server: https://.*:6443|server: https://127.0.0.1:6443|g" /tmp/kubeconfig
-          
           export KUBECONFIG=/tmp/kubeconfig
           kubectl cluster-info
 
@@ -672,65 +365,28 @@ jobs:
         id: frontend-config-prod
         run: |
           export KUBECONFIG=/tmp/kubeconfig
-          echo "Setting up frontend-config secret with backend URL..."
-          # Get backend URL from ingress or use default
           BACKEND_URL="https://api.72.62.40.154.nip.io"
-          
-          # Try to get from backend ingress if it exists
           if kubectl get ingress backend -n ${PROD_NAMESPACE} &>/dev/null; then
             BACKEND_HOST=$(kubectl get ingress backend -n ${PROD_NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "")
-            if [ -n "$BACKEND_HOST" ]; then
-              BACKEND_URL="https://${BACKEND_HOST}"
-              echo "Found backend host from ingress: $BACKEND_HOST"
-            fi
+            [ -n "$BACKEND_HOST" ] && BACKEND_URL="https://${BACKEND_HOST}"
           fi
-          
-          echo "Using backend URL: $BACKEND_URL"
           STRIPE_KEY="pk_live_YOUR_LIVE_KEY"
-          
-          # Store values for use in Helm deployment
           echo "api_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
           echo "stripe_key=${STRIPE_KEY}" >> $GITHUB_OUTPUT
-          
-          # Also create/update the secret as fallback
           kubectl create secret generic frontend-config \
             --from-literal=NEXT_PUBLIC_API_URL="$BACKEND_URL" \
             --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
             --namespace ${PROD_NAMESPACE} \
             --dry-run=client -o yaml | kubectl apply -f -
-          echo "✅ Frontend config secret updated"
 
       - name: Deploy frontend to prod
         run: |
           export KUBECONFIG=/tmp/kubeconfig
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}"
-          if [ -z "$IMAGE_TAG" ]; then
-            echo "⚠️  Image tag from build job not found, falling back to github.run_number"
-            IMAGE_TAG="${{ github.run_number }}"
-          fi
-          # Allow manual override for image_tag if workflow_dispatch input is provided
-          if [ -n "${{ github.event.inputs.image_tag }}" ]; then
-            IMAGE_TAG="${{ github.event.inputs.image_tag }}"
-          fi
-          echo "🚀 Deploying to PRODUCTION with tag: ${IMAGE_TAG}"
-          
-          # Get values from step output (with fallbacks)
+          [ -n "${{ github.event.inputs.image_tag }}" ] && IMAGE_TAG="${{ github.event.inputs.image_tag }}"
           API_URL="${{ steps.frontend-config-prod.outputs.api_url }}"
           STRIPE_KEY="${{ steps.frontend-config-prod.outputs.stripe_key }}"
           
-          # Ensure values are not empty
-          if [ -z "$API_URL" ]; then
-            API_URL="https://api.72.62.40.154.nip.io"
-            echo "⚠️  API_URL not found in step output, using default: $API_URL"
-          fi
-          if [ -z "$STRIPE_KEY" ]; then
-            STRIPE_KEY="pk_live_YOUR_LIVE_KEY"
-            echo "⚠️  STRIPE_KEY not found in step output, using default"
-          fi
-          
-          echo "Deploying with API_URL: $API_URL"
-          
-          # Create temporary values file with extraEnv to avoid --set parsing issues
           printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
             "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values-prod.yaml
           
@@ -743,13 +399,10 @@ jobs:
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-            --wait --timeout=5m
+            --atomic --timeout=8m
 
       - name: Verify deployment
         run: |
           export KUBECONFIG=/tmp/kubeconfig
-          echo "📊 Deployment status:"
           kubectl get pods -n ${PROD_NAMESPACE} -l app.kubernetes.io/name=frontend
-          echo ""
-          echo "📊 Service status:"
           kubectl get svc -n ${PROD_NAMESPACE} -l app.kubernetes.io/name=frontend
