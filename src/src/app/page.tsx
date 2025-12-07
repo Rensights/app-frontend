@@ -131,15 +131,92 @@ export default function Home() {
   }, []);
 
   const handleVerifyCode = useCallback(async () => {
-    const code = codeDigits.join("").trim();
-    // Check if all 6 digits are filled
-    if (code.length !== CODE_LENGTH || codeDigits.some(d => !d || d.trim() === '')) {
+    // Use functional state update to get latest codeDigits
+    let currentCode = '';
+    let allDigitsFilled = false;
+    
+    setCodeDigits((currentDigits) => {
+      // Clean the code - remove any non-digits
+      currentCode = currentDigits.join("").replace(/\D/g, '');
+      
+      // Check if all 6 digits are filled - all must be non-empty strings
+      allDigitsFilled = currentDigits.length === CODE_LENGTH && 
+                       currentDigits.every(d => d !== null && d !== undefined && d.trim() !== '') &&
+                       currentCode.length === CODE_LENGTH;
+      
+      return currentDigits; // Don't change state, just read it
+    });
+    
+    // Wait a tiny bit for state to settle, then check validation
+    await new Promise(resolve => setTimeout(resolve, 0));
+    
+    // Double-check with current state (get fresh value)
+    const code = codeDigits.join("").replace(/\D/g, '');
+    const allFilled = codeDigits.length === CODE_LENGTH && 
+                     codeDigits.every(d => d && d.trim() !== '') &&
+                     code.length === CODE_LENGTH;
+    
+    if (!allFilled && !allDigitsFilled) {
       setErrors((prev) => ({
         ...prev,
         code: "Please enter the complete verification code",
       }));
+      console.log('Validation failed:', { 
+        codeDigits, 
+        code, 
+        length: code.length, 
+        allFilled: codeDigits.every(d => d && d.trim() !== '') 
+      });
       return;
     }
+    
+    // Use the cleaned code
+    const finalCode = allFilled ? code : currentCode;
+    
+    setIsSubmitting(true);
+    setErrors((prev) => ({ ...prev, code: "" }));
+    
+    try {
+      // Get device fingerprint (should always be available for login verification)
+      const deviceFingerprint = typeof window !== 'undefined' 
+        ? (localStorage.getItem('pendingDeviceFingerprint') || apiClient.getDeviceFingerprint())
+        : apiClient.getDeviceFingerprint();
+      
+      if (!deviceFingerprint) {
+        throw new Error("Device fingerprint not available");
+      }
+      
+      // For login verification, try verifyEmail first (for unverified email)
+      // If that fails with "not found" or similar, try verifyDevice (for new device)
+      try {
+        await apiClient.verifyEmail(email, finalCode, deviceFingerprint);
+      } catch (emailVerifyError: any) {
+        // If verifyEmail fails (e.g., user already verified but new device), try verifyDevice
+        if (emailVerifyError.message && emailVerifyError.message.includes("not found")) {
+          await apiClient.verifyDevice(email, finalCode, deviceFingerprint);
+        } else {
+          throw emailVerifyError;
+        }
+      }
+      
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('pendingDeviceFingerprint');
+      }
+      
+      rememberThisDevice();
+      showSuccess();
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+    } catch (error: any) {
+      setErrors((prev) => ({
+        ...prev,
+        code: error.message || "Invalid verification code. Please try again.",
+      }));
+      setIsSubmitting(false);
+    }
+  }, [email, router, codeDigits, rememberThisDevice, showSuccess]);
 
     setIsSubmitting(true);
     setErrors((prev) => ({ ...prev, code: "" }));
