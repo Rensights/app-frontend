@@ -152,6 +152,7 @@ class ApiClient {
     const requestPromise = fetch(url, {
       ...options,
       headers,
+      credentials: 'include', // Include credentials (cookies, authorization headers) for CORS
     })
       .then(async (response) => {
         if (!response.ok) {
