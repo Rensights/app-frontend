@@ -131,32 +131,15 @@ export default function Home() {
   }, []);
 
   const handleVerifyCode = useCallback(async () => {
-    // Use functional state update to get latest codeDigits
-    let currentCode = '';
-    let allDigitsFilled = false;
-    
-    setCodeDigits((currentDigits) => {
-      // Clean the code - remove any non-digits
-      currentCode = currentDigits.join("").replace(/\D/g, '');
-      
-      // Check if all 6 digits are filled - all must be non-empty strings
-      allDigitsFilled = currentDigits.length === CODE_LENGTH && 
-                       currentDigits.every(d => d !== null && d !== undefined && d.trim() !== '') &&
-                       currentCode.length === CODE_LENGTH;
-      
-      return currentDigits; // Don't change state, just read it
-    });
-    
-    // Wait a tiny bit for state to settle, then check validation
-    await new Promise(resolve => setTimeout(resolve, 0));
-    
-    // Double-check with current state (get fresh value)
+    // Clean the code - remove any non-digits
     const code = codeDigits.join("").replace(/\D/g, '');
+    
+    // Check if all 6 digits are filled - all must be non-empty strings
     const allFilled = codeDigits.length === CODE_LENGTH && 
-                     codeDigits.every(d => d && d.trim() !== '') &&
+                     codeDigits.every(d => d !== null && d !== undefined && d.trim() !== '') &&
                      code.length === CODE_LENGTH;
     
-    if (!allFilled && !allDigitsFilled) {
+    if (!allFilled) {
       setErrors((prev) => ({
         ...prev,
         code: "Please enter the complete verification code",
@@ -169,9 +152,6 @@ export default function Home() {
       });
       return;
     }
-    
-    // Use the cleaned code
-    const finalCode = allFilled ? code : currentCode;
     
     setIsSubmitting(true);
     setErrors((prev) => ({ ...prev, code: "" }));
@@ -189,11 +169,11 @@ export default function Home() {
       // For login verification, try verifyEmail first (for unverified email)
       // If that fails with "not found" or similar, try verifyDevice (for new device)
       try {
-        await apiClient.verifyEmail(email, finalCode, deviceFingerprint);
+        await apiClient.verifyEmail(email, code, deviceFingerprint);
       } catch (emailVerifyError: any) {
         // If verifyEmail fails (e.g., user already verified but new device), try verifyDevice
         if (emailVerifyError.message && emailVerifyError.message.includes("not found")) {
-          await apiClient.verifyDevice(email, finalCode, deviceFingerprint);
+          await apiClient.verifyDevice(email, code, deviceFingerprint);
         } else {
           throw emailVerifyError;
         }
