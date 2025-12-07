@@ -131,8 +131,9 @@ export default function Home() {
   }, []);
 
   const handleVerifyCode = useCallback(async () => {
-    const code = codeDigits.join("");
-    if (code.length !== CODE_LENGTH) {
+    const code = codeDigits.join("").trim();
+    // Check if all 6 digits are filled
+    if (code.length !== CODE_LENGTH || codeDigits.some(d => !d || d.trim() === '')) {
       setErrors((prev) => ({
         ...prev,
         code: "Please enter the complete verification code",
@@ -217,14 +218,43 @@ export default function Home() {
   }, []);
 
   const handleCodeChange = useCallback((value: string, index: number) => {
-    if (!/^\d?$/.test(value)) return;
-    const nextDigits = [...codeDigits];
-    nextDigits[index] = value;
-    setCodeDigits(nextDigits);
-    if (value && index < CODE_LENGTH - 1) {
-      codeRefs.current[index + 1]?.focus();
+    // Only allow digits, and limit to single character
+    const digit = value.replace(/\D/g, '').slice(-1); // Extract last digit only
+    if (!digit && value !== '') return; // Allow empty string for deletion
+    
+    setCodeDigits((prev) => {
+      const nextDigits = [...prev];
+      nextDigits[index] = digit;
+      return nextDigits;
+    });
+    
+    // Auto-focus next input when a digit is entered
+    if (digit && index < CODE_LENGTH - 1) {
+      setTimeout(() => codeRefs.current[index + 1]?.focus(), 0);
     }
-  }, [codeDigits]);
+  }, []);
+
+  const handleCodePaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, CODE_LENGTH);
+    
+    if (pastedData.length === 0) return;
+    
+    setCodeDigits((prev) => {
+      const nextDigits = [...prev];
+      // Fill in the pasted digits starting from the current index
+      const startIndex = parseInt((e.currentTarget as HTMLInputElement).getAttribute('data-index') || '0');
+      for (let i = 0; i < pastedData.length && startIndex + i < CODE_LENGTH; i++) {
+        nextDigits[startIndex + i] = pastedData[i];
+      }
+      return nextDigits;
+    });
+    
+    // Focus on the next empty input or the last input
+    const startIndex = parseInt((e.currentTarget as HTMLInputElement).getAttribute('data-index') || '0');
+    const nextFocusIndex = Math.min(startIndex + pastedData.length, CODE_LENGTH - 1);
+    setTimeout(() => codeRefs.current[nextFocusIndex]?.focus(), 0);
+  }, []);
 
   const handleCodeKeyDown = useCallback((
     event: React.KeyboardEvent<HTMLInputElement>,
@@ -232,6 +262,12 @@ export default function Home() {
   ) => {
     if (event.key === "Backspace" && !codeDigits[index] && index > 0) {
       codeRefs.current[index - 1]?.focus();
+      // Clear the previous input when backspacing on empty input
+      setCodeDigits((prev) => {
+        const nextDigits = [...prev];
+        nextDigits[index - 1] = '';
+        return nextDigits;
+      });
     }
   }, [codeDigits]);
 
@@ -384,13 +420,16 @@ export default function Home() {
                   <input
                     key={index}
                     type="text"
+                    inputMode="numeric"
                     className="code-input"
                     maxLength={1}
                     value={digit}
+                    data-index={index}
                     onChange={(event) =>
                       handleCodeChange(event.target.value, index)
                     }
                     onKeyDown={(event) => handleCodeKeyDown(event, index)}
+                    onPaste={index === 0 ? handleCodePaste : undefined}
                     ref={(ref) => {
                       codeRefs.current[index] = ref;
                     }}
