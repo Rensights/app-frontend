@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import "../dashboard/dashboard.css";
-import "./city-analysis.css";
 
 const MENU_ITEMS = [
   { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },

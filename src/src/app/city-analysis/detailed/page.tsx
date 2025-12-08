@@ -86,7 +86,7 @@ export default function DetailedCityAnalysisPage() {
   }
 
   return (
-    <div className="dashboard-page city-analysis-page">
+    <div className="dashboard-page city-analysis-page detailed-page">
       <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="logo-section">
           <div className="logo">Rensights</div>
