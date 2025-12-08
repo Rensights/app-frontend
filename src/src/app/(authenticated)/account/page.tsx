@@ -40,8 +40,14 @@ function AccountPageContent() {
           }
         }
 
-        const historyData = await apiClient.getPaymentHistory().catch(() => []);
-        setPaymentHistory(Array.isArray(historyData) ? historyData : []);
+        // Get payment history
+        try {
+          const historyData = await apiClient.getPaymentHistory();
+          setPaymentHistory(Array.isArray(historyData) ? historyData : []);
+        } catch (err: any) {
+          // If endpoint doesn't exist, use empty array
+          setPaymentHistory([]);
+        }
         
         if (contextUser) {
           setEditForm({
@@ -155,6 +161,118 @@ function AccountPageContent() {
     }
   };
 
+  const handleDownloadInvoice = async (payment: any) => {
+    try {
+      // Generate invoice PDF on client side or fetch from backend
+      const invoiceData = {
+        invoiceNumber: payment.id || `INV-${Date.now()}`,
+        date: payment.createdAt || new Date().toISOString(),
+        planType: payment.planType || "FREE",
+        status: payment.status || "ACTIVE",
+        startDate: payment.startDate,
+        endDate: payment.endDate,
+        customer: {
+          name: `${contextUser?.firstName || ""} ${contextUser?.lastName || ""}`.trim() || contextUser?.email,
+          email: contextUser?.email,
+          customerId: contextUser?.customerId,
+        }
+      };
+
+      // Create a simple HTML invoice and convert to PDF
+      const invoiceHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Invoice ${invoiceData.invoiceNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+            .header { border-bottom: 2px solid #f39c12; padding-bottom: 20px; margin-bottom: 30px; }
+            .invoice-title { font-size: 2em; color: #333; margin: 0; }
+            .invoice-number { color: #666; margin-top: 5px; }
+            .section { margin: 30px 0; }
+            .section-title { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 10px; }
+            .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+            .info-label { color: #666; }
+            .info-value { color: #333; font-weight: 500; }
+            .plan-badge { display: inline-block; padding: 5px 15px; border-radius: 5px; background: #f39c12; color: white; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9em; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 class="invoice-title">Rensights</h1>
+            <div class="invoice-number">Invoice #${invoiceData.invoiceNumber}</div>
+          </div>
+          
+          <div class="section">
+            <div class="section-title">Customer Information</div>
+            <div class="info-row">
+              <span class="info-label">Name:</span>
+              <span class="info-value">${invoiceData.customer.name}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span class="info-value">${invoiceData.customer.email}</span>
+            </div>
+            ${invoiceData.customer.customerId ? `
+            <div class="info-row">
+              <span class="info-label">Customer ID:</span>
+              <span class="info-value">${invoiceData.customer.customerId}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="section">
+            <div class="section-title">Subscription Details</div>
+            <div class="info-row">
+              <span class="info-label">Plan:</span>
+              <span class="info-value"><span class="plan-badge">${invoiceData.planType}</span></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Status:</span>
+              <span class="info-value">${invoiceData.status}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Invoice Date:</span>
+              <span class="info-value">${formatDate(invoiceData.date)}</span>
+            </div>
+            ${invoiceData.startDate ? `
+            <div class="info-row">
+              <span class="info-label">Start Date:</span>
+              <span class="info-value">${formatDate(invoiceData.startDate)}</span>
+            </div>
+            ` : ''}
+            ${invoiceData.endDate ? `
+            <div class="info-row">
+              <span class="info-label">End Date:</span>
+              <span class="info-value">${formatDate(invoiceData.endDate)}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <div class="footer">
+            <p>Thank you for choosing Rensights!</p>
+            <p>This is a computer-generated invoice.</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Open in new window for printing/downloading
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(invoiceHTML);
+        printWindow.document.close();
+        // Wait for content to load then trigger print
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      }
+    } catch (err: any) {
+      setError("Failed to generate invoice: " + (err?.message || "Unknown error"));
+    }
+  };
+
   const formatDate = (dateStr: string | undefined | null): string => {
     if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === "" || dateStr === "N/A") {
       return "N/A";
@@ -172,18 +290,6 @@ function AccountPageContent() {
       });
     } catch {
       return dateStr;
-    }
-  };
-
-  const getPlanIcon = (planType?: string | null) => {
-    if (!planType) return "🆓";
-    switch (planType.toUpperCase()) {
-      case "PREMIUM":
-        return "⭐";
-      case "ENTERPRISE":
-        return "💎";
-      default:
-        return "🆓";
     }
   };
 
@@ -220,36 +326,6 @@ function AccountPageContent() {
 
   return (
     <div className="account-page">
-      {/* Hero Header Section */}
-      <div className="account-hero">
-        <div className="hero-content">
-          <div className="hero-avatar">
-            <div className="avatar-circle">
-              {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
-            </div>
-            <div className="avatar-badge">
-              {getPlanIcon(subscription?.planType)}
-            </div>
-          </div>
-          <div className="hero-info">
-            <h1 className="hero-title">
-              {user?.firstName || user?.lastName
-                ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
-                : "Welcome Back!"}
-            </h1>
-            <p className="hero-subtitle">{user?.email || ""}</p>
-            <div className="hero-badges">
-              <span className={`plan-badge-inline ${getPlanColor(subscription?.planType)}`}>
-                {getPlanIcon(subscription?.planType)} {subscription?.planType || "FREE"} Plan
-              </span>
-              <span className={`status-badge-inline ${(subscription?.status || "ACTIVE").toLowerCase()}`}>
-                {subscription?.status || "ACTIVE"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Alert Messages */}
       {error && (
         <div className="alert alert-error" role="alert">
@@ -267,293 +343,175 @@ function AccountPageContent() {
         </div>
       )}
 
-      {/* Main Content Grid */}
-      <div className="account-grid">
-        {/* Profile Card */}
-        <div className="account-card profile-card">
-          <div className="card-icon-header">
-            <div className="card-icon">👤</div>
-            <div className="card-header-content">
-              <h2 className="card-title">Profile Information</h2>
-              <p className="card-subtitle">Manage your personal details</p>
+      {/* Account Information */}
+      <div className="account-card">
+        <h2 className="card-title">Account Information</h2>
+        {isEditing ? (
+          <div className="edit-form">
+            <div className="form-group">
+              <label htmlFor="firstName">First Name</label>
+              <input
+                id="firstName"
+                type="text"
+                value={editForm.firstName}
+                onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                placeholder="Enter your first name"
+                disabled={saving}
+              />
             </div>
-            {!isEditing && (
-              <button className="btn-icon" onClick={handleEdit} aria-label="Edit Profile">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
+            <div className="form-group">
+              <label htmlFor="lastName">Last Name</label>
+              <input
+                id="lastName"
+                type="text"
+                value={editForm.lastName}
+                onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                placeholder="Enter your last name"
+                disabled={saving}
+              />
+            </div>
+            <div className="form-actions">
+              <button className="btn btn-secondary" onClick={handleCancel} disabled={saving}>
+                Cancel
               </button>
-            )}
-          </div>
-
-          {isEditing ? (
-            <div className="edit-form">
-              <div className="form-group">
-                <label htmlFor="firstName">
-                  <span className="label-icon">📝</span>
-                  First Name
-                </label>
-                <input
-                  id="firstName"
-                  type="text"
-                  value={editForm.firstName}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, firstName: e.target.value })
-                  }
-                  placeholder="Enter your first name"
-                  disabled={saving}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="lastName">
-                  <span className="label-icon">📝</span>
-                  Last Name
-                </label>
-                <input
-                  id="lastName"
-                  type="text"
-                  value={editForm.lastName}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, lastName: e.target.value })
-                  }
-                  placeholder="Enter your last name"
-                  disabled={saving}
-                />
-              </div>
-              <div className="form-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleCancel}
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleSave}
-                  disabled={saving}
-                >
-                  {saving ? (
-                    <>
-                      <span className="spinner-small"></span>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <span>✓</span>
-                      Save Changes
-                    </>
-                  )}
-                </button>
-              </div>
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
             </div>
-          ) : (
-            <div className="profile-details">
-              <div className="detail-item">
-                <div className="detail-icon">👤</div>
-                <div className="detail-content">
-                  <span className="detail-label">Full Name</span>
-                  <span className="detail-value">
-                    {user?.firstName || user?.lastName
-                      ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
-                      : "Not set"}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="detail-item">
-                <div className="detail-icon">✉️</div>
-                <div className="detail-content">
-                  <span className="detail-label">Email Address</span>
-                  <span className="detail-value">{user?.email || "N/A"}</span>
-                </div>
-              </div>
-              
-              <div className="detail-item">
-                <div className="detail-icon">🆔</div>
-                <div className="detail-content">
-                  <span className="detail-label">Customer ID</span>
-                  <span className="detail-value code">{user?.customerId && user.customerId.trim() !== "" ? user.customerId : "N/A"}</span>
-                </div>
-              </div>
-              
-              <div className="detail-item">
-                <div className="detail-icon">🎯</div>
-                <div className="detail-content">
-                  <span className="detail-label">Account Status</span>
-                  <span className={`status-badge ${getPlanColor(user?.userTier)}`}>
-                    {user?.userTier || "FREE"}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="detail-item">
-                <div className="detail-icon">📅</div>
-                <div className="detail-content">
-                  <span className="detail-label">Member Since</span>
-                  <span className="detail-value">{formatDate(user?.createdAt)}</span>
-                </div>
-              </div>
+          </div>
+        ) : (
+          <div className="account-info">
+            <div className="info-item">
+              <span className="info-label">Full Name:</span>
+              <span className="info-value">
+                {user?.firstName || user?.lastName
+                  ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
+                  : "Not set"}
+              </span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Email:</span>
+              <span className="info-value">{user?.email || "N/A"}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Customer ID:</span>
+              <span className="info-value">{user?.customerId && user.customerId.trim() !== "" ? user.customerId : "N/A"}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Account Status:</span>
+              <span className={`status-badge ${getPlanColor(user?.userTier)}`}>
+                {user?.userTier || "FREE"}
+              </span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Member Since:</span>
+              <span className="info-value">{formatDate(user?.createdAt)}</span>
+            </div>
+            <button className="btn btn-edit" onClick={handleEdit}>
+              Edit Profile
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Subscription Management */}
+      <div className="account-card">
+        <h2 className="card-title">Subscription Management</h2>
+        <div className="subscription-info">
+          <div className="info-item">
+            <span className="info-label">Current Plan:</span>
+            <span className={`status-badge ${getPlanColor(subscription?.planType)}`}>
+              {subscription?.planType || "FREE"}
+            </span>
+          </div>
+          {subscription?.status && (
+            <div className="info-item">
+              <span className="info-label">Status:</span>
+              <span className={`status-badge ${(subscription.status || "ACTIVE").toLowerCase()}`}>
+                {subscription.status || "ACTIVE"}
+              </span>
+            </div>
+          )}
+          {subscription?.startDate && (
+            <div className="info-item">
+              <span className="info-label">Start Date:</span>
+              <span className="info-value">{formatDate(subscription.startDate)}</span>
+            </div>
+          )}
+          {subscription?.endDate && (
+            <div className="info-item">
+              <span className="info-label">End Date:</span>
+              <span className="info-value">{formatDate(subscription.endDate)}</span>
             </div>
           )}
         </div>
 
-        {/* Subscription Card */}
-        <div className="account-card subscription-card">
-          <div className="card-icon-header">
-            <div className="card-icon">💳</div>
-            <div className="card-header-content">
-              <h2 className="card-title">Subscription Plan</h2>
-              <p className="card-subtitle">Manage your subscription</p>
-            </div>
-          </div>
-
-          <div className="subscription-content">
-            <div className={`plan-card ${getPlanColor(subscription?.planType)}`}>
-              <div className="plan-header">
-                <div className="plan-icon-large">{getPlanIcon(subscription?.planType)}</div>
-                <div className="plan-info">
-                  <div className="plan-name">{subscription?.planType || "FREE"} Plan</div>
-                  <div className="plan-status-text">
-                    Status: <span className={`status-badge ${(subscription?.status || "ACTIVE").toLowerCase()}`}>
-                      {subscription?.status || "ACTIVE"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {subscription?.startDate && (
-                <div className="plan-dates">
-                  <div className="date-item">
-                    <span className="date-icon">📆</span>
-                    <div className="date-info">
-                      <span className="date-label">Start Date</span>
-                      <span className="date-value">{formatDate(subscription.startDate)}</span>
-                    </div>
-                  </div>
-                  {subscription?.endDate && (
-                    <div className="date-item">
-                      <span className="date-icon">⏰</span>
-                      <div className="date-info">
-                        <span className="date-label">End Date</span>
-                        <span className="date-value">{formatDate(subscription.endDate)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="subscription-actions">
-              {!subscription || subscription?.planType === "FREE" ? (
-                <div className="upgrade-section">
-                  <p className="upgrade-text">✨ Unlock Premium Features</p>
-                  <div className="upgrade-buttons">
-                    <button
-                      className="btn btn-upgrade btn-premium"
-                      onClick={() => handleUpgrade("PREMIUM")}
-                    >
-                      <span className="btn-icon">⭐</span>
-                      <div>
-                        <div className="btn-title">Premium Plan</div>
-                        <div className="btn-subtitle">Advanced features</div>
-                      </div>
-                      <span className="btn-arrow">→</span>
-                    </button>
-                    <button
-                      className="btn btn-upgrade btn-enterprise"
-                      onClick={() => handleUpgrade("ENTERPRISE")}
-                    >
-                      <span className="btn-icon">💎</span>
-                      <div>
-                        <div className="btn-title">Enterprise Plan</div>
-                        <div className="btn-subtitle">Full access</div>
-                      </div>
-                      <span className="btn-arrow">→</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="subscription-management">
-                  {subscription?.status === "ACTIVE" && (
-                    <>
-                      <button
-                        className="btn btn-primary"
-                        onClick={handleRenew}
-                      >
-                        <span>🔄</span>
-                        Renew Subscription
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={handleCancelSubscription}
-                      >
-                        <span>🚫</span>
-                        Cancel Subscription
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Payment History Card */}
-        <div className="account-card payment-card">
-          <div className="card-icon-header">
-            <div className="card-icon">📜</div>
-            <div className="card-header-content">
-              <h2 className="card-title">Payment History</h2>
-              <p className="card-subtitle">View your transaction history</p>
-            </div>
-            {paymentHistory.length > 0 && (
-              <div className="card-badge">{paymentHistory.length}</div>
-            )}
-          </div>
-
-          {!paymentHistory || paymentHistory.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <p className="empty-text">No Payment History</p>
-              <p className="empty-subtext">Your payment history will appear here once you make a purchase</p>
+        <div className="subscription-actions">
+          {!subscription || subscription?.planType === "FREE" ? (
+            <div className="upgrade-options">
+              <button className="btn btn-primary" onClick={() => handleUpgrade("PREMIUM")}>
+                Upgrade to Premium
+              </button>
+              <button className="btn btn-primary" onClick={() => handleUpgrade("ENTERPRISE")}>
+                Upgrade to Enterprise
+              </button>
             </div>
           ) : (
-            <div className="payment-list">
-              {paymentHistory.map((payment: any, index: number) => (
-                <div key={payment.id || index} className="payment-item">
-                  <div className="payment-header">
-                    <div className="payment-info">
-                      <div className="payment-icon-large">{getPlanIcon(payment.planType)}</div>
-                      <div>
-                        <div className="payment-plan">{payment.planType || "FREE"}</div>
-                        <div className="payment-date">Created: {formatDate(payment.createdAt)}</div>
+            <div className="subscription-management">
+              {subscription?.status === "ACTIVE" && (
+                <>
+                  <button className="btn btn-primary" onClick={handleRenew}>
+                    Renew Subscription
+                  </button>
+                  <button className="btn btn-danger" onClick={handleCancelSubscription}>
+                    Cancel Subscription
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Invoice History */}
+      <div className="account-card">
+        <h2 className="card-title">Invoice History</h2>
+        {!paymentHistory || paymentHistory.length === 0 ? (
+          <div className="empty-state">
+            <p>No invoices found</p>
+            <p className="empty-subtext">Your invoice history will appear here once you make a purchase</p>
+          </div>
+        ) : (
+          <div className="invoice-list">
+            {paymentHistory.map((payment: any, index: number) => (
+              <div key={payment.id || index} className="invoice-item">
+                <div className="invoice-header">
+                  <div className="invoice-info">
+                    <div className="invoice-plan">{payment.planType || "FREE"}</div>
+                    <div className="invoice-date">{formatDate(payment.createdAt)}</div>
+                    {payment.startDate && payment.endDate && (
+                      <div className="invoice-period">
+                        {formatDate(payment.startDate)} - {formatDate(payment.endDate)}
                       </div>
-                    </div>
-                    <span className={`payment-status ${(payment.status || "ACTIVE").toLowerCase()}`}>
+                    )}
+                  </div>
+                  <div className="invoice-actions">
+                    <span className={`invoice-status ${(payment.status || "ACTIVE").toLowerCase()}`}>
                       {payment.status || "ACTIVE"}
                     </span>
+                    <button 
+                      className="btn btn-download"
+                      onClick={() => handleDownloadInvoice(payment)}
+                      title="Download Invoice"
+                    >
+                      📥 Download
+                    </button>
                   </div>
-                  {payment.startDate && (
-                    <div className="payment-details">
-                      <div className="payment-detail-item">
-                        <span className="detail-label-small">📅 Start:</span>
-                        <span>{formatDate(payment.startDate)}</span>
-                      </div>
-                      {payment.endDate && (
-                        <div className="payment-detail-item">
-                          <span className="detail-label-small">⏰ End:</span>
-                          <span>{formatDate(payment.endDate)}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
