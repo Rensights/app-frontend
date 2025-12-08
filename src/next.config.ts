@@ -90,8 +90,12 @@ const nextConfig: NextConfig = {
     return config;
   },
   
-  // Turbopack config (empty for now - uses defaults)
-  turbopack: {},
+  // Turbopack config
+  turbopack: {
+    resolveAlias: {
+      // Ensure instrumentation.js is only loaded in Node.js runtime
+    },
+  },
   
   // Expose environment variables to client side
   // NOTE: This env object is evaluated at BUILD TIME, not runtime

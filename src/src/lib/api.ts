@@ -537,18 +537,3 @@ export interface PaginatedDealResponse {
 // Create API client - URL will be read lazily from window.__API_URL__ at request time
 // This ensures we always use the value injected by layout.tsx from the Kubernetes secret
 export const apiClient = new ApiClient();
-
-  buildingStatus: string;
-}
-
-export interface PaginatedDealResponse {
-  content: Deal[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
-
-// Create API client - URL will be read lazily from window.__API_URL__ at request time
-// This ensures we always use the value injected by layout.tsx from the Kubernetes secret
-export const apiClient = new ApiClient();
