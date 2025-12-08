@@ -238,7 +238,7 @@ export default function AnalysisRequestPage() {
 
   return (
     <div className="analysis-page">
-      <div className="container">
+      <div className="analysis-page-wrapper">
         <header className="header">
           <div className="header-left">
             <div className="logo">Rensights</div>
@@ -598,6 +598,7 @@ export default function AnalysisRequestPage() {
             </div>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -5,22 +5,13 @@
 }
 
 .analysis-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f6b042 0%, #f39c12 100%);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-.analysis-page .main-content {
-  margin-left: 260px;
-  flex: 1;
   padding: 30px;
-  min-height: 100vh;
-  overflow-y: auto;
-}
-
-.container {
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+}
+
+.analysis-page-wrapper {
   width: 100%;
 }
 

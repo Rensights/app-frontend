@@ -128,7 +128,8 @@ export default function DealsPage() {
   }
 
   return (
-    <div className="container">
+    <div className="deals-page">
+      <div className="container">
       <header className="header">
         <div className="header-left">
           <div className="page-title">Underpriced Property Deals</div>
@@ -315,6 +316,7 @@ export default function DealsPage() {
           </button>
         </div>
       </section>
+      </div>
     </div>
   );
 }
