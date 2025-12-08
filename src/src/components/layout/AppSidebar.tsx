@@ -21,7 +21,8 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[number]) => {
+  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[number], e: React.MouseEvent) => {
+    e.preventDefault();
     if (item.id === "account") {
       router.push("/account");
     } else {
@@ -53,7 +54,7 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
               href={item.path}
               aria-current={pathname === item.path ? "page" : undefined}
               className={`menu-item ${pathname === item.path ? "active" : ""}`}
-              onClick={onClose}
+              onClick={(e) => handleSectionChange(item, e)}
               prefetch={true}
             >
               <span className="menu-icon" aria-hidden>
