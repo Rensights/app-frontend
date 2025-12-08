@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { getRuntimeApiUrl } from "../lib/runtime-config";
+import { UserProvider } from "../context/UserContext";
 
 export const metadata: Metadata = {
   title: "Rensights",
@@ -62,7 +63,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://js.stripe.com" />
       </head>
       <body>
-        {children}
+        <UserProvider>
+          {children}
+        </UserProvider>
       </body>
     </html>
   );
