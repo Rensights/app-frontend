@@ -9,7 +9,7 @@ import "./city-analysis.css";
 const MENU_ITEMS = [
   { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
   { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
-  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/deals" },
+  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/weekly-deals" },
   { id: "account", label: "Account", icon: "⚙️", path: "/account" },
 ];
 
