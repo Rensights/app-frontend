@@ -1,27 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient, Deal } from "@/lib/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "./property-details.css";
 
-const MENU_ITEMS = [
-  { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
-  { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
-  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/weekly-deals" },
-  { id: "account", label: "Account", icon: "⚙️", path: "/account" },
-];
-
 type TabId = "listed" | "transactions";
 
 function PropertyDetailsPageContent() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comparableDeals, setComparableDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,83 +65,28 @@ function PropertyDetailsPageContent() {
   }, [propertyId]);
 
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await apiClient.getCurrentUser();
-        setUser(userData);
-      } catch (error) {
-        router.push("/");
-      }
-    };
-    loadUser();
-  }, [pathname, router]);
-
-  useEffect(() => {
     if (propertyId) {
       loadDeal();
     }
-  }, [pathname, propertyId, loadDeal]);
-
-  const handleLogout = useCallback(() => {
-    apiClient.logout();
-  }, []);
-
-  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[0]) => {
-    if (item.id === "account") {
-      router.push("/account");
-      return;
-    }
-    router.push(item.path);
-    setIsSidebarOpen(false);
-  }, [router]);
-
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen((prev) => !prev);
-  }, []);
-
-  const closeSidebar = useCallback(() => {
-    setIsSidebarOpen(false);
-  }, []);
+  }, [propertyId, loadDeal]);
 
   const handleGoBack = () => router.push("/deals");
   const handleViewProperty = () => alert("Opening property listing page...");
   const handleViewAll = () => alert("Loading all comparable properties...");
 
   if (loading) {
-    return (
-      <div className="dashboard-page property-page">
-        <aside className="sidebar">
-          <div className="logo-section">
-            <div className="logo">Rensights</div>
-            <div className="logo-subtitle">Dubai Property Intelligence</div>
-          </div>
-        </aside>
-        <main className="main-content">
-          <LoadingSpinner message="Loading Property Details..." />
-        </main>
-      </div>
-    );
+    return <LoadingSpinner message="Loading Property Details..." />;
   }
 
   if (error || !deal) {
     return (
-      <div className="dashboard-page property-page">
-        <aside className="sidebar">
-          <div className="logo-section">
-            <div className="logo">Rensights</div>
-            <div className="logo-subtitle">Dubai Property Intelligence</div>
-          </div>
-        </aside>
-        <main className="main-content">
-          <div style={{ padding: "2rem", textAlign: "center" }}>
-            <p style={{ color: "#c33", marginBottom: "1rem" }}>
-              {error || "Property not found"}
-            </p>
-            <button onClick={() => router.push("/deals")} style={{ padding: "10px 20px", background: "#f39c12", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}>
-              Back to Deals
-            </button>
-          </div>
-        </main>
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        <p style={{ color: "#c33", marginBottom: "1rem" }}>
+          {error || "Property not found"}
+        </p>
+        <button onClick={() => router.push("/deals")} style={{ padding: "10px 20px", background: "#f39c12", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}>
+          Back to Deals
+        </button>
       </div>
     );
   }
@@ -163,80 +98,26 @@ function PropertyDetailsPageContent() {
   const discountPercent = deal.discount ? parseFloat(deal.discount.replace("%", "")) : 0;
 
   return (
-    <div className="dashboard-page property-page">
-      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
-        <div className="logo-section">
-          <div className="logo">Rensights</div>
-          <div className="logo-subtitle">Dubai Property Intelligence</div>
-          <button
-            className="sidebar-close"
-            type="button"
-            aria-label="Close navigation"
-            onClick={closeSidebar}
-          >
-            ×
-          </button>
-        </div>
-
-        <nav className="menu">
-          {MENU_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className="menu-item"
-              onClick={() => handleSectionChange(item)}
-            >
-              <span className="menu-icon" aria-hidden>
-                {item.icon}
-              </span>
-              <span className="menu-text">{item.label}</span>
+    <div className="property-page">
+      <div className="container">
+        <header className="header">
+          <div className="header-left">
+            <button className="back-btn" onClick={handleGoBack}>
+              ← Back to Deals
             </button>
-          ))}
-        </nav>
+            <div className="logo">Rensights</div>
+          </div>
+          <div className="verified-badge">Verified Listing</div>
+        </header>
 
-        <div className="logout-section">
-          <button className="logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </aside>
+        {error && (
+          <div style={{ padding: "1rem", background: "#fee", color: "#c33", borderRadius: "8px", marginBottom: "1rem" }}>
+            {error}
+          </div>
+        )}
 
-      <div
-        className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
-        onClick={closeSidebar}
-      />
-
-      <main className="main-content">
-        <button
-          className="menu-toggle"
-          type="button"
-          aria-label="Toggle navigation"
-          onClick={toggleSidebar}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-
-        <div className="container">
-          <header className="header">
-            <div className="header-left">
-              <button className="back-btn" onClick={handleGoBack}>
-                ← Back to Deals
-              </button>
-              <div className="logo">Rensights</div>
-            </div>
-            <div className="verified-badge">Verified Listing</div>
-          </header>
-
-          {error && (
-            <div style={{ padding: "1rem", background: "#fee", color: "#c33", borderRadius: "8px", marginBottom: "1rem" }}>
-              {error}
-            </div>
-          )}
-
-          <div className="property-content-grid">
-            <div className="property-overview">
+        <div className="property-content-grid">
+          <div className="property-overview">
             <div className="property-header">
               <h1 className="property-title">{deal.name || "Property"}</h1>
               <p className="property-location">{deal.location}, {deal.city}</p>
@@ -408,11 +289,11 @@ function PropertyDetailsPageContent() {
                 )}
               </div>
 
-            <button
-              className="action-btn secondary"
-              onClick={handleViewAll}
-              type="button"
-            >
+              <button
+                className="action-btn secondary"
+                onClick={handleViewAll}
+                type="button"
+              >
                 View All Comparable Properties
               </button>
             </div>
@@ -501,9 +382,8 @@ function PropertyDetailsPageContent() {
               </p>
             </div>
           </div>
-          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
@@ -511,9 +391,7 @@ function PropertyDetailsPageContent() {
 export default function PropertyDetailsPage() {
   return (
     <Suspense fallback={
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Loading..." />
-      </div>
+      <LoadingSpinner fullPage={true} message="Loading..." />
     }>
       <PropertyDetailsPageContent />
     </Suspense>

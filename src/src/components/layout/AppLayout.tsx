@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, ReactNode } from "react";
+import { useState, useEffect, useCallback, ReactNode } from "react";
 import { useUser } from "@/context/UserContext";
 import { AppSidebar } from "./AppSidebar";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -12,7 +12,22 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   const { loading, user, logout } = useUser();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Set sidebar state based on screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      if (window.innerWidth > 1024) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((prev) => !prev);
