@@ -54,7 +54,7 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
               href={item.path}
               aria-current={pathname === item.path ? "page" : undefined}
               className={`menu-item ${pathname === item.path ? "active" : ""}`}
-              onClick={(e) => handleSectionChange(item, e)}
+              onClick={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleSectionChange(item, e)}
               prefetch={true}
             >
               <span className="menu-icon" aria-hidden>
