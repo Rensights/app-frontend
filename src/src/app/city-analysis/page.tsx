@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "./city-analysis.css";
 
