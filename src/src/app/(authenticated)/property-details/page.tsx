@@ -212,7 +212,7 @@ function PropertyDetailsPageContent() {
                   />
                   <DescriptionStat
                     label="Building Status:"
-                    value={deal.buildingStatus === "READY" ? "Ready" : "Off-Plan"}
+                    value={deal.buildingStatus === "READY" || deal.buildingStatus === "ready" ? "Ready" : "Off-Plan"}
                   />
                   <DescriptionStat
                     label="Listed Price:"
