@@ -58,7 +58,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setError(err);
       setUser(null);
       setSubscription(null);
-      // Don't redirect here - let pages handle it if needed
+      
+      // If authentication failed (401/403), clear token and ensure redirect
+      // The API client should already have cleared the token, but we ensure user state is cleared
+      if (err.status === 401 || err.status === 403) {
+        apiClient.clearToken();
+        // Don't redirect here - AppLayout will handle it based on user state
+      }
     } finally {
       setLoading(false);
     }

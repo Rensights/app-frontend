@@ -156,6 +156,22 @@ class ApiClient {
     })
       .then(async (response) => {
         if (!response.ok) {
+          // Handle authentication/authorization errors (401/403) - redirect to login
+          if (response.status === 401 || response.status === 403) {
+            // Clear token on authentication failure
+            this.clearToken();
+            // Redirect to login page if we're in the browser and not already on a public page
+            if (typeof window !== 'undefined') {
+              const currentPath = window.location.pathname;
+              const publicPaths = ['/', '/signup', '/forgot-password', '/reset-password', '/early-access'];
+              const isPublicPath = publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'));
+              
+              if (!isPublicPath) {
+                window.location.href = '/';
+              }
+            }
+          }
+          
           const errorText = await response.text().catch(() => 'Unknown error');
           let error;
           try {
@@ -164,7 +180,6 @@ class ApiClient {
             error = { error: errorText || `Request failed with status ${response.status}` };
           }
           console.error(`API Error [${response.status}]: ${endpoint}`, error);
-          // Handle different error response formats
           const errorMessage = error.error || error.message || error.details || errorText || `Request failed with status ${response.status}`;
           const apiError = new Error(errorMessage);
           (apiError as any).status = response.status;
@@ -420,6 +435,22 @@ class ApiClient {
     });
     
     if (!response.ok) {
+          // Handle authentication errors (401/403) - clear invalid token
+          if (response.status === 401 || response.status === 403) {
+            // Clear token on authentication failure
+            this.clearToken();
+            // Redirect to login page if we're in the browser and not already on a public page
+            if (typeof window !== 'undefined') {
+              const currentPath = window.location.pathname;
+              const publicPaths = ['/', '/signup', '/forgot-password', '/reset-password', '/early-access'];
+              const isPublicPath = publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'));
+              
+              if (!isPublicPath) {
+                window.location.href = '/';
+              }
+            }
+          }
+      
       const errorText = await response.text().catch(() => 'Unknown error');
       let error;
       try {
@@ -486,6 +517,21 @@ export interface Deal {
   estimateRange?: string;
   discount?: string;
   rentalYield?: string;
+  buildingStatus: string;
+}
+
+export interface PaginatedDealResponse {
+  content: Deal[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+// Create API client - URL will be read lazily from window.__API_URL__ at request time
+// This ensures we always use the value injected by layout.tsx from the Kubernetes secret
+export const apiClient = new ApiClient();
+
   buildingStatus: string;
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { AppSidebar } from "./AppSidebar";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -11,6 +12,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
+  const router = useRouter();
   const { loading, user, logout } = useUser();
   // Initialize sidebar as open (desktop default) - will be adjusted on mount
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -58,6 +60,24 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
     logout();
   }, [logout]);
 
+  // Redirect to login if auth is required but no user is found
+  useEffect(() => {
+    if (!loading && requireAuth && !user) {
+      // Check if we have a token in localStorage
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      
+      // If no token, definitely redirect to login
+      if (!token) {
+        router.push('/');
+        return;
+      }
+      
+      // If we have a token but no user after loading, it means the token is invalid
+      // The API client should have cleared it, but we'll redirect anyway
+      router.push('/');
+    }
+  }, [loading, requireAuth, user, router]);
+
   // Show loading spinner while checking authentication
   if (loading) {
     return (
@@ -67,11 +87,14 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
     );
   }
 
-  // If auth required but no user, redirect to login
-  // Note: This will be handled by individual pages that need auth
+  // If auth required but no user, don't render the page content
+  // The useEffect above will handle the redirect
   if (requireAuth && !user) {
-    // Pages will handle their own redirects via useEffect
-    return <>{children}</>;
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Redirecting to login..." />
+      </div>
+    );
   }
 
   return (
