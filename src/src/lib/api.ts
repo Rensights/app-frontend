@@ -389,7 +389,7 @@ class ApiClient {
   // User endpoints - Optimized: Enable caching for GET requests
   async getCurrentUser(): Promise<UserResponse> {
     // Don't use cache - always fetch fresh user data to avoid stale state after login/logout
-    return this.request<UserResponse>('/users/me', {}, false);
+    return this.request<UserResponse>('/api/users/me', {}, false);
   }
 
   async updateUserProfile(data: { firstName?: string; lastName?: string }): Promise<UserResponse> {
@@ -403,7 +403,7 @@ class ApiClient {
   }
 
   async getPaymentHistory(): Promise<SubscriptionResponse[]> {
-    return this.request<SubscriptionResponse[]>('/users/me/payment-history', {}, true);
+    return this.request<SubscriptionResponse[]>('/api/users/me/payment-history', {}, false);
   }
 
   // Subscription endpoints - Optimized: Enable caching
@@ -412,7 +412,8 @@ class ApiClient {
   }
 
   async getCurrentSubscription(): Promise<SubscriptionResponse> {
-    return this.request<SubscriptionResponse>('/api/subscriptions', {}, true);
+    // Don't use cache - always fetch fresh subscription data
+    return this.request<SubscriptionResponse>('/api/subscriptions', {}, false);
   }
 
   async purchasePlan(planType: 'FREE' | 'PREMIUM' | 'ENTERPRISE', paymentMethodId?: string): Promise<SubscriptionResponse> {
