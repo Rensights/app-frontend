@@ -46,6 +46,17 @@ export default function DashboardPage() {
       router.push("/account");
       return;
     }
+    if (item.id === "alerts") {
+      // For Weekly Deals, scroll to the section on dashboard instead of navigating
+      setIsSidebarOpen(false);
+      setTimeout(() => {
+        const dealsSection = document.getElementById('weekly-deals-section');
+        if (dealsSection) {
+          dealsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+      return;
+    }
     router.push(item.path);
     setIsSidebarOpen(false);
   }, [router]);
@@ -284,7 +295,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="content-section active">
+        <section id="weekly-deals-section" className="content-section active">
           <div className="section-card">
             <div className="section-title">Weekly Property Deals</div>
 
