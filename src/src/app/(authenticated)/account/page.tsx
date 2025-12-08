@@ -1,0 +1,377 @@
+"use client";
+
+import { useState, useEffect, Suspense, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { apiClient } from "@/lib/api";
+import { useUser } from "@/context/UserContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import "../dashboard/dashboard.css";
+import "./account.css";
+
+function AccountPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user: contextUser, subscription: contextSubscription, refreshUser, refreshSubscription, loading: contextLoading } = useUser();
+  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Check if we have a session_id from Stripe checkout
+        const sessionId = searchParams.get('session_id');
+        if (sessionId) {
+          try {
+            console.log("Processing checkout success with session_id:", sessionId);
+            const updatedSubscription = await apiClient.checkoutSuccess(sessionId);
+            console.log("Checkout success response:", updatedSubscription);
+            await refreshSubscription();
+            await refreshUser();
+            router.replace('/account', { scroll: false });
+          } catch (err: any) {
+            console.error("Checkout success error:", err);
+            setError(err.message || "Failed to process payment");
+          }
+        }
+
+        const historyData = await apiClient.getPaymentHistory().catch(() => []);
+        setPaymentHistory(historyData);
+        if (contextUser) {
+          setEditForm({
+            firstName: contextUser.firstName || "",
+            lastName: contextUser.lastName || "",
+          });
+        }
+      } catch (error) {
+        // Error handled by context
+      }
+    };
+    if (!contextLoading && contextUser) {
+      loadData();
+    }
+  }, [router, searchParams, contextUser, contextLoading, refreshUser, refreshSubscription]);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    if (contextUser) {
+      setEditForm({
+        firstName: contextUser.firstName || "",
+        lastName: contextUser.lastName || "",
+      });
+    }
+    setError("");
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const updatedUser = await apiClient.updateUserProfile({
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+      });
+      await refreshUser();
+      setIsEditing(false);
+    } catch (err: any) {
+      setError(err.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpgrade = async (planType: "PREMIUM" | "ENTERPRISE") => {
+    try {
+      const { url } = await apiClient.createCheckoutSession(planType);
+      window.location.href = url;
+    } catch (err: any) {
+      setError(err.message || "Failed to create checkout session");
+    }
+  };
+
+  const handleRenew = async () => {
+    try {
+      const { url } = await apiClient.createCheckoutSession(
+        contextSubscription?.planType === "PREMIUM" ? "PREMIUM" : "ENTERPRISE"
+      );
+      window.location.href = url;
+    } catch (err: any) {
+      setError(err.message || "Failed to renew subscription");
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm("Are you sure you want to cancel your subscription?")) {
+      return;
+    }
+    try {
+      await apiClient.cancelSubscription();
+      await refreshSubscription();
+    } catch (err: any) {
+      setError(err.message || "Failed to cancel subscription");
+    }
+  };
+
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr || dateStr.trim() === "" || dateStr === "N/A") return "N/A";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return dateStr;
+      }
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  if (contextLoading || loading) {
+    return (
+      <LoadingSpinner fullPage={false} message="Loading Account..." />
+    );
+  }
+
+  const user = contextUser;
+  const subscription = contextSubscription;
+
+  return (
+    <div className="account-container">
+      <div className="account-content">
+        {error && (
+          <div className="error-message" style={{ marginBottom: "1rem", padding: "1rem", background: "#fee", color: "#c33", borderRadius: "8px" }}>
+            {error}
+          </div>
+        )}
+
+        {/* Profile Section */}
+        <div className="account-card">
+          <div className="card-header">
+            <h2 className="card-title">Profile</h2>
+            {!isEditing && (
+              <button className="btn btn-secondary" onClick={handleEdit}>
+                Edit Profile
+              </button>
+            )}
+          </div>
+
+          {isEditing ? (
+            <div className="edit-form">
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  value={editForm.firstName}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, firstName: e.target.value })
+                  }
+                  placeholder="First Name"
+                />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  value={editForm.lastName}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, lastName: e.target.value })
+                  }
+                  placeholder="Last Name"
+                />
+              </div>
+              <div className="form-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleCancel}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="profile-info">
+              <div className="info-row">
+                <span className="info-label">Name:</span>
+                <span className="info-value">
+                  {user?.firstName || user?.lastName
+                    ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
+                    : "Not set"}
+                </span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Email:</span>
+                <span className="info-value">{user?.email}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Customer ID:</span>
+                <span className="info-value">
+                  {user?.customerId && user.customerId.trim() !== "" ? user.customerId : "N/A"}
+                </span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">User Status:</span>
+                <span className="info-value">
+                  <span
+                    className={`status-badge ${
+                      user?.userTier?.toLowerCase() || "free"
+                    }`}
+                  >
+                    {user?.userTier || "FREE"}
+                  </span>
+                </span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Member Since:</span>
+                <span className="info-value">
+                  {formatDate(user?.createdAt)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Subscription Section */}
+        <div className="account-card">
+          <div className="card-header">
+            <h2 className="card-title">Subscription</h2>
+          </div>
+
+          <div className="subscription-info">
+            <div className="subscription-plan">
+              <div className="plan-badge-large">
+                {subscription?.planType === "FREE" && "🆓"}
+                {subscription?.planType === "PREMIUM" && "⭐"}
+                {subscription?.planType === "ENTERPRISE" && "💎"}
+                <span className="plan-name">
+                  {subscription?.planType || "FREE"} Plan
+                </span>
+              </div>
+              <div className="plan-status">
+                Status:{" "}
+                <span
+                  className={`status-badge ${
+                    subscription?.status?.toLowerCase() || "active"
+                  }`}
+                >
+                  {subscription?.status || "ACTIVE"}
+                </span>
+              </div>
+              {subscription?.startDate && (
+                <div className="plan-dates">
+                  <div>Start Date: {formatDate(subscription.startDate)}</div>
+                  {subscription?.endDate && (
+                    <div>End Date: {formatDate(subscription.endDate)}</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="subscription-actions">
+              {subscription?.planType === "FREE" ? (
+                <div className="upgrade-options">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleUpgrade("PREMIUM")}
+                  >
+                    Upgrade to Premium
+                  </button>
+                </div>
+              ) : (
+                <div className="subscription-management">
+                  {subscription?.status === "ACTIVE" && (
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleRenew}
+                    >
+                      Renew Subscription
+                    </button>
+                  )}
+                  {subscription?.status === "ACTIVE" && (
+                    <button
+                      className="btn btn-danger"
+                      onClick={handleCancelSubscription}
+                    >
+                      Cancel Subscription
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Payment History Section */}
+        <div className="account-card">
+          <div className="card-header">
+            <h2 className="card-title">Payment History</h2>
+          </div>
+
+          {paymentHistory.length === 0 ? (
+            <div className="empty-state">
+              <p>No payment history available.</p>
+            </div>
+          ) : (
+            <div className="payment-history">
+              {paymentHistory.map((payment: any) => (
+                <div key={payment.id} className="payment-item">
+                  <div className="payment-header">
+                    <div className="payment-plan">
+                      {payment.planType === "PREMIUM" && "⭐"}
+                      {payment.planType === "ENTERPRISE" && "💎"}
+                      {payment.planType || "FREE"}
+                    </div>
+                    <div
+                      className={`payment-status ${payment.status?.toLowerCase()}`}
+                    >
+                      {payment.status}
+                    </div>
+                  </div>
+                  <div className="payment-details">
+                    <div>
+                      <strong>Start:</strong> {formatDate(payment.startDate)}
+                    </div>
+                    {payment.endDate && (
+                      <div>
+                        <strong>End:</strong> {formatDate(payment.endDate)}
+                      </div>
+                    )}
+                    <div>
+                      <strong>Created:</strong> {formatDate(payment.createdAt)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner fullPage={true} message="Loading Account..." />}>
+      <AccountPageContent />
+    </Suspense>
+  );
+}
+
