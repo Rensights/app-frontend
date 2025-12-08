@@ -393,12 +393,12 @@ class ApiClient {
   }
 
   async updateUserProfile(data: { firstName?: string; lastName?: string }): Promise<UserResponse> {
-    const result = await this.request<UserResponse>('/users/me', {
+    const result = await this.request<UserResponse>('/api/users/me', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
-    // Invalidate user cache on update
-    this.cache.delete('GET:/users/me');
+    // Invalidate user cache on update (not using cache anymore, but keep for consistency)
+    this.cache.delete('GET:/api/users/me');
     return result;
   }
 
