@@ -21,7 +21,7 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[number], e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[number], e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     e.preventDefault();
     if (item.id === "account") {
       router.push("/account");
