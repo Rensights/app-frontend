@@ -6,16 +6,15 @@ import { apiClient } from "@/lib/api";
 import "./dashboard.css";
 
 const MENU_ITEMS = [
-  { id: "analysis", label: "City Analysis", icon: "📊" },
-  { id: "reports", label: "Property Reports", icon: "📋" },
-  { id: "alerts", label: "Weekly Deals", icon: "🚨" },
-  { id: "account", label: "Account", icon: "⚙️" },
+  { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
+  { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
+  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/deals" },
+  { id: "account", label: "Account", icon: "⚙️", path: "/account" },
 ];
 
 export default function DashboardPage() {
   const router = useRouter();
   const pathname = usePathname();
-  const [activeSection, setActiveSection] = useState<string>("analysis");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
@@ -42,12 +41,12 @@ export default function DashboardPage() {
   }, [pathname, router]);
   
   // Optimized: Memoize handlers
-  const handleSectionChange = useCallback((sectionId: string) => {
-    if (sectionId === "account") {
+  const handleSectionChange = useCallback((item: typeof MENU_ITEMS[0]) => {
+    if (item.id === "account") {
       router.push("/account");
       return;
     }
-    setActiveSection(sectionId);
+    router.push(item.path);
     setIsSidebarOpen(false);
   }, [router]);
   
@@ -116,11 +115,11 @@ export default function DashboardPage() {
             <button
               key={item.id}
               type="button"
-              aria-current={activeSection === item.id ? "page" : undefined}
+              aria-current={pathname === item.path ? "page" : undefined}
               className={`menu-item ${
-                activeSection === item.id ? "active" : ""
+                pathname === item.path ? "active" : ""
               }`}
-              onClick={() => handleSectionChange(item.id)}
+              onClick={() => handleSectionChange(item)}
             >
               <span className="menu-icon" aria-hidden>
                 {item.icon}
@@ -154,85 +153,7 @@ export default function DashboardPage() {
           <span />
         </button>
 
-        <section
-          className={`content-section ${
-            activeSection === "analysis" ? "active" : ""
-          }`}
-        >
-          <div className="city-analysis-container">
-            <div className="city-analysis-header">
-              <h2>🏙️ Dubai City Analysis</h2>
-              <p>Data-Driven Investment Intelligence for Smart Investors</p>
-            </div>
-
-            <div className="city-analysis-summary">
-              <div className="city-analysis-left">
-                <h3>City Market Summary</h3>
-                <ul className="city-metrics-list">
-                  <li>Median property price in Dubai is 1,850,000 AED (504,000 USD)</li>
-                  <li>Year-over-year price appreciation stands at 12.4%</li>
-                  <li>Gross rental yield averages 6.8% across all property types</li>
-                  <li>Net rental yield after maintenance costs is 5.2%</li>
-                  <li>Sales-to-listing ratio is 0.78 indicating balanced market conditions</li>
-                  <li>Market volatility index is at moderate level (6.2/10)</li>
-                  <li>Average age of properties is 8.5 years</li>
-                  <li>Off-plan properties offer 7.2% yield vs 6.4% for ready homes</li>
-                  <li>Investment recovery period averages 15.6 years</li>
-                </ul>
-              </div>
-
-              <div className="city-analysis-right">
-                <h3>Detailed Analysis Modules</h3>
-                <div className="city-analysis-cards">
-                  <div className="city-analysis-card">
-                    <h4>📍 Analysis by Dubai Areas</h4>
-                    <p>6 comprehensive area reports with comparative charts covering Downtown, Marina, JBR, Business Bay, JVC, and Arabian Ranches</p>
-                  </div>
-
-                  <div className="city-analysis-card">
-                    <h4>🏗️ Property Type Comparison</h4>
-                    <p>6 detailed charts comparing off-plan vs ready properties including ROI, appreciation, and risk analysis</p>
-                  </div>
-
-                  <div className="city-analysis-card">
-                    <h4>🏠 Analysis of Properties by Size</h4>
-                    <p>5 charts analyzing studio, 1-bedroom, 2-bedroom, 3-bedroom, and 4+ bedroom properties with yield and demand metrics</p>
-                  </div>
-
-                  <div className="city-analysis-card">
-                    <h4>💰 Profitability Assessment</h4>
-                    <p>ROI calculator and profit projection models for different investment horizons</p>
-                  </div>
-
-                  <div className="city-analysis-card">
-                    <h4>🎯 Which Property to Buy</h4>
-                    <p>Detailed analysis and comparison of properties by occupancy rates, proximity to metro, amenities, and other key variables to identify optimal investment opportunities</p>
-                  </div>
-
-                  <div className="city-analysis-card">
-                    <h4>🤝 Price Negotiation Intelligence</h4>
-                    <p>Real market value analysis to help negotiate optimal purchase prices</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="city-analysis-cta">
-              <button 
-                className="city-cta-button"
-                onClick={() => router.push('/city-analysis')}
-              >
-                See Full City Analysis
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section
-          className={`content-section ${
-            activeSection === "reports" ? "active" : ""
-          }`}
-        >
+        <section className="content-section active">
           <div className="section-card">
             <div className="section-title">Property Reports</div>
 
@@ -290,77 +211,6 @@ export default function DashboardPage() {
               <div>💎 Luxury market: Strong investor demand</div>
               <div>🏙️ Dubai avg: AED 1,450/sq ft</div>
             </div>
-          </div>
-        </section>
-
-        <section
-          className={`content-section ${
-            activeSection === "alerts" ? "active" : ""
-          }`}
-        >
-          <div className="section-card">
-            <div className="section-title">Weekly Property Deals</div>
-
-            <div className="alert-item">
-              <div className="alert-title">Latest Alert</div>
-              <div className="alert-desc">
-                Hot deals discovered across Dubai areas this week!
-              </div>
-
-              <div className="alert-list">
-                {[
-                  { label: "🏙️ Downtown Dubai:", count: 3 },
-                  { label: "⚓ Dubai Marina:", count: 4 },
-                  { label: "🏢 Business Bay:", count: 3 },
-                  { label: "🌴 Jumeirah Beach:", count: 3 },
-                ].map((alert) => (
-                  <div key={alert.label} className="alert-row">
-                    <span>{alert.label}</span>
-                    <span className="alert-number">{alert.count} deals</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="alert-stats">
-                <span>Total active alerts:</span>
-                <span className="alert-number">13</span>
-              </div>
-            </div>
-
-            <button className="btn" onClick={() => router.push('/deals')}>View This Week&apos;s Alerts</button>
-          </div>
-
-          <div className="section-card">
-            <div className="section-title">This Week&apos;s Highlights</div>
-            <div className="highlights">
-              <div>
-                <span>🔥 Hottest market:</span>
-                <span className="alert-performance">
-                  Dubai Marina (4 deals)
-                </span>
-              </div>
-              <div>
-                <span>💎 Best discount found:</span>
-                <span className="alert-performance">22% below market</span>
-              </div>
-              <div>
-                <span>🏆 Best performing area:</span>
-                <span className="alert-performance">Downtown Dubai</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="section-card">
-            <div className="section-title">About Deal Alerts</div>
-            <p className="info-text">
-              Our AI-powered system analyzes thousands of properties daily to
-              identify underpriced opportunities across Dubai.
-            </p>
-            <p className="info-text">
-              Each deal is verified by expert analysts to ensure accuracy and
-              potential value. Get notified weekly about properties priced
-              significantly below market value in prime locations.
-            </p>
           </div>
         </section>
       </main>
