@@ -228,10 +228,6 @@ export default function DealsPage() {
       <div className="container">
         <header className="header">
           <div className="header-left">
-              <button className="back-btn" onClick={() => router.push('/dashboard')}>
-                ← Back to Dashboard
-            </button>
-            <div className="logo">Rensights</div>
             <div className="page-title">Underpriced Property Deals</div>
           </div>
           <div className="city-filter">
