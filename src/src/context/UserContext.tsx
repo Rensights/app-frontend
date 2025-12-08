@@ -45,6 +45,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const loadUser = useCallback(async () => {
     try {
+      setLoading(true);
+      // Don't use cache for user loading - always fetch fresh after login/logout
       // Use caching - these requests are already cached in API client
       const [userData, subscriptionData] = await Promise.all([
         apiClient.getCurrentUser(),
@@ -118,11 +120,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Always attempt to load user - cookie will be sent automatically if present
     // If no cookie, backend will return 401/403 and we handle it in loadUser
-    // Only load if not already loading (prevent multiple simultaneous loads)
-    if (!loading) {
-      loadUser();
-    }
-  }, [loadUser, loading]);
+    loadUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   return (
     <UserContext.Provider

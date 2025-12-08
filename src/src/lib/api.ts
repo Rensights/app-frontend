@@ -388,7 +388,8 @@ class ApiClient {
 
   // User endpoints - Optimized: Enable caching for GET requests
   async getCurrentUser(): Promise<UserResponse> {
-    return this.request<UserResponse>('/users/me', {}, true);
+    // Don't use cache - always fetch fresh user data to avoid stale state after login/logout
+    return this.request<UserResponse>('/users/me', {}, false);
   }
 
   async updateUserProfile(data: { firstName?: string; lastName?: string }): Promise<UserResponse> {

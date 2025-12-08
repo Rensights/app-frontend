@@ -109,8 +109,7 @@ export default function Home() {
         // Known device - cookie is set by backend, redirect to dashboard
         // SECURITY: Token is now in HttpOnly cookie, not in response
         rememberThisDevice();
-        // Clear any cached state before redirecting
-        apiClient.clearCache();
+        // DON'T clear cache here - let UserContext load user with fresh cookie
         // Use hard navigation to ensure cookie is sent with subsequent requests
         // Small delay to ensure cookie is set before redirect
         setTimeout(() => {
@@ -119,7 +118,7 @@ export default function Home() {
           } else {
             router.push("/dashboard");
           }
-        }, 100);
+        }, 200);
       }
     } catch (error: any) {
       // Check if error is about email not verified
