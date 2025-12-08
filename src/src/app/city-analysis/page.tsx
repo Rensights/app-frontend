@@ -122,64 +122,86 @@ export default function CityAnalysisPage() {
         </button>
 
         <section className="content-section active">
+          {/* City Analysis Section */}
           <div className="section-card">
-            <div className="section-title">🏙️ Dubai City Analysis</div>
-            <p className="info-text" style={{ marginBottom: '20px' }}>
-              Data-Driven Investment Intelligence for Smart Investors
-            </p>
+            <div className="section-title">City Analysis</div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
+              {/* Average Price per Sq Ft */}
+              <div>
+                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '8px' }}>Average Price per Sq Ft</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#333', marginBottom: '8px' }}>AED 1,450</div>
+                <div style={{ fontSize: '0.85rem', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>↑</span>
+                  <span>+8.2% from last quarter</span>
+                </div>
+              </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ marginBottom: '15px', color: '#333' }}>City Market Summary</h3>
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>Median property price in Dubai is 1,850,000 AED (504,000 USD)</li>
-                <li style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>Year-over-year price appreciation stands at 12.4%</li>
-                <li style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>Gross rental yield averages 6.8% across all property types</li>
-                <li style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>Net rental yield after maintenance costs is 5.2%</li>
-                <li style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>Sales-to-listing ratio is 0.78 indicating balanced market conditions</li>
-                <li style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>Market volatility index is at moderate level (6.2/10)</li>
-                <li style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>Average age of properties is 8.5 years</li>
-                <li style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>Off-plan properties offer 7.2% yield vs 6.4% for ready homes</li>
-                <li style={{ padding: '8px 0' }}>Investment recovery period averages 15.6 years</li>
-              </ul>
-          </div>
+              {/* Most Active Area */}
+              <div>
+                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '8px' }}>Most Active Area</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#333', marginBottom: '8px' }}>Dubai Marina</div>
+                <div style={{ fontSize: '0.85rem', color: '#666' }}>247 transactions this month</div>
+              </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ marginBottom: '15px', color: '#333' }}>Detailed Analysis Modules</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
-                <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <h4 style={{ marginBottom: '8px', color: '#555' }}>📍 Analysis by Dubai Areas</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#666', margin: 0 }}>6 comprehensive area reports with comparative charts</p>
-                </div>
-                <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <h4 style={{ marginBottom: '8px', color: '#555' }}>🏗️ Property Type Comparison</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#666', margin: 0 }}>6 detailed charts comparing off-plan vs ready properties</p>
-                </div>
-                <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <h4 style={{ marginBottom: '8px', color: '#555' }}>🏠 Analysis of Properties by Size</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#666', margin: 0 }}>5 charts analyzing properties by bedroom count</p>
-                </div>
-                <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <h4 style={{ marginBottom: '8px', color: '#555' }}>💰 Profitability Assessment</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#666', margin: 0 }}>ROI calculator and profit projection models</p>
-                </div>
-                <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <h4 style={{ marginBottom: '8px', color: '#555' }}>🎯 Which Property to Buy</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#666', margin: 0 }}>Detailed analysis and comparison of properties</p>
-                </div>
-                <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
-                  <h4 style={{ marginBottom: '8px', color: '#555' }}>🤝 Price Negotiation Intelligence</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#666', margin: 0 }}>Real market value analysis for negotiation</p>
-                </div>
+              {/* Average Rental Yield */}
+              <div>
+                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '8px' }}>Average Rental Yield</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#333', marginBottom: '8px' }}>5.8%</div>
+                <div style={{ fontSize: '0.85rem', color: '#666' }}>Above regional average</div>
               </div>
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: '30px' }}>
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
               <button 
                 className="btn"
                 onClick={() => router.push('/city-analysis/detailed')}
               >
-                See Full City Analysis
+                View Full City Analysis
               </button>
+            </div>
+          </div>
+
+          {/* Top Performing Areas Section */}
+          <div className="section-card">
+            <div className="section-title">Top Performing Areas</div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Downtown Dubai */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '8px', background: '#f8f9fa' }}>
+                <div style={{ fontSize: '2rem' }}>🏆</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '4px' }}>Downtown Dubai</div>
+                  <div style={{ fontSize: '0.9rem', color: '#666' }}>9.1% growth • High appreciation potential</div>
+                </div>
+              </div>
+
+              {/* Dubai Marina */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '8px', background: '#f8f9fa' }}>
+                <div style={{ fontSize: '2rem' }}>⚓</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '4px' }}>Dubai Marina</div>
+                  <div style={{ fontSize: '0.9rem', color: '#666' }}>High liquidity • Most transactions</div>
+                </div>
+              </div>
+
+              {/* Business Bay */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '8px', background: '#f8f9fa' }}>
+                <div style={{ fontSize: '2rem' }}>🏢</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '4px' }}>Business Bay</div>
+                  <div style={{ fontSize: '0.9rem', color: '#666' }}>Best rental yields • 6.5% average</div>
+                </div>
+              </div>
+
+              {/* Palm Jumeirah */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '8px', background: '#f8f9fa' }}>
+                <div style={{ fontSize: '2rem' }}>🌴</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '4px' }}>Palm Jumeirah</div>
+                  <div style={{ fontSize: '0.9rem', color: '#666' }}>Premium segment leader • Luxury market</div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
