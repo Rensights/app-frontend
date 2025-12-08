@@ -238,17 +238,29 @@ jobs:
           API_URL="${{ steps.frontend-config.outputs.api_url }}"
           STRIPE_KEY="${{ steps.frontend-config.outputs.stripe_key }}"
           
-          # Check for stuck Helm releases
+          # Check for stuck Helm releases and clean up release secrets
           if helm list -n ${DEV_NAMESPACE} -q | grep -q "^frontend$"; then
             STATUS=$(helm status frontend -n ${DEV_NAMESPACE} -o json 2>/dev/null | jq -r '.info.status' 2>/dev/null || echo "unknown")
             if [[ "$STATUS" =~ ^(pending-install|pending-upgrade|pending-rollback|failed)$ ]]; then
               echo "⚠️  Cleaning up stuck release (status: $STATUS)..."
-              helm rollback frontend -n ${DEV_NAMESPACE} --force 2>&1 || true
-              sleep 3
-              helm delete frontend -n ${DEV_NAMESPACE} 2>&1 || true
+              # Delete stuck release secrets
+              kubectl delete secret -n ${DEV_NAMESPACE} -l owner=helm,name=frontend 2>/dev/null || true
+              helm uninstall frontend -n ${DEV_NAMESPACE} 2>&1 || true
               sleep 3
             fi
           fi
+          
+          # Clean up any orphaned release secrets
+          kubectl get secrets -n ${DEV_NAMESPACE} -l owner=helm,name=frontend -o name 2>/dev/null | while read secret; do
+            REVISION=$(echo "$secret" | grep -oP 'v\d+' | grep -oP '\d+' || echo "")
+            if [ -n "$REVISION" ]; then
+              # Check if this revision exists in helm history
+              if ! helm history frontend -n ${DEV_NAMESPACE} 2>/dev/null | grep -q "$REVISION"; then
+                echo "⚠️  Removing orphaned secret: $secret"
+                kubectl delete "$secret" -n ${DEV_NAMESPACE} 2>/dev/null || true
+              fi
+            fi
+          done
           
           VALUES_FILES="-f env-values/dev/frontend.yaml"
           [ -f "env-values/dev/global.yaml" ] && VALUES_FILES="-f env-values/dev/global.yaml -f env-values/dev/frontend.yaml"
@@ -264,7 +276,8 @@ jobs:
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-            --atomic --timeout=8m
+            --rollback-on-failure --timeout=8m \
+            --wait
 
       - name: Verify deployment
         run: |
@@ -387,6 +400,18 @@ jobs:
           API_URL="${{ steps.frontend-config-prod.outputs.api_url }}"
           STRIPE_KEY="${{ steps.frontend-config-prod.outputs.stripe_key }}"
           
+          # Check for stuck Helm releases and clean up release secrets
+          if helm list -n ${PROD_NAMESPACE} -q | grep -q "^frontend$"; then
+            STATUS=$(helm status frontend -n ${PROD_NAMESPACE} -o json 2>/dev/null | jq -r '.info.status' 2>/dev/null || echo "unknown")
+            if [[ "$STATUS" =~ ^(pending-install|pending-upgrade|pending-rollback|failed)$ ]]; then
+              echo "⚠️  Cleaning up stuck release (status: $STATUS)..."
+              # Delete stuck release secrets
+              kubectl delete secret -n ${PROD_NAMESPACE} -l owner=helm,name=frontend 2>/dev/null || true
+              helm uninstall frontend -n ${PROD_NAMESPACE} 2>&1 || true
+              sleep 3
+            fi
+          fi
+          
           printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
             "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values-prod.yaml
           
@@ -399,7 +424,8 @@ jobs:
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-            --atomic --timeout=8m
+            --rollback-on-failure --timeout=8m \
+            --wait
 
       - name: Verify deployment
         run: |
