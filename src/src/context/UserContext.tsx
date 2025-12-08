@@ -96,36 +96,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     // Clear all state first
     setUser(null);
     setSubscription(null);
     setError(null);
     setLoading(false);
-    // Clear token and cache
-    apiClient.logout();
+    // Call backend logout endpoint to clear HttpOnly cookie
+    await apiClient.logout();
     // Force a hard navigation to ensure clean state (clears React state and cache)
     if (typeof window !== 'undefined') {
       window.location.href = '/';
     }
   }, []);
 
-  // Only load user if we have a token (don't try to load after logout)
+  // SECURITY: Load user - cookie is automatically sent with request
+  // No need to check localStorage (token is in HttpOnly cookie)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token) {
-        loadUser();
-      } else {
-        // No token, set loading to false immediately
-        setLoading(false);
-        setUser(null);
-        setSubscription(null);
-      }
-    } else {
-      // Server-side, just set loading to false
-      setLoading(false);
-    }
+    // Always attempt to load user - cookie will be sent automatically if present
+    // If no cookie, backend will return 401/403 and we handle it in loadUser
+    loadUser();
   }, [loadUser]);
 
   return (

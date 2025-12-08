@@ -103,14 +103,10 @@ export default function Home() {
         setTimeout(() => codeRefs.current[0]?.focus(), 200);
         setIsSubmitting(false);
       } else {
-        // Known device - go to dashboard
-        if (loginResponse.token) {
-          rememberThisDevice();
-          router.push("/dashboard");
-        } else {
-          setLoginError("Login failed. Please try again.");
-          setIsSubmitting(false);
-        }
+        // Known device - cookie is set by backend, redirect to dashboard
+        // SECURITY: Token is now in HttpOnly cookie, not in response
+        rememberThisDevice();
+        router.push("/dashboard");
       }
     } catch (error: any) {
       // Check if error is about email not verified

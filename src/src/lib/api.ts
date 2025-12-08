@@ -94,17 +94,12 @@ interface CacheEntry<T> {
 
 class ApiClient {
   private baseUrl: string | null = null;
-  private token: string | null = null;
+  // SECURITY: Token is now stored in HttpOnly cookie, not in localStorage or memory
+  // Cookies are automatically sent with requests, so we don't need to manage tokens
   // Optimized: Add request cache and deduplication
   private cache = new Map<string, CacheEntry<any>>();
   private pendingRequests = new Map<string, Promise<any>>();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-  constructor() {
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('token');
-    }
-  }
 
   /**
    * Get the API URL
@@ -142,34 +137,24 @@ class ApiClient {
       return this.pendingRequests.get(cacheKey)!;
     }
     
-    // Always reload token from localStorage to ensure we have the latest token
-    // This is important if token was updated after ApiClient was instantiated
-    if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        this.token = storedToken;
-      }
-    }
-    
+    // SECURITY: Token is now stored in HttpOnly cookie, automatically sent by browser
+    // No need to manually add Authorization header - cookie is sent automatically
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
     };
-
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
+    // Note: Authorization header removed - using HttpOnly cookie instead
 
     const requestPromise = fetch(url, {
       ...options,
       headers,
-      credentials: 'include', // Include credentials (cookies, authorization headers) for CORS
+      credentials: 'include', // CRITICAL: Include credentials (cookies) for cookie-based authentication
     })
       .then(async (response) => {
         if (!response.ok) {
           // Handle authentication/authorization errors (401/403) - redirect to login
           if (response.status === 401 || response.status === 403) {
-            // Clear token on authentication failure
+            // Clear state on authentication failure (cookie is cleared by backend if needed)
             this.clearToken();
             // Redirect to login page if we're in the browser and not already on a public page
             if (typeof window !== 'undefined') {
@@ -220,31 +205,30 @@ class ApiClient {
     return requestPromise;
   }
   
-  // Optimized: Clear cache when token changes
+  // Optimized: Clear cache when needed
   clearCache() {
     this.cache.clear();
     // Also clear pending requests to prevent stale promises
     this.pendingRequests.clear();
   }
 
+  // SECURITY: setToken deprecated - tokens are now in HttpOnly cookies
+  // Kept for backward compatibility but does nothing (cookie is set by backend)
   setToken(token: string) {
-    this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('token', token);
-    }
-    this.clearCache(); // Clear cache on token change
+    // Token is now stored in HttpOnly cookie by backend
+    // No need to store in localStorage (more secure)
+    this.clearCache(); // Clear cache on authentication state change
   }
 
   clearToken() {
-    this.token = null;
+    // SECURITY: Token clearing is handled by backend logout endpoint (clears cookie)
     // Clear cached fingerprint
     this.cachedFingerprint = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('deviceFingerprint');
-      // Also clear device storage for login
+      // Clear device storage for login (but keep fingerprint for convenience)
       localStorage.removeItem('rensights-remembered-device');
       localStorage.removeItem('pendingDeviceFingerprint');
+      // Note: deviceFingerprint can stay for convenience
     }
     // Clear cache AND pending requests to ensure clean state
     this.clearCache();
@@ -306,6 +290,8 @@ class ApiClient {
   }
 
   async verifyEmail(email: string, code: string, deviceFingerprint?: string): Promise<AuthResponse> {
+    // SECURITY: Token is now set in HttpOnly cookie by backend
+    // Response will not contain token (for security)
     const response = await this.request<AuthResponse>('/api/auth/verify-email', {
       method: 'POST',
       body: JSON.stringify({ 
@@ -314,9 +300,7 @@ class ApiClient {
         deviceFingerprint: deviceFingerprint || this.getDeviceFingerprint() 
       }),
     });
-    if (response.token) {
-      this.setToken(response.token);
-    }
+    // Token is automatically stored in HttpOnly cookie by backend
     return response;
   }
 
@@ -340,18 +324,28 @@ class ApiClient {
   }
 
   async verifyDevice(email: string, code: string, deviceFingerprint: string): Promise<AuthResponse> {
+    // SECURITY: Token is now set in HttpOnly cookie by backend
     const response = await this.request<AuthResponse>('/api/auth/verify-device', {
       method: 'POST',
       body: JSON.stringify({ email, code, deviceFingerprint }),
     });
-    if (response.token) {
-      this.setToken(response.token);
-    }
+    // Token is automatically stored in HttpOnly cookie by backend
     return response;
   }
 
-  logout() {
-    // Clear all state
+  async logout() {
+    // SECURITY: Call backend logout endpoint to clear HttpOnly cookie
+    try {
+      await this.request('/api/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      // Continue with logout even if backend call fails
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Logout API call failed:', error);
+      }
+    }
+    // Clear local state
     this.clearToken();
     // Note: Navigation is handled by UserContext to ensure state is properly reset
   }
@@ -439,21 +433,12 @@ class ApiClient {
 
   // Analysis request endpoints
   async submitAnalysisRequest(formData: FormData): Promise<{ message: string }> {
-    // Reload token from localStorage to ensure we have the latest token
-    if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        this.token = storedToken;
-      }
-    }
-    
+    // SECURITY: Token is in HttpOnly cookie, automatically sent by browser
     const apiUrl = this.baseUrl || this.getApiUrl();
     const url = `${apiUrl}/api/analysis-requests`;
     
+    // No Authorization header needed - cookie is sent automatically
     const headers: Record<string, string> = {};
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
     // Don't set Content-Type for FormData - browser will set it with boundary
     
     const response = await fetch(url, {
@@ -463,7 +448,8 @@ class ApiClient {
     });
     
     if (!response.ok) {
-          // Handle authentication errors (401/403) - clear invalid token
+          // Handle authentication errors (401/403)
+          // Cookie is cleared by backend if needed
           if (response.status === 401 || response.status === 403) {
             // Clear token on authentication failure
             this.clearToken();

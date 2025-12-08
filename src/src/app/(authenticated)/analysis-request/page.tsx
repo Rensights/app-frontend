@@ -155,15 +155,13 @@ export default function AnalysisRequestPage() {
       let userEmail = formState.email;
       
       // If user is authenticated and email is not provided, try to get from user profile
+      // SECURITY: Cookie-based auth - cookie is automatically sent with request
       if (!userEmail) {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        if (token) {
-          try {
-            const user = await apiClient.getCurrentUser();
-            userEmail = user.email;
-          } catch (e) {
-            // If not authenticated, email is required from form
-          }
+        try {
+          const user = await apiClient.getCurrentUser();
+          userEmail = user.email;
+        } catch (e) {
+          // If not authenticated, email is required from form
         }
       }
       

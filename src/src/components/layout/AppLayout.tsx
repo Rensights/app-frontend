@@ -61,19 +61,11 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   }, [logout]);
 
   // Redirect to login if auth is required but no user is found
+  // SECURITY: Cookie-based auth - cookie is automatically checked by backend
+  // If user is null after loading, it means authentication failed (no cookie or invalid)
   useEffect(() => {
     if (!loading && requireAuth && !user) {
-      // Check if we have a token in localStorage
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      
-      // If no token, definitely redirect to login
-      if (!token) {
-        router.push('/');
-        return;
-      }
-      
-      // If we have a token but no user after loading, it means the token is invalid
-      // The API client should have cleared it, but we'll redirect anyway
+      // No user means no valid authentication cookie
       router.push('/');
     }
   }, [loading, requireAuth, user, router]);
