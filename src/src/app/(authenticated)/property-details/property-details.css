@@ -1,11 +1,9 @@
 /* Property Details Page Styles */
 .property-page {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
-.container {
+.property-page .container {
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
