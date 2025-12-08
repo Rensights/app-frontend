@@ -109,10 +109,18 @@ function PropertyDetailsPageContent() {
 
   // Calculate derived values from deal data with error handling
   const sizeNum = deal.size ? parseFloat(deal.size.replace(/[^0-9.]/g, "")) : 0;
-  const pricePerSqft = sizeNum > 0 && deal.priceValue > 0 ? deal.priceValue / sizeNum : 0;
-  const savingsMin = deal.estimateMin && deal.priceValue ? Math.max(0, deal.estimateMin - deal.priceValue) : 0;
-  const savingsMax = deal.estimateMax && deal.priceValue ? Math.max(0, deal.estimateMax - deal.priceValue) : 0;
-  const discountPercent = deal.discount ? parseFloat(deal.discount.replace("%", "")) || 0 : 0;
+  const pricePerSqft = sizeNum > 0 && deal.priceValue && deal.priceValue > 0 
+    ? deal.priceValue / sizeNum 
+    : 0;
+  const savingsMin = deal.estimateMin && deal.priceValue 
+    ? Math.max(0, deal.estimateMin - deal.priceValue) 
+    : 0;
+  const savingsMax = deal.estimateMax && deal.priceValue 
+    ? Math.max(0, deal.estimateMax - deal.priceValue) 
+    : 0;
+  const discountPercent = deal.discount 
+    ? parseFloat(deal.discount.replace("%", "").replace(/,/g, "")) || 0 
+    : 0;
 
   return (
     <div className="property-page">
