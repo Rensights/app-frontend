@@ -10,12 +10,17 @@
 }
 
 .deals-page .main-content {
-  padding: 20px;
+  margin-left: 260px;
+  flex: 1;
+  padding: 30px;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .header {
@@ -260,7 +265,18 @@
   color: #fff;
 }
 
+@media (max-width: 1024px) {
+  .deals-page .main-content {
+    margin-left: 0;
+    padding: 24px;
+  }
+}
+
 @media (max-width: 768px) {
+  .deals-page .main-content {
+    padding: 18px;
+  }
+
   .header {
     flex-direction: column;
     gap: 15px;
