@@ -12,11 +12,14 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   const { loading, user, logout } = useUser();
+  // Initialize sidebar as open - will be adjusted on mount for mobile
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Set sidebar state based on screen size
+  // Set sidebar state based on screen size after mount to avoid hydration issues
   useEffect(() => {
     const checkScreenSize = () => {
+      // On desktop (>1024px), always show sidebar
+      // On mobile, hide by default
       if (window.innerWidth > 1024) {
         setIsSidebarOpen(true);
       } else {
@@ -24,9 +27,14 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
       }
     };
 
+    // Check on mount
     checkScreenSize();
+    
+    // Handle window resize
     window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
   }, []);
 
   const toggleSidebar = useCallback(() => {

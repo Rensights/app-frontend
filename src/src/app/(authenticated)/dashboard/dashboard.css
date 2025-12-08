@@ -26,6 +26,7 @@
   top: 0;
   z-index: 40;
   transition: transform 0.3s ease;
+  transform: translateX(0); /* Always visible on desktop by default */
 }
 
 .logo-section {
@@ -579,11 +580,11 @@
   }
 
   .sidebar {
-    transform: translateX(-100%);
+    transform: translateX(-100%); /* Hidden by default on mobile */
   }
 
   .sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0); /* Shown when toggled on mobile */
   }
 
   .sidebar-close {
@@ -592,6 +593,21 @@
 
   .menu-toggle {
     display: flex;
+  }
+}
+
+/* Ensure sidebar is always visible on desktop */
+@media (min-width: 1025px) {
+  .sidebar {
+    transform: translateX(0) !important; /* Force visible on desktop */
+  }
+  
+  .sidebar-close {
+    display: none; /* Hide close button on desktop */
+  }
+  
+  .menu-toggle {
+    display: none; /* Hide toggle button on desktop */
   }
 }
 
