@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import "../dashboard/dashboard.css";
+import "./city-analysis.css";
 
 const MENU_ITEMS = [
   { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
@@ -122,67 +123,76 @@ export default function CityAnalysisPage() {
         </button>
 
         <section className="content-section active">
-          {/* City Analysis Section */}
-          <div className="section-card">
-            <div className="section-title">City Analysis</div>
-            
-            <div className="analysis-metric">
-              <div className="metric-label">Average Price per Sq Ft</div>
-              <div className="metric-value">AED 1,450</div>
-              <div className="metric-trend">↑ +8.2% from last quarter</div>
+          <div className="city-analysis-container">
+            {/* Header Section */}
+            <div className="city-analysis-header">
+              <h2>🏙️ Dubai City Analysis</h2>
+              <p>Data-Driven Investment Intelligence for Smart Investors</p>
             </div>
 
-            <div className="analysis-metric">
-              <div className="metric-label">Most Active Area</div>
-              <div className="metric-value">Dubai Marina</div>
-              <div className="metric-trend">247 transactions this month</div>
-            </div>
-
-            <div className="analysis-metric">
-              <div className="metric-label">Average Rental Yield</div>
-              <div className="metric-value">5.8%</div>
-              <div className="metric-trend">Above regional average</div>
-            </div>
-
-            <button 
-              className="btn"
-              onClick={() => router.push('/city-analysis/detailed')}
-            >
-              View Full City Analysis
-            </button>
+            {/* Summary Section */}
+            <div className="city-analysis-summary">
+              {/* Left Column - City Market Summary */}
+              <div className="city-analysis-left">
+                <h3>City Market Summary</h3>
+                <ul className="city-metrics-list">
+                  <li>Median property price in Dubai is 1,850,000 AED (504,000 USD)</li>
+                  <li>Year-over-year price appreciation stands at 12.4%</li>
+                  <li>Gross rental yield averages 6.8% across all property types</li>
+                  <li>Net rental yield after maintenance costs is 5.2%</li>
+                  <li>Sales-to-listing ratio is 0.78 indicating balanced market conditions</li>
+                  <li>Market volatility index is at moderate level (6.2/10)</li>
+                  <li>Average age of properties is 8.5 years</li>
+                  <li>Off-plan properties offer 7.2% yield vs 6.4% for ready homes</li>
+                  <li>Investment recovery period averages 15.6 years</li>
+                </ul>
           </div>
 
-          {/* Top Performing Areas Section */}
-          <div className="section-card">
-            <div className="section-title">Top Performing Areas</div>
-            <div style={{ fontSize: '0.95rem', color: '#666', lineHeight: '1.6' }}>
-              <div style={{ marginBottom: '12px', padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
-                <strong>🏆 Downtown Dubai</strong><br />
-                <span style={{ fontSize: '0.85rem' }}>9.1% growth • High appreciation potential</span>
-              </div>
-              <div style={{ marginBottom: '12px', padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
-                <strong>⚓ Dubai Marina</strong><br />
-                <span style={{ fontSize: '0.85rem' }}>High liquidity • Most transactions</span>
-              </div>
-              <div style={{ marginBottom: '12px', padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
-                <strong>🏢 Business Bay</strong><br />
-                <span style={{ fontSize: '0.85rem' }}>Best rental yields • 6.5% average</span>
-              </div>
-              <div style={{ padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
-                <strong>🌴 Palm Jumeirah</strong><br />
-                <span style={{ fontSize: '0.85rem' }}>Premium segment leader • Luxury market</span>
+              {/* Right Column - Detailed Analysis Modules */}
+              <div className="city-analysis-right">
+                <h3>Detailed Analysis Modules</h3>
+                <div className="city-analysis-cards">
+                  <div className="city-analysis-card">
+                    <h4>📍 Analysis by Dubai Areas</h4>
+                    <p>6 comprehensive area reports with comparative charts covering Downtown, Marina, JBR, Business Bay, JVC, and Arabian Ranches</p>
+                  </div>
+
+                  <div className="city-analysis-card">
+                    <h4>🏗️ Property Type Comparison</h4>
+                    <p>6 detailed charts comparing off-plan vs ready properties including ROI, appreciation, and risk analysis</p>
+                  </div>
+
+                  <div className="city-analysis-card">
+                    <h4>🏠 Analysis of Properties by Size</h4>
+                    <p>5 charts analyzing studio, 1-bedroom, 2-bedroom, 3-bedroom, and 4+ bedroom properties with yield and demand metrics</p>
+                  </div>
+
+                  <div className="city-analysis-card">
+                    <h4>💰 Profitability Assessment</h4>
+                    <p>ROI calculator and profit projection models for different investment horizons</p>
+                  </div>
+
+                  <div className="city-analysis-card">
+                    <h4>🎯 Which Property to Buy</h4>
+                    <p>Detailed analysis and comparison of properties by occupancy rates, proximity to metro, amenities, and other key variables to identify optimal investment opportunities</p>
+                  </div>
+
+                  <div className="city-analysis-card">
+                    <h4>🤝 Price Negotiation Intelligence</h4>
+                    <p>Real market value analysis to help negotiate optimal purchase prices</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Dubai Market Insights Section */}
-          <div className="section-card">
-            <div className="section-title">Dubai Market Insights</div>
-            <div style={{ fontSize: '0.95rem', color: '#666', lineHeight: '1.6' }}>
-              <div style={{ marginBottom: '10px' }}>🚀 Dubai real estate up 12% YoY</div>
-              <div style={{ marginBottom: '10px' }}>🗝️ New projects: Business Bay & Bluewaters</div>
-              <div style={{ marginBottom: '10px' }}>💎 Luxury market: Strong investor demand</div>
-              <div>🏙️ Dubai avg: AED 1,450/sq ft</div>
+            {/* CTA Section */}
+            <div className="city-analysis-cta">
+              <button 
+                className="city-cta-button"
+                onClick={() => router.push('/city-analysis/detailed')}
+              >
+                See Full City Analysis
+              </button>
             </div>
           </div>
         </section>
