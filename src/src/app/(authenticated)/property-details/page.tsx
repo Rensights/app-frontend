@@ -30,39 +30,51 @@ function PropertyDetailsPageContent() {
       setLoading(true);
       setError(null);
       const dealData = await apiClient.getDealById(propertyId);
+      // Validate deal data before setting
+      if (!dealData || !dealData.id) {
+        throw new Error("Invalid property data received");
+      }
       setDeal(dealData);
       
-      // Load comparable deals (similar area and bedrooms, excluding current deal)
-      if (dealData) {
-        setLoadingComparables(true);
-        try {
-          const comparablesResponse = await apiClient.getDeals(
-            0,
-            10,
-            dealData.city,
-            dealData.area,
-            dealData.bedroomCount,
-            undefined
-          );
-          // Filter out the current deal and limit to 8
-          const filtered = comparablesResponse.content
-            .filter(d => d.id !== dealData.id)
-            .slice(0, 8);
-          setComparableDeals(filtered);
-        } catch (err) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error("Error loading comparable deals:", err);
+          // Load comparable deals (similar area and bedrooms, excluding current deal)
+          if (dealData) {
+            setLoadingComparables(true);
+            try {
+              const comparablesResponse = await apiClient.getDeals(
+                0,
+                10,
+                dealData.city || undefined,
+                dealData.area || undefined,
+                dealData.bedroomCount || undefined,
+                undefined
+              );
+              // Filter out the current deal and limit to 8
+              const filtered = (comparablesResponse?.content || [])
+                .filter(d => d && d.id && d.id !== dealData.id)
+                .slice(0, 8);
+              setComparableDeals(filtered);
+            } catch (err) {
+              if (process.env.NODE_ENV === 'development') {
+                console.error("Error loading comparable deals:", err);
+              }
+              // Don't fail the whole page if comparables fail
+              setComparableDeals([]);
+            } finally {
+              setLoadingComparables(false);
+            }
           }
-          // Don't fail the whole page if comparables fail
-        } finally {
-          setLoadingComparables(false);
-        }
-      }
     } catch (error: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Error loading deal:", error);
       }
-      setError(error.message || "Failed to load property details");
+      const errorMessage = error?.message || error?.error || "Failed to load property details";
+      setError(errorMessage);
+      setDeal(null);
+      // If 401/403, let AppLayout handle redirect
+      if (error?.status === 401 || error?.status === 403) {
+        // Don't set error message for auth errors - AppLayout will redirect
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -95,11 +107,12 @@ function PropertyDetailsPageContent() {
     );
   }
 
-  // Calculate derived values from deal data
-  const pricePerSqft = deal.priceValue / parseFloat(deal.size.replace(/[^0-9]/g, ""));
-  const savingsMin = deal.estimateMin ? deal.estimateMin - deal.priceValue : 0;
-  const savingsMax = deal.estimateMax ? deal.estimateMax - deal.priceValue : 0;
-  const discountPercent = deal.discount ? parseFloat(deal.discount.replace("%", "")) : 0;
+  // Calculate derived values from deal data with error handling
+  const sizeNum = deal.size ? parseFloat(deal.size.replace(/[^0-9.]/g, "")) : 0;
+  const pricePerSqft = sizeNum > 0 && deal.priceValue > 0 ? deal.priceValue / sizeNum : 0;
+  const savingsMin = deal.estimateMin && deal.priceValue ? Math.max(0, deal.estimateMin - deal.priceValue) : 0;
+  const savingsMax = deal.estimateMax && deal.priceValue ? Math.max(0, deal.estimateMax - deal.priceValue) : 0;
+  const discountPercent = deal.discount ? parseFloat(deal.discount.replace("%", "")) || 0 : 0;
 
   return (
     <div className="property-page">
@@ -124,7 +137,7 @@ function PropertyDetailsPageContent() {
           <div className="property-overview">
             <div className="property-header">
               <h1 className="property-title">{deal.name || "Property"}</h1>
-              <p className="property-location">{deal.location}, {deal.city}</p>
+              <p className="property-location">{deal.location || "Location not available"}, {deal.city || "City not available"}</p>
               {deal.discount && (
                 <div className="discount-highlight">
                   {deal.discount} Below Market Value
@@ -136,7 +149,7 @@ function PropertyDetailsPageContent() {
               {[
                 { value: deal.bedrooms || "N/A", label: "Bedrooms" },
                 { value: deal.size || "N/A", label: "Size" },
-                { value: deal.buildingStatus === "READY" ? "Ready" : "Off-Plan", label: "Handover" },
+                { value: deal.buildingStatus === "READY" || deal.buildingStatus === "ready" ? "Ready" : "Off-Plan", label: "Handover" },
                 { value: deal.rentalYield || "N/A", label: "Rental Yield" },
               ].map((metric) => (
                 <div key={metric.label} className="metric-card">
@@ -164,14 +177,18 @@ function PropertyDetailsPageContent() {
                     <div className="price-label">Potential Savings</div>
                     <div className="price-value">
                       <span className="savings-amount">
-                        AED {savingsMin.toLocaleString()} - {savingsMax.toLocaleString()}
+                        AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
                       </span>
                     </div>
                   </div>
                 )}
                 <div className="price-section">
                   <div className="price-label">Price per sq ft</div>
-                  <div className="price-value">AED {pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })} /sq ft</div>
+                  <div className="price-value">
+                    {pricePerSqft > 0 
+                      ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })} /sq ft`
+                      : "N/A"}
+                  </div>
                   {deal.discount && <small>{deal.discount} below market avg</small>}
                 </div>
               </div>
@@ -180,16 +197,18 @@ function PropertyDetailsPageContent() {
             <section className="property-description">
               <h3>Property Description</h3>
               <div className="description-card">
-                <p>
-                  This {deal.bedrooms?.toLowerCase() || "property"} offers luxurious living in the
-                  heart of {deal.location}. The unit features premium finishes and an
-                  efficient layout that maximizes the {deal.size} space. The
-                  property is located in {deal.area} area of {deal.city}.
-                </p>
+                  <p>
+                    This {deal.bedrooms?.toLowerCase() || "property"} offers luxurious living in the
+                    heart of {deal.location || "the area"}. The unit features premium finishes and an
+                    efficient layout that maximizes the {deal.size || "available"} space. The
+                    property is located in {deal.area || "the"} area of {deal.city || "the city"}.
+                  </p>
                 <div className="description-grid">
                   <DescriptionStat
                     label="Price per sq ft:"
-                    value={`AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`}
+                    value={pricePerSqft > 0 
+                      ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`
+                      : "N/A"}
                   />
                   <DescriptionStat
                     label="Building Status:"
@@ -216,8 +235,10 @@ function PropertyDetailsPageContent() {
               <h3>Market Comparison</h3>
               {[
                 {
-                  label: `This Property (${deal.bedrooms})`,
-                  value: `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`,
+                  label: `This Property (${deal.bedrooms || "N/A"})`,
+                  value: pricePerSqft > 0 
+                    ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`
+                    : "N/A",
                 },
                 { label: "Listed Price", value: deal.listedPrice || "N/A" },
                 { label: "Market Position", value: deal.discount ? `${deal.discount} Below Average` : "N/A" },
@@ -278,14 +299,17 @@ function PropertyDetailsPageContent() {
                   </div>
                 ) : (
                   comparableDeals.map((item) => {
-                    const psf = item.priceValue / parseFloat(item.size.replace(/[^0-9]/g, ""));
+                    const itemSizeNum = item.size ? parseFloat(item.size.replace(/[^0-9.]/g, "")) : 0;
+                    const psf = itemSizeNum > 0 && item.priceValue > 0 
+                      ? item.priceValue / itemSizeNum 
+                      : 0;
                     return (
                       <ComparableCard
                         key={item.id}
-                        title={item.name}
-                        details={`${item.bedrooms} • ${item.size} • ${item.location}`}
-                        price={item.listedPrice}
-                        psf={`AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`}
+                        title={item.name || "Property"}
+                        details={`${item.bedrooms || "N/A"} • ${item.size || "N/A"} • ${item.location || "N/A"}`}
+                        price={item.listedPrice || "N/A"}
+                        psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
                         status="Available"
                       />
                     );
@@ -319,7 +343,7 @@ function PropertyDetailsPageContent() {
                     </div>
                     <p>
                       Based on price analysis, market trends, location score, rental
-                      potential, and liquidity in {deal.location} market.
+                      potential, and liquidity in {deal.location || "the area"} market.
                     </p>
                     <div className="score-breakdown">
                       <p>
@@ -332,7 +356,7 @@ function PropertyDetailsPageContent() {
                       )}
                       {savingsMin > 0 && savingsMax > 0 && (
                         <p>
-                          <strong>Potential Savings:</strong> AED {savingsMin.toLocaleString()} - {savingsMax.toLocaleString()}
+                          <strong>Potential Savings:</strong> AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
                         </p>
                       )}
                       {deal.rentalYield && (
@@ -345,7 +369,7 @@ function PropertyDetailsPageContent() {
                     <ul className="score-components">
                       <li>
                         <span>Price vs Market</span>
-                        <strong>{discountPercent.toFixed(1)}%</strong>
+                        <strong>{!isNaN(discountPercent) && isFinite(discountPercent) ? discountPercent.toFixed(1) : "0.0"}%</strong>
                       </li>
                       {deal.rentalYield && (
                         <li>
@@ -355,7 +379,7 @@ function PropertyDetailsPageContent() {
                       )}
                       <li>
                         <span>Building Status</span>
-                        <strong>{deal.buildingStatus === "READY" ? "Ready" : "Off-Plan"}</strong>
+                        <strong>{deal.buildingStatus === "READY" || deal.buildingStatus === "ready" ? "Ready" : "Off-Plan"}</strong>
                       </li>
                     </ul>
                   </>
@@ -380,8 +404,8 @@ function PropertyDetailsPageContent() {
               )}
 
               <p className="benefits-text">
-                <strong>Key Benefits:</strong> Property located in {deal.location}, {deal.city}. 
-                {deal.buildingStatus === "READY" ? " Ready property allows immediate occupancy and rental income." : " Off-plan property offers potential for capital appreciation."}
+                <strong>Key Benefits:</strong> Property located in {deal.location || "the area"}, {deal.city || "the city"}. 
+                {(deal.buildingStatus === "READY" || deal.buildingStatus === "ready") ? " Ready property allows immediate occupancy and rental income." : " Off-plan property offers potential for capital appreciation."}
                 {deal.rentalYield && ` Rental yield of ${deal.rentalYield} provides attractive returns for investors.`}
               </p>
             </div>
