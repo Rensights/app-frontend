@@ -109,12 +109,17 @@ export default function Home() {
         // Known device - cookie is set by backend, redirect to dashboard
         // SECURITY: Token is now in HttpOnly cookie, not in response
         rememberThisDevice();
+        // Clear any cached state before redirecting
+        apiClient.clearCache();
         // Use hard navigation to ensure cookie is sent with subsequent requests
-        if (typeof window !== 'undefined') {
-          window.location.href = "/dashboard";
-        } else {
-          router.push("/dashboard");
-        }
+        // Small delay to ensure cookie is set before redirect
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.location.href = "/dashboard";
+          } else {
+            router.push("/dashboard");
+          }
+        }, 100);
       }
     } catch (error: any) {
       // Check if error is about email not verified
