@@ -12,20 +12,19 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   const { loading, user, logout } = useUser();
-  // Initialize sidebar as closed to prevent overlay flash - will be adjusted on mount
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // Initialize sidebar as open (desktop default) - will be adjusted on mount
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
   // Set sidebar state based on screen size after mount to avoid hydration issues
   useEffect(() => {
     setIsMounted(true);
     const checkScreenSize = () => {
-      // On desktop (>1024px), always show sidebar
-      // On mobile, hide by default
-      if (window.innerWidth > 1024) {
-        setIsSidebarOpen(true);
-      } else {
-        setIsSidebarOpen(false);
+      const isDesktop = window.innerWidth > 1024;
+      // On desktop (>1024px), always keep sidebar open
+      // On mobile, maintain current state (don't force close to avoid flickering)
+      if (isDesktop) {
+        setIsSidebarOpen(true); // Force open on desktop
       }
     };
 
