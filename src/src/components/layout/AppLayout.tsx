@@ -40,10 +40,18 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   }, []);
 
   const toggleSidebar = useCallback(() => {
+    // On desktop, sidebar should always be visible, so don't toggle
+    if (window.innerWidth > 1024) {
+      return; // Sidebar is always visible on desktop via CSS
+    }
     setIsSidebarOpen((prev) => !prev);
   }, []);
 
   const closeSidebar = useCallback(() => {
+    // On desktop, don't allow closing
+    if (window.innerWidth > 1024) {
+      return; // Sidebar is always visible on desktop via CSS
+    }
     setIsSidebarOpen(false);
   }, []);
 

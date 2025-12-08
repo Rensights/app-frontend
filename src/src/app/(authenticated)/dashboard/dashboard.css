@@ -26,7 +26,16 @@
   top: 0;
   z-index: 40;
   transition: transform 0.3s ease;
-  transform: translateX(0); /* Always visible on desktop by default */
+  /* Default: visible on desktop, hidden on mobile */
+  transform: translateX(0);
+}
+
+/* Force sidebar to always be visible on desktop */
+@media (min-width: 1025px) {
+  .sidebar {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+  }
 }
 
 .logo-section {
@@ -612,14 +621,25 @@
   }
 }
 
-/* Ensure sidebar is always visible on desktop */
+/* Ensure sidebar is always visible on desktop - must come after mobile rules */
 @media (min-width: 1025px) {
   .sidebar {
     transform: translateX(0) !important; /* Force visible on desktop */
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .sidebar.open,
+  .sidebar:not(.open) {
+    transform: translateX(0) !important; /* Always visible regardless of open state */
   }
   
   .sidebar-close {
-    display: none; /* Hide close button on desktop */
+    display: none !important; /* Hide close button on desktop */
+  }
+  
+  .sidebar-overlay {
+    display: none !important; /* Never show overlay on desktop */
   }
   
   .menu-toggle {
