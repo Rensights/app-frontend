@@ -34,10 +34,11 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     
-    // Clear any cached authentication state
+    // Clear any cached authentication state and pending requests
+    // This is critical after logout to ensure clean state
     apiClient.clearCache();
     
-    // Reset form state
+    // Reset form state completely
     setStep("login");
     setEmail("");
     setPassword("");
@@ -48,6 +49,13 @@ export default function Home() {
     
     // Check for remembered device
     setHasKnownDevice(localStorage.getItem(DEVICE_STORAGE_KEY) === "true");
+    
+    // Remove any URL parameters (like cache busting parameter from logout)
+    if (window.location.search) {
+      const url = new URL(window.location.href);
+      url.search = '';
+      window.history.replaceState({}, '', url.toString());
+    }
   }, []);
 
   useEffect(() => {
@@ -109,18 +117,18 @@ export default function Home() {
         // Known device - cookie is set by backend, redirect to dashboard
         // SECURITY: Token is now in HttpOnly cookie, not in response
         rememberThisDevice();
-        // Clear any cached auth state to force fresh load
-        apiClient.clearCache();
-        // Wait longer to ensure cookie is fully set and propagated
-        // Use longer delay to ensure cookie is available when UserContext loads
+        // Clear any cached auth state to force fresh load after redirect
+        // Don't clear cache here - let UserContext fetch fresh data after redirect
+        // Wait longer to ensure cookie is fully set and propagated in browser
         setTimeout(() => {
           if (typeof window !== 'undefined') {
-            // Use location.replace to ensure clean navigation
+            // Use location.replace to ensure clean navigation (no back button to login)
+            // This forces a full page reload, ensuring UserContext remounts with fresh state
             window.location.replace("/dashboard");
           } else {
             router.push("/dashboard");
           }
-        }, 500);
+        }, 300); // Reduced delay - cookie should be available quickly
       }
     } catch (error: any) {
       // Check if error is about email not verified

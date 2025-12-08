@@ -99,33 +99,61 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // Clear all state first
+    // Clear all state first to prevent any redirects during logout
     setUser(null);
     setSubscription(null);
     setError(null);
     setLoading(true); // Set loading to true to prevent AppLayout from checking auth during logout
-    // Call backend logout endpoint to clear HttpOnly cookie
-    await apiClient.logout();
-    // Clear API client cache completely
-    apiClient.clearCache();
-    // Force a hard navigation with cache busting to ensure clean state
-    if (typeof window !== 'undefined') {
-      // Use replace to prevent back button issues and clear history
-      window.location.replace('/');
+    
+    try {
+      // Call backend logout endpoint to clear HttpOnly cookie
+      // This must happen before navigation to ensure cookie is cleared
+      await apiClient.logout();
+    } catch (error) {
+      // Continue with logout even if backend call fails
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Logout API call failed:', error);
+      }
+    } finally {
+      // Clear API client cache completely (including pending requests)
+      apiClient.clearCache();
+      
+      // Force a hard navigation to ensure complete state reset
+      if (typeof window !== 'undefined') {
+        // Use replace to prevent back button issues and clear history
+        // Add cache busting parameter to ensure fresh page load
+        const timestamp = Date.now();
+        window.location.replace(`/?_=${timestamp}`);
+      }
     }
   }, []);
 
   // SECURITY: Load user - cookie is automatically sent with request
   // No need to check localStorage (token is in HttpOnly cookie)
   useEffect(() => {
-    // Always attempt to load user - cookie will be sent automatically if present
-    // If no cookie, backend will return 401/403 and we handle it in loadUser
-    // Small delay on mount to ensure cookies are available (especially after redirect)
-    const timer = setTimeout(() => {
-      loadUser();
-    }, 100);
+    // Don't load user on public pages (login, signup, etc.)
+    // This prevents unnecessary API calls and potential redirect loops
+    if (typeof window === 'undefined') return;
     
-    return () => clearTimeout(timer);
+    const publicPaths = ['/', '/signup', '/forgot-password', '/reset-password', '/early-access'];
+    const currentPath = window.location.pathname;
+    const isPublicPath = publicPaths.some(path => 
+      currentPath === path || currentPath.startsWith(path + '/')
+    );
+    
+    // Only load user if we're not on a public page
+    // Public pages handle their own auth state
+    if (!isPublicPath) {
+      // Small delay on mount to ensure cookies are available (especially after redirect)
+      const timer = setTimeout(() => {
+        loadUser();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    } else {
+      // On public pages, set loading to false immediately to prevent spinners
+      setLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 

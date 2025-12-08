@@ -362,21 +362,35 @@ class ApiClient {
     try {
       // Use fetch directly to avoid cache/pending requests interference
       const apiUrl = this.baseUrl || this.getApiUrl();
-      await fetch(`${apiUrl}/api/auth/logout`, {
+      
+      // Clear cache BEFORE logout call to prevent any cached responses
+      this.clearCache();
+      
+      // Call logout endpoint - cookie will be cleared by backend
+      const response = await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
-        credentials: 'include', // Include cookies
+        credentials: 'include', // CRITICAL: Include cookies so backend can clear them
         headers: {
           'Content-Type': 'application/json',
         },
+        // Don't cache this request
+        cache: 'no-store',
       });
+      
+      // Even if response is not ok, we still want to clear local state
+      if (!response.ok && process.env.NODE_ENV === 'development') {
+        console.warn('Logout endpoint returned non-OK status:', response.status);
+      }
     } catch (error) {
       // Continue with logout even if backend call fails
+      // This ensures local state is cleared even if network request fails
       if (process.env.NODE_ENV === 'development') {
         console.error('Logout API call failed:', error);
       }
+    } finally {
+      // Always clear local state, even if backend call failed
+      this.clearToken();
     }
-    // Clear local state
-    this.clearToken();
     // Note: Navigation is handled by UserContext to ensure state is properly reset
   }
 

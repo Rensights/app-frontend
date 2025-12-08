@@ -64,9 +64,20 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   // SECURITY: Cookie-based auth - cookie is automatically checked by backend
   // If user is null after loading, it means authentication failed (no cookie or invalid)
   useEffect(() => {
+    // Only redirect if we're sure loading is complete and we're on an authenticated route
+    // Give a small delay to allow for cookie propagation after login redirect
     if (!loading && requireAuth && !user) {
       // No user means no valid authentication cookie
-      router.push('/');
+      // Add small delay to prevent race condition with login redirect
+      const timer = setTimeout(() => {
+        // Double-check we're still on an authenticated route and still no user
+        // This prevents redirect loops if user state changes during the delay
+        if (!user) {
+          router.push('/');
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, [loading, requireAuth, user, router]);
 

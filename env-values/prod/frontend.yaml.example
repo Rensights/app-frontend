@@ -1,0 +1,41 @@
+# Production environment overrides for frontend
+# EXAMPLE CONFIGURATION - Replace 'rensights.com' with your actual domain
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/rensights/app-frontend
+  tag: ""  # Will be set by CI/CD with pipeline run number
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: "kong"
+  hosts:
+    - host: app.rensights.com  # REPLACE: Change to your production domain (e.g., app.yourdomain.com or yourdomain.com)
+      paths:
+        - path: /
+          pathType: Prefix
+  annotations:
+    konghq.com/strip-path: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Automatic SSL certificate
+  tls:
+    - secretName: app-frontend-tls  # Cert-manager will create this automatically
+      hosts:
+        - app.rensights.com  # REPLACE: Must match host above
+
+secrets:
+  frontendConfig: frontend-config  # Kubernetes secret containing NEXT_PUBLIC_API_URL, etc.
+
+extraEnv:
+  # Note: NEXT_PUBLIC_API_URL and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY are read from frontend-config secret
+  # Update the secret with your production API URL:
+  # kubectl create secret generic frontend-config \
+  #   --from-literal=NEXT_PUBLIC_API_URL=https://api.rensights.com \
+  #   --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_key \
+  #   --namespace=your-namespace \
+  #   --dry-run=client -o yaml | kubectl apply -f -
