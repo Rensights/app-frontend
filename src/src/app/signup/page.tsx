@@ -113,8 +113,12 @@ function SignUpPageContent() {
     if (!isValidEmail(formState.email))
       nextErrors.email = "Valid email required";
     if (!formState.phone.trim()) nextErrors.phone = "Required";
-    if (formState.password.length < 8)
+    // SECURITY FIX: Enforce strong password requirements to match backend
+    if (formState.password.length < 8) {
       nextErrors.password = "Min. 8 characters";
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(formState.password)) {
+      nextErrors.password = "Must contain uppercase, lowercase, number, and special character";
+    }
     if (formState.password !== formState.confirmPassword)
       nextErrors.confirmPassword = "Passwords must match";
     if (!formState.budget) nextErrors.budget = "Required";
