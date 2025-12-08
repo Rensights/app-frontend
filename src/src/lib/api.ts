@@ -336,8 +336,14 @@ class ApiClient {
   async logout() {
     // SECURITY: Call backend logout endpoint to clear HttpOnly cookie
     try {
-      await this.request('/api/auth/logout', {
+      // Use fetch directly to avoid cache/pending requests interference
+      const apiUrl = this.baseUrl || this.getApiUrl();
+      await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
+        credentials: 'include', // Include cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
     } catch (error) {
       // Continue with logout even if backend call fails

@@ -34,6 +34,9 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     
+    // Clear any cached authentication state
+    apiClient.clearCache();
+    
     // Reset form state
     setStep("login");
     setEmail("");

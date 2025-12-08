@@ -101,12 +101,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSubscription(null);
     setError(null);
-    setLoading(false);
+    setLoading(true); // Set loading to true to prevent AppLayout from checking auth during logout
     // Call backend logout endpoint to clear HttpOnly cookie
     await apiClient.logout();
-    // Force a hard navigation to ensure clean state (clears React state and cache)
+    // Clear API client cache completely
+    apiClient.clearCache();
+    // Force a hard navigation with cache busting to ensure clean state
     if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      // Use replace to prevent back button issues and clear history
+      window.location.replace('/');
     }
   }, []);
 
@@ -115,8 +118,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Always attempt to load user - cookie will be sent automatically if present
     // If no cookie, backend will return 401/403 and we handle it in loadUser
-    loadUser();
-  }, [loadUser]);
+    // Only load if not already loading (prevent multiple simultaneous loads)
+    if (!loading) {
+      loadUser();
+    }
+  }, [loadUser, loading]);
 
   return (
     <UserContext.Provider
