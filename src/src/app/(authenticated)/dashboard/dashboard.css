@@ -135,11 +135,22 @@
   pointer-events: none;
   transition: opacity 0.3s ease;
   z-index: 30;
+  display: none; /* Hidden by default */
 }
 
 .sidebar-overlay.open {
   opacity: 1;
   pointer-events: auto;
+  display: block; /* Only show when explicitly open */
+}
+
+/* Hide overlay on desktop - only show on mobile */
+@media (min-width: 1025px) {
+  .sidebar-overlay {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
 }
 
 .main-content {
@@ -593,6 +604,11 @@
 
   .menu-toggle {
     display: flex;
+  }
+
+  /* Show overlay only on mobile when sidebar is open */
+  .sidebar-overlay {
+    display: block;
   }
 }
 

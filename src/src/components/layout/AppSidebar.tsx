@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, memo } from "react";
+import { useCallback, memo, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { LinkWithPrefetch } from "./LinkWithPrefetch";
 
@@ -20,6 +20,17 @@ interface AppSidebarProps {
 export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleSectionChange = useCallback((item: typeof MENU_ITEMS[number], e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     e.preventDefault();
@@ -30,6 +41,9 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
     }
     onClose();
   }, [router, onClose]);
+
+  // Only show overlay on mobile when sidebar is open
+  const showOverlay = isMobile && isOpen;
 
   return (
     <>
@@ -72,10 +86,13 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
         </div>
       </aside>
 
-      <div
-        className={`sidebar-overlay ${isOpen ? "open" : ""}`}
-        onClick={onClose}
-      />
+      {showOverlay && (
+        <div
+          className="sidebar-overlay open"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
     </>
   );
 });
