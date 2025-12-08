@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient, Deal, PaginatedDealResponse } from "@/lib/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useDebounce } from "@/hooks/useDebounce";
 import "../dashboard/dashboard.css";
 import "./deals.css";
 
@@ -23,18 +24,22 @@ export default function DealsPage() {
   const [totalElements, setTotalElements] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  // Debounce filters to avoid excessive API calls (500ms delay)
+  const debouncedFilters = useDebounce(filters, 500);
+  const debouncedCity = useDebounce(city, 300);
+
   const loadDeals = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const buildingStatus = filters.status !== "all" ? filters.status : undefined;
-      const area = filters.area !== "all" ? filters.area : undefined;
-      const bedroomCount = filters.bedroom !== "all" ? filters.bedroom : undefined;
+      const buildingStatus = debouncedFilters.status !== "all" ? debouncedFilters.status : undefined;
+      const area = debouncedFilters.area !== "all" ? debouncedFilters.area : undefined;
+      const bedroomCount = debouncedFilters.bedroom !== "all" ? debouncedFilters.bedroom : undefined;
       
       const response = await apiClient.getDeals(
         currentPage,
         20,
-        city,
+        debouncedCity,
         area,
         bedroomCount,
         buildingStatus
@@ -49,7 +54,7 @@ export default function DealsPage() {
     } finally {
       setLoading(false);
     }
-  }, [city, filters, currentPage]);
+  }, [debouncedCity, debouncedFilters, currentPage]);
 
   useEffect(() => {
     loadDeals();

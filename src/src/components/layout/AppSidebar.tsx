@@ -2,6 +2,7 @@
 
 import { useCallback, memo } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { LinkWithPrefetch } from "./LinkWithPrefetch";
 
 export const MENU_ITEMS = [
   { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
@@ -47,18 +48,19 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
 
         <nav className="menu">
           {MENU_ITEMS.map((item) => (
-            <button
+            <LinkWithPrefetch
               key={item.id}
-              type="button"
+              href={item.path}
               aria-current={pathname === item.path ? "page" : undefined}
               className={`menu-item ${pathname === item.path ? "active" : ""}`}
-              onClick={() => handleSectionChange(item)}
+              onClick={onClose}
+              prefetch={true}
             >
               <span className="menu-icon" aria-hidden>
                 {item.icon}
               </span>
               <span className="menu-text">{item.label}</span>
-            </button>
+            </LinkWithPrefetch>
           ))}
         </nav>
 
