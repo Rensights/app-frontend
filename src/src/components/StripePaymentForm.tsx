@@ -114,8 +114,9 @@ export default function StripePaymentForm(props: StripePaymentFormProps) {
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
     "pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l";
 
-  console.log("StripePaymentForm rendered. Publishable key available:", !!publishableKey);
-  console.log("Stripe key (first 20 chars):", publishableKey?.substring(0, 20));
+  if (process.env.NODE_ENV === 'development') {
+    console.log("StripePaymentForm rendered. Publishable key available:", !!publishableKey);
+  }
 
   if (!publishableKey || publishableKey.length < 20) {
     return (

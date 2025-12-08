@@ -36,9 +36,11 @@ export default function RootLayout({
       || getRuntimeApiUrl()
       || 'http://dev-api.72.62.40.154.nip.io:31416'; // Hardcoded fallback for dev
     
-    console.log('[Layout] process.env.API_URL:', process.env.API_URL);
-    console.log('[Layout] process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-    console.log('[Layout] ✅ Final API URL:', apiUrl);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Layout] process.env.API_URL:', process.env.API_URL);
+      console.log('[Layout] process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+      console.log('[Layout] ✅ Final API URL:', apiUrl);
+    }
   } else {
     // Client-side: should be injected via script tag below
     apiUrl = '';

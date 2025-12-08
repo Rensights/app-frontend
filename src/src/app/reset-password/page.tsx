@@ -103,7 +103,9 @@ function ResetPasswordPageContent() {
       await apiClient.verifyResetCode(email, code);
       setStep("password");
     } catch (err: any) {
-      console.error("Verify reset code error:", err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Verify reset code error:", err);
+      }
       const errorMessage = err?.message || err?.error || "Invalid or expired code. Please try again.";
       setCodeError(errorMessage);
     } finally {
@@ -141,7 +143,9 @@ function ResetPasswordPageContent() {
       await apiClient.resetPassword(email, code, newPassword);
       setStep("success");
     } catch (err: any) {
-      console.error("Reset password error:", err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Reset password error:", err);
+      }
       const errorMessage = err?.message || err?.error || "Failed to reset password. Please try again.";
       setError(errorMessage);
     } finally {
@@ -165,7 +169,9 @@ function ResetPasswordPageContent() {
       setCodeError("");
       setTimeout(() => codeRefs.current[0]?.focus(), 200);
     } catch (err: any) {
-      console.error("Resend code error:", err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Resend code error:", err);
+      }
       const errorMessage = err?.message || err?.error || "Failed to resend code. Please try again.";
       setError(errorMessage);
     }

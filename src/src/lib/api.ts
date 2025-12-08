@@ -18,18 +18,20 @@ const getApiUrlFromEnv = (): string => {
     }
     
     // Neither runtime nor build-time URL available
-    console.warn('NEXT_PUBLIC_API_URL is not set. Check Kubernetes secret configuration.');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('NEXT_PUBLIC_API_URL is not set. Check Kubernetes secret configuration.');
+    }
     return '';
   } else {
-    // Server-side: Read from process.env (available at runtime from Kubernetes secret)
-    // Try API_URL first (regular env var, available at runtime), then NEXT_PUBLIC_API_URL
-    const url = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
-    if (!url || url === '') {
-      console.warn('API_URL or NEXT_PUBLIC_API_URL is not set on server-side. Check Kubernetes secret configuration.');
-      console.warn('API_URL:', process.env.API_URL);
-      console.warn('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-      return '';
-    }
+      // Server-side: Read from process.env (available at runtime from Kubernetes secret)
+      // Try API_URL first (regular env var, available at runtime), then NEXT_PUBLIC_API_URL
+      const url = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
+      if (!url || url === '') {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('API_URL or NEXT_PUBLIC_API_URL is not set on server-side. Check Kubernetes secret configuration.');
+        }
+        return '';
+      }
     return url;
   }
 };
@@ -179,7 +181,9 @@ class ApiClient {
           } catch {
             error = { error: errorText || `Request failed with status ${response.status}` };
           }
-          console.error(`API Error [${response.status}]: ${endpoint}`, error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`API Error [${response.status}]: ${endpoint}`, error);
+          }
           const errorMessage = error.error || error.message || error.details || errorText || `Request failed with status ${response.status}`;
           const apiError = new Error(errorMessage);
           (apiError as any).status = response.status;
@@ -458,7 +462,9 @@ class ApiClient {
       } catch {
         error = { error: errorText || `Request failed with status ${response.status}` };
       }
-      console.error(`API Error [${response.status}]: /api/analysis-requests`, error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`API Error [${response.status}]: /api/analysis-requests`, error);
+      }
       const errorMessage = error.error || error.message || error.details || errorText || `Request failed with status ${response.status}`;
       const apiError = new Error(errorMessage);
       (apiError as any).status = response.status;

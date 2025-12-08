@@ -36,7 +36,9 @@ export default function ForgotPasswordPage() {
       await apiClient.forgotPassword(email);
       setSuccess(true);
     } catch (err: any) {
-      console.error("Forgot password error:", err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Forgot password error:", err);
+      }
       const errorMessage = err?.message || err?.error || "Failed to send reset code. Please try again.";
       setError(errorMessage);
     } finally {

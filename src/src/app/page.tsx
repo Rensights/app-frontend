@@ -152,12 +152,14 @@ export default function Home() {
         ...prev,
         code: "Please enter the complete verification code",
       }));
-      console.log('Validation failed:', { 
-        codeDigits, 
-        code, 
-        length: code.length, 
-        allFilled: codeDigits.every(d => d && d.trim() !== '') 
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Validation failed:', { 
+          codeDigits, 
+          code, 
+          length: code.length, 
+          allFilled: codeDigits.every(d => d && d.trim() !== '') 
+        });
+      }
       return;
     }
     
@@ -215,6 +217,9 @@ export default function Home() {
       setResendTimer(60);
       setErrors((prev) => ({ ...prev, code: "" }));
     } catch (error: any) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Failed to resend code:", error);
+      }
       alert("Failed to resend code: " + (error.message || "Unknown error"));
     } finally {
       setIsSubmitting(false);

@@ -50,14 +50,18 @@ function PropertyDetailsPageContent() {
             .slice(0, 8);
           setComparableDeals(filtered);
         } catch (err) {
-          console.error("Error loading comparable deals:", err);
+          if (process.env.NODE_ENV === 'development') {
+            console.error("Error loading comparable deals:", err);
+          }
           // Don't fail the whole page if comparables fail
         } finally {
           setLoadingComparables(false);
         }
       }
     } catch (error: any) {
-      console.error("Error loading deal:", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error loading deal:", error);
+      }
       setError(error.message || "Failed to load property details");
     } finally {
       setLoading(false);
@@ -443,4 +447,5 @@ const ComparableCard = ({
     </div>
   </div>
 );
+
 

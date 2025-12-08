@@ -49,7 +49,9 @@ export default function DealsPage() {
       setTotalPages(response.totalPages);
       setTotalElements(response.totalElements);
     } catch (error: any) {
-      console.error("Error loading deals:", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error loading deals:", error);
+      }
       setError(error.message || "Failed to load deals");
     } finally {
       setLoading(false);

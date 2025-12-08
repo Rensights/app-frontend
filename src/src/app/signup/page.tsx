@@ -153,7 +153,9 @@ function SignUpPageContent() {
 
       // Check if token is returned (email verification disabled)
       if ('token' in registerResponse && registerResponse.token) {
-        console.log("Email verification disabled - token received, redirecting to dashboard");
+        if (process.env.NODE_ENV === 'development') {
+          console.log("Email verification disabled - token received, redirecting to dashboard");
+        }
         // Token received - save it and redirect
         apiClient.setToken(registerResponse.token);
         
@@ -209,14 +211,18 @@ function SignUpPageContent() {
       // Verify email and get token (device will be registered)
       const authResponse = await apiClient.verifyEmail(verificationEmail, code, deviceFingerprint);
       
-      console.log("Email verified successfully. Plan:", formState.plan);
-      console.log("Auth response:", authResponse);
-      console.log("Current step before check:", step);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Email verified successfully. Plan:", formState.plan);
+        console.log("Auth response:", authResponse);
+        console.log("Current step before check:", step);
+      }
 
       // IMPORTANT: Check plan BEFORE any redirect
       // If a paid plan is selected, redirect to Stripe Checkout
       if (formState.plan === "premium") {
-        console.log("✅ Premium plan detected! Redirecting to Stripe Checkout");
+        if (process.env.NODE_ENV === 'development') {
+          console.log("✅ Premium plan detected! Redirecting to Stripe Checkout");
+        }
         setIsSubmitting(true);
         try {
           const checkoutResponse = await apiClient.createCheckoutSession("PREMIUM");
@@ -233,7 +239,9 @@ function SignUpPageContent() {
       }
 
       // Redirect to dashboard for free plan
-      console.log("Free plan selected, redirecting to dashboard");
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Free plan selected, redirecting to dashboard");
+      }
       router.push("/dashboard");
     } catch (error: any) {
       setCodeError(error.message || "Invalid verification code. Please try again.");

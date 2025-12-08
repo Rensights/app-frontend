@@ -54,7 +54,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setSubscription(subscriptionData);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to load user:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to load user:', err);
+      }
       setError(err);
       setUser(null);
       setSubscription(null);
@@ -76,7 +78,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to refresh user:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to refresh user:', err);
+      }
       setError(err);
     }
   }, []);
@@ -86,7 +90,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const subscriptionData = await apiClient.getCurrentSubscription().catch(() => null);
       setSubscription(subscriptionData);
     } catch (err: any) {
-      console.error('Failed to refresh subscription:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to refresh subscription:', err);
+      }
     }
   }, []);
 
