@@ -106,7 +106,12 @@ export default function Home() {
         // Known device - cookie is set by backend, redirect to dashboard
         // SECURITY: Token is now in HttpOnly cookie, not in response
         rememberThisDevice();
-        router.push("/dashboard");
+        // Use hard navigation to ensure cookie is sent with subsequent requests
+        if (typeof window !== 'undefined') {
+          window.location.href = "/dashboard";
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (error: any) {
       // Check if error is about email not verified
@@ -203,10 +208,12 @@ export default function Home() {
       
       rememberThisDevice();
       showSuccess();
-      // Redirect to dashboard after a short delay
+      // SECURITY: Cookie is set by backend, wait a moment for it to be set before redirect
+      // Redirect to dashboard after a short delay to ensure cookie is set
       setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
+        // Use window.location.href for hard navigation to ensure cookie is sent
+        window.location.href = "/dashboard";
+      }, 1000);
     } catch (error: any) {
       setErrors((prev) => ({
         ...prev,
