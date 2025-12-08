@@ -30,8 +30,20 @@ export default function Home() {
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [hasKnownDevice, setHasKnownDevice] = useState(false);
 
+  // Reset login form state when component mounts (e.g., after logout)
   useEffect(() => {
     if (typeof window === "undefined") return;
+    
+    // Reset form state
+    setStep("login");
+    setEmail("");
+    setPassword("");
+    setErrors({ email: "", password: "", code: "" });
+    setLoginError("");
+    setCodeDigits(Array(CODE_LENGTH).fill(""));
+    setIsSubmitting(false);
+    
+    // Check for remembered device
     setHasKnownDevice(localStorage.getItem(DEVICE_STORAGE_KEY) === "true");
   }, []);
 

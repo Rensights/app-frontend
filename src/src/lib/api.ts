@@ -223,6 +223,8 @@ class ApiClient {
   // Optimized: Clear cache when token changes
   clearCache() {
     this.cache.clear();
+    // Also clear pending requests to prevent stale promises
+    this.pendingRequests.clear();
   }
 
   setToken(token: string) {
@@ -235,11 +237,17 @@ class ApiClient {
 
   clearToken() {
     this.token = null;
+    // Clear cached fingerprint
+    this.cachedFingerprint = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('deviceFingerprint');
+      // Also clear device storage for login
+      localStorage.removeItem('rensights-remembered-device');
+      localStorage.removeItem('pendingDeviceFingerprint');
     }
-    this.clearCache(); // Clear cache on logout
+    // Clear cache AND pending requests to ensure clean state
+    this.clearCache();
   }
 
   /**
@@ -343,10 +351,9 @@ class ApiClient {
   }
 
   logout() {
+    // Clear all state
     this.clearToken();
-    if (typeof window !== 'undefined') {
-      window.location.href = '/';
-    }
+    // Note: Navigation is handled by UserContext to ensure state is properly reset
   }
 
   // Device verification endpoints (for resending codes)

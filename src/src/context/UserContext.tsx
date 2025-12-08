@@ -97,14 +97,35 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    apiClient.logout();
+    // Clear all state first
     setUser(null);
     setSubscription(null);
-    router.push('/');
-  }, [router]);
+    setError(null);
+    setLoading(false);
+    // Clear token and cache
+    apiClient.logout();
+    // Force a hard navigation to ensure clean state (clears React state and cache)
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+  }, []);
 
+  // Only load user if we have a token (don't try to load after logout)
   useEffect(() => {
-    loadUser();
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        loadUser();
+      } else {
+        // No token, set loading to false immediately
+        setLoading(false);
+        setUser(null);
+        setSubscription(null);
+      }
+    } else {
+      // Server-side, just set loading to false
+      setLoading(false);
+    }
   }, [loadUser]);
 
   return (
