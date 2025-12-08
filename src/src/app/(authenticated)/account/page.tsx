@@ -26,19 +26,16 @@ function AccountPageContent() {
         setLoading(true);
         setError("");
         
-        // Check if we have a session_id from Stripe checkout
         const sessionId = searchParams?.get('session_id');
         if (sessionId) {
           try {
-            console.log("Processing checkout success with session_id:", sessionId);
             const updatedSubscription = await apiClient.checkoutSuccess(sessionId);
-            console.log("Checkout success response:", updatedSubscription);
             await refreshSubscription();
             await refreshUser();
             setSuccess("Payment processed successfully! Your subscription has been updated.");
             router.replace('/account', { scroll: false });
+            setTimeout(() => setSuccess(""), 5000);
           } catch (err: any) {
-            console.error("Checkout success error:", err);
             setError(err?.message || "Failed to process payment");
           }
         }
@@ -53,7 +50,6 @@ function AccountPageContent() {
           });
         }
       } catch (error: any) {
-        console.error("Error loading account data:", error);
         setError(error?.message || "Failed to load account data");
       } finally {
         setLoading(false);
@@ -211,6 +207,7 @@ function AccountPageContent() {
     return (
       <div className="account-error">
         <div className="error-card">
+          <div className="error-icon">⚠️</div>
           <h2>Unable to Load Account</h2>
           <p>Please try refreshing the page or contact support if the problem persists.</p>
         </div>
@@ -223,38 +220,69 @@ function AccountPageContent() {
 
   return (
     <div className="account-page">
-      <div className="account-header">
-        <h1 className="account-title">Account Settings</h1>
-        <p className="account-subtitle">Manage your profile and subscription</p>
+      {/* Hero Header Section */}
+      <div className="account-hero">
+        <div className="hero-content">
+          <div className="hero-avatar">
+            <div className="avatar-circle">
+              {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
+            </div>
+            <div className="avatar-badge">
+              {getPlanIcon(subscription?.planType)}
+            </div>
+          </div>
+          <div className="hero-info">
+            <h1 className="hero-title">
+              {user?.firstName || user?.lastName
+                ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
+                : "Welcome Back!"}
+            </h1>
+            <p className="hero-subtitle">{user?.email || ""}</p>
+            <div className="hero-badges">
+              <span className={`plan-badge-inline ${getPlanColor(subscription?.planType)}`}>
+                {getPlanIcon(subscription?.planType)} {subscription?.planType || "FREE"} Plan
+              </span>
+              <span className={`status-badge-inline ${(subscription?.status || "ACTIVE").toLowerCase()}`}>
+                {subscription?.status || "ACTIVE"}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Alert Messages */}
       {error && (
-        <div className="alert alert-error">
+        <div className="alert alert-error" role="alert">
           <span className="alert-icon">⚠️</span>
-          <span>{error}</span>
-          <button className="alert-close" onClick={() => setError("")}>×</button>
+          <span className="alert-message">{error}</span>
+          <button className="alert-close" onClick={() => setError("")} aria-label="Close">×</button>
         </div>
       )}
 
       {success && (
-        <div className="alert alert-success">
+        <div className="alert alert-success" role="alert">
           <span className="alert-icon">✓</span>
-          <span>{success}</span>
-          <button className="alert-close" onClick={() => setSuccess("")}>×</button>
+          <span className="alert-message">{success}</span>
+          <button className="alert-close" onClick={() => setSuccess("")} aria-label="Close">×</button>
         </div>
       )}
 
+      {/* Main Content Grid */}
       <div className="account-grid">
         {/* Profile Card */}
         <div className="account-card profile-card">
-          <div className="card-header">
-            <div>
-              <h2 className="card-title">👤 Profile Information</h2>
-              <p className="card-subtitle">Update your personal details</p>
+          <div className="card-icon-header">
+            <div className="card-icon">👤</div>
+            <div className="card-header-content">
+              <h2 className="card-title">Profile Information</h2>
+              <p className="card-subtitle">Manage your personal details</p>
             </div>
             {!isEditing && (
-              <button className="btn btn-edit" onClick={handleEdit}>
-                Edit Profile
+              <button className="btn-icon" onClick={handleEdit} aria-label="Edit Profile">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
               </button>
             )}
           </div>
@@ -262,7 +290,10 @@ function AccountPageContent() {
           {isEditing ? (
             <div className="edit-form">
               <div className="form-group">
-                <label htmlFor="firstName">First Name</label>
+                <label htmlFor="firstName">
+                  <span className="label-icon">📝</span>
+                  First Name
+                </label>
                 <input
                   id="firstName"
                   type="text"
@@ -275,7 +306,10 @@ function AccountPageContent() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="lastName">Last Name</label>
+                <label htmlFor="lastName">
+                  <span className="label-icon">📝</span>
+                  Last Name
+                </label>
                 <input
                   id="lastName"
                   type="text"
@@ -300,39 +334,66 @@ function AccountPageContent() {
                   onClick={handleSave}
                   disabled={saving}
                 >
-                  {saving ? "Saving..." : "Save Changes"}
+                  {saving ? (
+                    <>
+                      <span className="spinner-small"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <span>✓</span>
+                      Save Changes
+                    </>
+                  )}
                 </button>
               </div>
             </div>
           ) : (
             <div className="profile-details">
               <div className="detail-item">
-                <span className="detail-label">Full Name</span>
-                <span className="detail-value">
-                  {user?.firstName || user?.lastName
-                    ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
-                    : "Not set"}
-                </span>
+                <div className="detail-icon">👤</div>
+                <div className="detail-content">
+                  <span className="detail-label">Full Name</span>
+                  <span className="detail-value">
+                    {user?.firstName || user?.lastName
+                      ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
+                      : "Not set"}
+                  </span>
+                </div>
               </div>
+              
               <div className="detail-item">
-                <span className="detail-label">Email Address</span>
-                <span className="detail-value">{user?.email || "N/A"}</span>
+                <div className="detail-icon">✉️</div>
+                <div className="detail-content">
+                  <span className="detail-label">Email Address</span>
+                  <span className="detail-value">{user?.email || "N/A"}</span>
+                </div>
               </div>
+              
               <div className="detail-item">
-                <span className="detail-label">Customer ID</span>
-                <span className="detail-value code">
-                  {user?.customerId && user.customerId.trim() !== "" ? user.customerId : "N/A"}
-                </span>
+                <div className="detail-icon">🆔</div>
+                <div className="detail-content">
+                  <span className="detail-label">Customer ID</span>
+                  <span className="detail-value code">{user?.customerId && user.customerId.trim() !== "" ? user.customerId : "N/A"}</span>
+                </div>
               </div>
+              
               <div className="detail-item">
-                <span className="detail-label">Account Status</span>
-                <span className={`status-badge ${getPlanColor(user?.userTier)}`}>
-                  {user?.userTier || "FREE"}
-                </span>
+                <div className="detail-icon">🎯</div>
+                <div className="detail-content">
+                  <span className="detail-label">Account Status</span>
+                  <span className={`status-badge ${getPlanColor(user?.userTier)}`}>
+                    {user?.userTier || "FREE"}
+                  </span>
+                </div>
               </div>
+              
               <div className="detail-item">
-                <span className="detail-label">Member Since</span>
-                <span className="detail-value">{formatDate(user?.createdAt)}</span>
+                <div className="detail-icon">📅</div>
+                <div className="detail-content">
+                  <span className="detail-label">Member Since</span>
+                  <span className="detail-value">{formatDate(user?.createdAt)}</span>
+                </div>
               </div>
             </div>
           )}
@@ -340,20 +401,21 @@ function AccountPageContent() {
 
         {/* Subscription Card */}
         <div className="account-card subscription-card">
-          <div className="card-header">
-            <div>
-              <h2 className="card-title">💳 Subscription Plan</h2>
+          <div className="card-icon-header">
+            <div className="card-icon">💳</div>
+            <div className="card-header-content">
+              <h2 className="card-title">Subscription Plan</h2>
               <p className="card-subtitle">Manage your subscription</p>
             </div>
           </div>
 
           <div className="subscription-content">
-            <div className="plan-display">
-              <div className={`plan-badge ${getPlanColor(subscription?.planType)}`}>
-                <span className="plan-icon">{getPlanIcon(subscription?.planType)}</span>
-                <div>
+            <div className={`plan-card ${getPlanColor(subscription?.planType)}`}>
+              <div className="plan-header">
+                <div className="plan-icon-large">{getPlanIcon(subscription?.planType)}</div>
+                <div className="plan-info">
                   <div className="plan-name">{subscription?.planType || "FREE"} Plan</div>
-                  <div className="plan-status">
+                  <div className="plan-status-text">
                     Status: <span className={`status-badge ${(subscription?.status || "ACTIVE").toLowerCase()}`}>
                       {subscription?.status || "ACTIVE"}
                     </span>
@@ -364,13 +426,19 @@ function AccountPageContent() {
               {subscription?.startDate && (
                 <div className="plan-dates">
                   <div className="date-item">
-                    <span className="date-label">Start Date</span>
-                    <span className="date-value">{formatDate(subscription.startDate)}</span>
+                    <span className="date-icon">📆</span>
+                    <div className="date-info">
+                      <span className="date-label">Start Date</span>
+                      <span className="date-value">{formatDate(subscription.startDate)}</span>
+                    </div>
                   </div>
                   {subscription?.endDate && (
                     <div className="date-item">
-                      <span className="date-label">End Date</span>
-                      <span className="date-value">{formatDate(subscription.endDate)}</span>
+                      <span className="date-icon">⏰</span>
+                      <div className="date-info">
+                        <span className="date-label">End Date</span>
+                        <span className="date-value">{formatDate(subscription.endDate)}</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -380,19 +448,29 @@ function AccountPageContent() {
             <div className="subscription-actions">
               {!subscription || subscription?.planType === "FREE" ? (
                 <div className="upgrade-section">
-                  <p className="upgrade-text">Upgrade to unlock premium features</p>
+                  <p className="upgrade-text">✨ Unlock Premium Features</p>
                   <div className="upgrade-buttons">
                     <button
-                      className="btn btn-primary btn-upgrade"
+                      className="btn btn-upgrade btn-premium"
                       onClick={() => handleUpgrade("PREMIUM")}
                     >
-                      ⭐ Upgrade to Premium
+                      <span className="btn-icon">⭐</span>
+                      <div>
+                        <div className="btn-title">Premium Plan</div>
+                        <div className="btn-subtitle">Advanced features</div>
+                      </div>
+                      <span className="btn-arrow">→</span>
                     </button>
                     <button
-                      className="btn btn-primary btn-upgrade"
+                      className="btn btn-upgrade btn-enterprise"
                       onClick={() => handleUpgrade("ENTERPRISE")}
                     >
-                      💎 Upgrade to Enterprise
+                      <span className="btn-icon">💎</span>
+                      <div>
+                        <div className="btn-title">Enterprise Plan</div>
+                        <div className="btn-subtitle">Full access</div>
+                      </div>
+                      <span className="btn-arrow">→</span>
                     </button>
                   </div>
                 </div>
@@ -404,12 +482,14 @@ function AccountPageContent() {
                         className="btn btn-primary"
                         onClick={handleRenew}
                       >
-                        🔄 Renew Subscription
+                        <span>🔄</span>
+                        Renew Subscription
                       </button>
                       <button
                         className="btn btn-danger"
                         onClick={handleCancelSubscription}
                       >
+                        <span>🚫</span>
                         Cancel Subscription
                       </button>
                     </>
@@ -422,17 +502,21 @@ function AccountPageContent() {
 
         {/* Payment History Card */}
         <div className="account-card payment-card">
-          <div className="card-header">
-            <div>
-              <h2 className="card-title">📜 Payment History</h2>
+          <div className="card-icon-header">
+            <div className="card-icon">📜</div>
+            <div className="card-header-content">
+              <h2 className="card-title">Payment History</h2>
               <p className="card-subtitle">View your transaction history</p>
             </div>
+            {paymentHistory.length > 0 && (
+              <div className="card-badge">{paymentHistory.length}</div>
+            )}
           </div>
 
           {!paymentHistory || paymentHistory.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📭</div>
-              <p className="empty-text">No payment history available</p>
+              <p className="empty-text">No Payment History</p>
               <p className="empty-subtext">Your payment history will appear here once you make a purchase</p>
             </div>
           ) : (
@@ -441,7 +525,7 @@ function AccountPageContent() {
                 <div key={payment.id || index} className="payment-item">
                   <div className="payment-header">
                     <div className="payment-info">
-                      <span className="payment-icon">{getPlanIcon(payment.planType)}</span>
+                      <div className="payment-icon-large">{getPlanIcon(payment.planType)}</div>
                       <div>
                         <div className="payment-plan">{payment.planType || "FREE"}</div>
                         <div className="payment-date">Created: {formatDate(payment.createdAt)}</div>
@@ -454,12 +538,12 @@ function AccountPageContent() {
                   {payment.startDate && (
                     <div className="payment-details">
                       <div className="payment-detail-item">
-                        <span>Start:</span>
+                        <span className="detail-label-small">📅 Start:</span>
                         <span>{formatDate(payment.startDate)}</span>
                       </div>
                       {payment.endDate && (
                         <div className="payment-detail-item">
-                          <span>End:</span>
+                          <span className="detail-label-small">⏰ End:</span>
                           <span>{formatDate(payment.endDate)}</span>
                         </div>
                       )}
