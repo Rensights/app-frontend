@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../../dashboard/dashboard.css";
 import "../city-analysis.css";
 
@@ -80,7 +81,7 @@ export default function DetailedCityAnalysisPage() {
   if (loading) {
     return (
       <div className="dashboard-page">
-        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+        <LoadingSpinner fullPage={true} message="Loading Detailed Analysis..." />
       </div>
     );
   }

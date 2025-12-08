@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 
 const MENU_ITEMS = [
@@ -57,7 +58,7 @@ export default function WeeklyDealsPage() {
   if (loading) {
     return (
       <div className="dashboard-page">
-        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+        <LoadingSpinner fullPage={true} message="Loading Weekly Deals..." />
       </div>
     );
   }

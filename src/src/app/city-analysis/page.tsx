@@ -58,7 +58,7 @@ export default function CityAnalysisPage() {
   if (loading) {
     return (
       <div className="dashboard-page">
-        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+        <LoadingSpinner fullPage={true} message="Loading City Analysis..." />
       </div>
     );
   }

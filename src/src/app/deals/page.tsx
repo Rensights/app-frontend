@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient, Deal, PaginatedDealResponse } from "@/lib/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "./deals.css";
 
@@ -161,7 +162,7 @@ export default function DealsPage() {
   if (loading) {
     return (
       <div className="dashboard-page">
-        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+        <LoadingSpinner fullPage={true} message="Loading Deals..." />
       </div>
     );
   }

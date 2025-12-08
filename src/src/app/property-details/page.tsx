@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient, Deal } from "@/lib/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "./property-details.css";
 
@@ -126,9 +127,7 @@ function PropertyDetailsPageContent() {
           </div>
         </aside>
         <main className="main-content">
-          <div style={{ padding: "2rem", textAlign: "center" }}>
-            Loading property details...
-          </div>
+          <LoadingSpinner message="Loading Property Details..." />
         </main>
       </div>
     );
@@ -513,7 +512,7 @@ export default function PropertyDetailsPage() {
   return (
     <Suspense fallback={
       <div className="dashboard-page">
-        <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+        <LoadingSpinner fullPage={true} message="Loading..." />
       </div>
     }>
       <PropertyDetailsPageContent />

@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "./account.css";
 
@@ -186,7 +187,7 @@ function AccountPageContent() {
           </div>
         </aside>
         <main className="main-content">
-          <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+          <LoadingSpinner message="Loading Account..." />
         </main>
       </div>
     );
@@ -486,7 +487,7 @@ function AccountPageContent() {
 
 export default function AccountPage() {
   return (
-    <Suspense fallback={<div className="account-page"><div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div></div>}>
+    <Suspense fallback={<div className="account-page"><LoadingSpinner message="Loading..." /></div>}>
       <AccountPageContent />
     </Suspense>
   );
