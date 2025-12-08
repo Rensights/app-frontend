@@ -143,7 +143,15 @@ export default function DetailedCityAnalysisPage() {
                   <p className="subtitle">Rental yield and price appreciation by district</p>
                 </div>
                 <div className="chart-body">
-                  Chart: Area performance metrics
+                  <iframe
+                    title="Dubai properties analysis by areas"
+                    width="100%"
+                    height="600"
+                    src="https://app.powerbi.com/view?r=eyJrIjoiYzgyNTIwZDYtZmY5Zi00NDExLWI3ZjQtZGMxM2I1ZGEyNjNjIiwidCI6ImRhODIxMGM4LWY5ZTQtNDBmYy1iZDI3LTZkM2U0ZjA0NmNjNyIsImMiOjl9"
+                    frameBorder="0"
+                    allowFullScreen={true}
+                    style={{ border: 'none', borderRadius: '8px' }}
+                  />
                 </div>
               </div>
               <div className="chart-card">
