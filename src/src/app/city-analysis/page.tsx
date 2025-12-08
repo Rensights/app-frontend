@@ -126,82 +126,63 @@ export default function CityAnalysisPage() {
           <div className="section-card">
             <div className="section-title">City Analysis</div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
-              {/* Average Price per Sq Ft */}
-              <div>
-                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '8px' }}>Average Price per Sq Ft</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#333', marginBottom: '8px' }}>AED 1,450</div>
-                <div style={{ fontSize: '0.85rem', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span>↑</span>
-                  <span>+8.2% from last quarter</span>
-                </div>
-              </div>
-
-              {/* Most Active Area */}
-              <div>
-                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '8px' }}>Most Active Area</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#333', marginBottom: '8px' }}>Dubai Marina</div>
-                <div style={{ fontSize: '0.85rem', color: '#666' }}>247 transactions this month</div>
-              </div>
-
-              {/* Average Rental Yield */}
-              <div>
-                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '8px' }}>Average Rental Yield</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#333', marginBottom: '8px' }}>5.8%</div>
-                <div style={{ fontSize: '0.85rem', color: '#666' }}>Above regional average</div>
-              </div>
+            <div className="analysis-metric">
+              <div className="metric-label">Average Price per Sq Ft</div>
+              <div className="metric-value">AED 1,450</div>
+              <div className="metric-trend">↑ +8.2% from last quarter</div>
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <button 
-                className="btn"
-                onClick={() => router.push('/city-analysis/detailed')}
-              >
-                View Full City Analysis
-              </button>
+            <div className="analysis-metric">
+              <div className="metric-label">Most Active Area</div>
+              <div className="metric-value">Dubai Marina</div>
+              <div className="metric-trend">247 transactions this month</div>
             </div>
+
+            <div className="analysis-metric">
+              <div className="metric-label">Average Rental Yield</div>
+              <div className="metric-value">5.8%</div>
+              <div className="metric-trend">Above regional average</div>
+            </div>
+
+            <button 
+              className="btn"
+              onClick={() => router.push('/city-analysis/detailed')}
+            >
+              View Full City Analysis
+            </button>
           </div>
 
           {/* Top Performing Areas Section */}
           <div className="section-card">
             <div className="section-title">Top Performing Areas</div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Downtown Dubai */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '8px', background: '#f8f9fa' }}>
-                <div style={{ fontSize: '2rem' }}>🏆</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '4px' }}>Downtown Dubai</div>
-                  <div style={{ fontSize: '0.9rem', color: '#666' }}>9.1% growth • High appreciation potential</div>
-                </div>
+            <div style={{ fontSize: '0.95rem', color: '#666', lineHeight: '1.6' }}>
+              <div style={{ marginBottom: '12px', padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <strong>🏆 Downtown Dubai</strong><br />
+                <span style={{ fontSize: '0.85rem' }}>9.1% growth • High appreciation potential</span>
               </div>
+              <div style={{ marginBottom: '12px', padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <strong>⚓ Dubai Marina</strong><br />
+                <span style={{ fontSize: '0.85rem' }}>High liquidity • Most transactions</span>
+              </div>
+              <div style={{ marginBottom: '12px', padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <strong>🏢 Business Bay</strong><br />
+                <span style={{ fontSize: '0.85rem' }}>Best rental yields • 6.5% average</span>
+              </div>
+              <div style={{ padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <strong>🌴 Palm Jumeirah</strong><br />
+                <span style={{ fontSize: '0.85rem' }}>Premium segment leader • Luxury market</span>
+              </div>
+            </div>
+          </div>
 
-              {/* Dubai Marina */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '8px', background: '#f8f9fa' }}>
-                <div style={{ fontSize: '2rem' }}>⚓</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '4px' }}>Dubai Marina</div>
-                  <div style={{ fontSize: '0.9rem', color: '#666' }}>High liquidity • Most transactions</div>
-                </div>
-              </div>
-
-              {/* Business Bay */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '8px', background: '#f8f9fa' }}>
-                <div style={{ fontSize: '2rem' }}>🏢</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '4px' }}>Business Bay</div>
-                  <div style={{ fontSize: '0.9rem', color: '#666' }}>Best rental yields • 6.5% average</div>
-                </div>
-              </div>
-
-              {/* Palm Jumeirah */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '8px', background: '#f8f9fa' }}>
-                <div style={{ fontSize: '2rem' }}>🌴</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '4px' }}>Palm Jumeirah</div>
-                  <div style={{ fontSize: '0.9rem', color: '#666' }}>Premium segment leader • Luxury market</div>
-                </div>
-              </div>
+          {/* Dubai Market Insights Section */}
+          <div className="section-card">
+            <div className="section-title">Dubai Market Insights</div>
+            <div style={{ fontSize: '0.95rem', color: '#666', lineHeight: '1.6' }}>
+              <div style={{ marginBottom: '10px' }}>🚀 Dubai real estate up 12% YoY</div>
+              <div style={{ marginBottom: '10px' }}>🗝️ New projects: Business Bay & Bluewaters</div>
+              <div style={{ marginBottom: '10px' }}>💎 Luxury market: Strong investor demand</div>
+              <div>🏙️ Dubai avg: AED 1,450/sq ft</div>
             </div>
           </div>
         </section>
