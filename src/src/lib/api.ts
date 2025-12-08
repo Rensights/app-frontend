@@ -142,6 +142,15 @@ class ApiClient {
       return this.pendingRequests.get(cacheKey)!;
     }
     
+    // Always reload token from localStorage to ensure we have the latest token
+    // This is important if token was updated after ApiClient was instantiated
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        this.token = storedToken;
+      }
+    }
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
@@ -423,6 +432,14 @@ class ApiClient {
 
   // Analysis request endpoints
   async submitAnalysisRequest(formData: FormData): Promise<{ message: string }> {
+    // Reload token from localStorage to ensure we have the latest token
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        this.token = storedToken;
+      }
+    }
+    
     const apiUrl = this.baseUrl || this.getApiUrl();
     const url = `${apiUrl}/api/analysis-requests`;
     
