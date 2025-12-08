@@ -55,6 +55,28 @@ export default function CityAnalysisPage() {
     setIsSidebarOpen(false);
   }, []);
 
+  const handleSectionClick = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleContactUs = () => {
+    alert('Contact Form\n\nOur team will get back to you within 24 hours.\n\nEmail: support@rensight.com\nPhone: +971 4 XXX XXXX');
+  };
+
+  const handleFilterClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const clickedPill = e.currentTarget;
+    const parent = clickedPill.parentElement;
+    if (parent) {
+      parent.querySelectorAll('.filter-pill').forEach((pill) => {
+        pill.classList.remove('active');
+      });
+      clickedPill.classList.add('active');
+    }
+  };
+
   if (loading) {
     return (
       <div className="dashboard-page">
