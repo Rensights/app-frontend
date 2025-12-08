@@ -310,17 +310,41 @@ class ApiClient {
       data.deviceFingerprint = this.getDeviceFingerprint();
     }
     
-    const response = await this.request<LoginResponse>('/api/auth/login', {
+    // Clear cache before login to ensure fresh state
+    this.clearCache();
+    
+    // Use fetch directly to ensure cookie is set properly and avoid cache interference
+    const apiUrl = this.baseUrl || this.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/auth/login`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // CRITICAL: Include credentials to receive and send cookies
       body: JSON.stringify(data),
     });
     
-    // If login successful with token, store it
-    if (response.token) {
-      this.setToken(response.token);
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      let error;
+      try {
+        error = JSON.parse(errorText);
+      } catch {
+        error = { error: errorText || `Login failed with status ${response.status}` };
+      }
+      const errorMessage = error.error || error.message || error.details || errorText || `Login failed with status ${response.status}`;
+      const apiError = new Error(errorMessage);
+      (apiError as any).status = response.status;
+      throw apiError;
     }
     
-    return response;
+    const loginResponse: LoginResponse = await response.json();
+    
+    // Token is now in HttpOnly cookie (set by backend), no need to store it
+    // Clear cache after login to ensure fresh user data is loaded
+    this.clearCache();
+    
+    return loginResponse;
   }
 
   async verifyDevice(email: string, code: string, deviceFingerprint: string): Promise<AuthResponse> {
@@ -389,21 +413,21 @@ class ApiClient {
   // User endpoints - Optimized: Enable caching for GET requests
   async getCurrentUser(): Promise<UserResponse> {
     // Don't use cache - always fetch fresh user data to avoid stale state after login/logout
-    return this.request<UserResponse>('/api/users/me', {}, false);
+    return this.request<UserResponse>('/users/me', {}, false);
   }
 
   async updateUserProfile(data: { firstName?: string; lastName?: string }): Promise<UserResponse> {
-    const result = await this.request<UserResponse>('/api/users/me', {
+    const result = await this.request<UserResponse>('/users/me', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
     // Invalidate user cache on update (not using cache anymore, but keep for consistency)
-    this.cache.delete('GET:/api/users/me');
+    this.cache.delete('GET:/users/me');
     return result;
   }
 
   async getPaymentHistory(): Promise<SubscriptionResponse[]> {
-    return this.request<SubscriptionResponse[]>('/api/users/me/payment-history', {}, false);
+    return this.request<SubscriptionResponse[]>('/users/me/payment-history', {}, false);
   }
 
   // Subscription endpoints - Optimized: Enable caching

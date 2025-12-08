@@ -120,7 +120,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Always attempt to load user - cookie will be sent automatically if present
     // If no cookie, backend will return 401/403 and we handle it in loadUser
-    loadUser();
+    // Small delay on mount to ensure cookies are available (especially after redirect)
+    const timer = setTimeout(() => {
+      loadUser();
+    }, 100);
+    
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
