@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
-import "../login.css";
+import "../../login.css";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
               <p>Please check your email and click the link to reset your password.</p>
               <button
                 type="button"
-                onClick={() => router.push("/reset-password")}
+                onClick={() => router.push("/portal/reset-password")}
                 className="btn"
                 style={{ marginTop: "20px" }}
               >
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
               </button>
               <button
                 type="button"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/portal/login")}
                 className="btn btn-secondary"
                 style={{ marginTop: "10px" }}
               >
@@ -123,7 +123,7 @@ export default function ForgotPasswordPage() {
           <div className="forgot-password">
             <div className="forgot-links">
               <a
-                href="/"
+                href="/portal/login"
                 style={{ color: "#f39c12", textDecoration: "none" }}
               >
                 Back to Login

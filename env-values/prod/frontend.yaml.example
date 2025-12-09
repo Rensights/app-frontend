@@ -39,3 +39,5 @@ extraEnv:
   #   --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_key \
   #   --namespace=your-namespace \
   #   --dry-run=client -o yaml | kubectl apply -f -
+
+

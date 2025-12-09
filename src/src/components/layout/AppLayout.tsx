@@ -73,7 +73,7 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
         // Double-check we're still on an authenticated route and still no user
         // This prevents redirect loops if user state changes during the delay
         if (!user) {
-          router.push('/');
+          router.push('/portal/login');
         }
       }, 100);
       

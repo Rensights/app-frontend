@@ -559,10 +559,10 @@ function SignUpPageContent() {
 
           <div className="back-to-login">
             <a
-              href="/"
+              href="/portal/login"
               onClick={(event) => {
                 event.preventDefault();
-                window.location.href = "/";
+                window.location.href = "/portal/login";
               }}
             >
               Already have an account? Sign In

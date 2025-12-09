@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
-import "../login.css";
+import "../../login.css";
 
 const CODE_LENGTH = 6;
 
@@ -190,7 +190,7 @@ function ResetPasswordPageContent() {
               <p>You can now log in with your new password.</p>
               <button
                 type="button"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/portal/login")}
                 className="btn"
                 style={{ marginTop: "20px" }}
               >
@@ -266,7 +266,7 @@ function ResetPasswordPageContent() {
             <div className="forgot-password">
               <div className="forgot-links">
                 <a
-                  href="/"
+                  href="/portal/login"
                   style={{ color: "#f39c12", textDecoration: "none" }}
                 >
                   Back to Login
@@ -363,13 +363,13 @@ function ResetPasswordPageContent() {
         <div className="forgot-password">
           <div className="forgot-links">
             <a
-              href="/forgot-password"
+              href="/portal/forgot-password"
               style={{ color: "#f39c12", textDecoration: "none" }}
             >
               Request New Code
             </a>
             <a
-              href="/"
+              href="/portal/login"
               style={{ color: "#f39c12", textDecoration: "none" }}
             >
               Back to Login

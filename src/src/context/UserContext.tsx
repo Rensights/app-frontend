@@ -123,7 +123,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         // Use replace to prevent back button issues and clear history
         // Add cache busting parameter to ensure fresh page load
         const timestamp = Date.now();
-        window.location.replace(`/?_=${timestamp}`);
+        window.location.replace(`/portal/login?_=${timestamp}`);
       }
     }
   }, []);
@@ -131,27 +131,41 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // SECURITY: Load user - cookie is automatically sent with request
   // No need to check localStorage (token is in HttpOnly cookie)
   useEffect(() => {
-    // Don't load user on public pages (login, signup, etc.)
-    // This prevents unnecessary API calls and potential redirect loops
     if (typeof window === 'undefined') return;
     
-    const publicPaths = ['/', '/signup', '/forgot-password', '/reset-password', '/early-access'];
+    const publicPaths = ['/', '/portal/login', '/portal/signup', '/portal/forgot-password', '/portal/reset-password', '/portal/early-access'];
     const currentPath = window.location.pathname;
     const isPublicPath = publicPaths.some(path => 
       currentPath === path || currentPath.startsWith(path + '/')
     );
     
-    // Only load user if we're not on a public page
-    // Public pages handle their own auth state
     if (!isPublicPath) {
-      // Small delay on mount to ensure cookies are available (especially after redirect)
+      // On authenticated routes, load user normally
       const timer = setTimeout(() => {
         loadUser();
       }, 100);
       
       return () => clearTimeout(timer);
+    } else if (currentPath.startsWith('/portal/')) {
+      // On portal pages, do a lightweight auth check
+      // This allows portal layout to redirect authenticated users
+      // But we fail fast if no auth cookie exists
+      const timer = setTimeout(async () => {
+        try {
+          // Quick auth check - will fail fast if not authenticated
+          const userData = await apiClient.getCurrentUser();
+          setUser(userData);
+          setLoading(false);
+        } catch (err: any) {
+          // Not authenticated - this is expected on portal pages
+          setUser(null);
+          setLoading(false);
+        }
+      }, 50); // Faster check for portal pages
+      
+      return () => clearTimeout(timer);
     } else {
-      // On public pages, set loading to false immediately to prevent spinners
+      // Landing page - no auth check needed
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
