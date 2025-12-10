@@ -85,6 +85,20 @@ export interface SubscriptionResponse {
   createdAt: string;
 }
 
+export interface InvoiceResponse {
+  id: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  status: string;
+  invoiceUrl?: string; // Stripe hosted invoice URL
+  invoicePdf?: string; // PDF download URL
+  description?: string;
+  invoiceDate?: string;
+  dueDate?: string;
+  paidAt?: string;
+}
+
 // Optimized: Request cache and deduplication
 interface CacheEntry<T> {
   data: T;
@@ -442,6 +456,21 @@ class ApiClient {
 
   async getPaymentHistory(): Promise<SubscriptionResponse[]> {
     return this.request<SubscriptionResponse[]>('/users/me/payment-history', {}, false);
+  }
+
+  // Invoice endpoints
+  async getInvoices(): Promise<InvoiceResponse[]> {
+    return this.request<InvoiceResponse[]>('/api/invoices', {}, false);
+  }
+
+  async syncInvoices(): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/invoices/sync', {
+      method: 'POST',
+    });
+  }
+
+  async getInvoice(invoiceId: string): Promise<InvoiceResponse> {
+    return this.request<InvoiceResponse>(`/api/invoices/${invoiceId}`, {}, false);
   }
 
   // Subscription endpoints - Optimized: Enable caching

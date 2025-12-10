@@ -12,7 +12,7 @@ function AccountPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user: contextUser, subscription: contextSubscription, refreshUser, refreshSubscription, loading: contextLoading } = useUser();
-  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: "", lastName: "" });
@@ -40,13 +40,20 @@ function AccountPageContent() {
           }
         }
 
-        // Get payment history
+        // Get invoices
         try {
-          const historyData = await apiClient.getPaymentHistory();
-          setPaymentHistory(Array.isArray(historyData) ? historyData : []);
+          const invoicesData = await apiClient.getInvoices();
+          setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
         } catch (err: any) {
-          // If endpoint doesn't exist, use empty array
-          setPaymentHistory([]);
+          // If endpoint doesn't exist, try to sync invoices first
+          try {
+            await apiClient.syncInvoices();
+            const invoicesData = await apiClient.getInvoices();
+            setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+          } catch (syncErr: any) {
+            // If sync fails, use empty array
+            setInvoices([]);
+          }
         }
         
         if (contextUser) {
@@ -161,16 +168,29 @@ function AccountPageContent() {
     }
   };
 
-  const handleDownloadInvoice = async (payment: any) => {
+  const handleDownloadInvoice = async (invoice: any) => {
     try {
-      // Generate invoice PDF on client side or fetch from backend
+      // Use Stripe invoice PDF URL if available, otherwise open Stripe hosted invoice
+      if (invoice.invoicePdf) {
+        // Open Stripe PDF in new window
+        window.open(invoice.invoicePdf, '_blank');
+        return;
+      }
+      
+      if (invoice.invoiceUrl) {
+        // Open Stripe hosted invoice in new window
+        window.open(invoice.invoiceUrl, '_blank');
+        return;
+      }
+      
+      // Fallback: Generate invoice HTML if Stripe URLs are not available
       const invoiceData = {
-        invoiceNumber: payment.id || `INV-${Date.now()}`,
-        date: payment.createdAt || new Date().toISOString(),
-        planType: payment.planType || "FREE",
-        status: payment.status || "ACTIVE",
-        startDate: payment.startDate,
-        endDate: payment.endDate,
+        invoiceNumber: invoice.invoiceNumber || invoice.id || `INV-${Date.now()}`,
+        date: invoice.invoiceDate || invoice.createdAt || new Date().toISOString(),
+        amount: invoice.amount || 0,
+        currency: invoice.currency || "USD",
+        status: invoice.status || "paid",
+        description: invoice.description,
         customer: {
           name: `${contextUser?.firstName || ""} ${contextUser?.lastName || ""}`.trim() || contextUser?.email,
           email: contextUser?.email,
@@ -223,29 +243,23 @@ function AccountPageContent() {
           </div>
 
           <div class="section">
-            <div class="section-title">Subscription Details</div>
+            <div class="section-title">Invoice Details</div>
             <div class="info-row">
-              <span class="info-label">Plan:</span>
-              <span class="info-value"><span class="plan-badge">${invoiceData.planType}</span></span>
+              <span class="info-label">Amount:</span>
+              <span class="info-value">${invoiceData.currency} ${invoiceData.amount.toFixed(2)}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Status:</span>
-              <span class="info-value">${invoiceData.status}</span>
+              <span class="info-value">${invoiceData.status.toUpperCase()}</span>
             </div>
             <div class="info-row">
               <span class="info-label">Invoice Date:</span>
               <span class="info-value">${formatDate(invoiceData.date)}</span>
             </div>
-            ${invoiceData.startDate ? `
+            ${invoiceData.description ? `
             <div class="info-row">
-              <span class="info-label">Start Date:</span>
-              <span class="info-value">${formatDate(invoiceData.startDate)}</span>
-            </div>
-            ` : ''}
-            ${invoiceData.endDate ? `
-            <div class="info-row">
-              <span class="info-label">End Date:</span>
-              <span class="info-value">${formatDate(invoiceData.endDate)}</span>
+              <span class="info-label">Description:</span>
+              <span class="info-value">${invoiceData.description}</span>
             </div>
             ` : ''}
           </div>
@@ -475,37 +489,91 @@ function AccountPageContent() {
 
       {/* Invoice History */}
       <div className="account-card">
-        <h2 className="card-title">Invoice History</h2>
-        {!paymentHistory || paymentHistory.length === 0 ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 className="card-title">Invoice History</h2>
+          <button 
+            className="btn btn-secondary" 
+            onClick={async () => {
+              try {
+                setLoading(true);
+                await apiClient.syncInvoices();
+                const invoicesData = await apiClient.getInvoices();
+                setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+                setSuccess("Invoices synced successfully!");
+                setTimeout(() => setSuccess(""), 3000);
+              } catch (err: any) {
+                setError(err?.message || "Failed to sync invoices");
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+          >
+            🔄 Sync Invoices
+          </button>
+        </div>
+        {!invoices || invoices.length === 0 ? (
           <div className="empty-state">
             <p>No invoices found</p>
-            <p className="empty-subtext">Your invoice history will appear here once you make a purchase</p>
+            <p className="empty-subtext">Your invoice history will appear here once you make a purchase. Invoices are automatically sent to your email by Stripe.</p>
           </div>
         ) : (
           <div className="invoice-list">
-            {paymentHistory.map((payment: any, index: number) => (
-              <div key={payment.id || index} className="invoice-item">
+            {invoices.map((invoice: any, index: number) => (
+              <div key={invoice.id || index} className="invoice-item">
                 <div className="invoice-header">
                   <div className="invoice-info">
-                    <div className="invoice-plan">{payment.planType || "FREE"}</div>
-                    <div className="invoice-date">{formatDate(payment.createdAt)}</div>
-                    {payment.startDate && payment.endDate && (
-                      <div className="invoice-period">
-                        {formatDate(payment.startDate)} - {formatDate(payment.endDate)}
+                    <div className="invoice-plan">
+                      Invoice #{invoice.invoiceNumber || invoice.id}
+                    </div>
+                    <div className="invoice-date">
+                      {formatDate(invoice.invoiceDate)}
+                      {invoice.amount && (
+                        <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>
+                          {invoice.currency || 'USD'} ${parseFloat(invoice.amount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      )}
+                    </div>
+                    {invoice.description && (
+                      <div className="invoice-period" style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
+                        {invoice.description}
                       </div>
                     )}
                   </div>
                   <div className="invoice-actions">
-                    <span className={`invoice-status ${(payment.status || "ACTIVE").toLowerCase()}`}>
-                      {payment.status || "ACTIVE"}
+                    <span className={`invoice-status ${(invoice.status || "paid").toLowerCase()}`}>
+                      {invoice.status || "paid"}
                     </span>
-                    <button 
-                      className="btn btn-download"
-                      onClick={() => handleDownloadInvoice(payment)}
-                      title="Download Invoice"
-                    >
-                      📥 Download
-                    </button>
+                    {invoice.invoicePdf ? (
+                      <a 
+                        href={invoice.invoicePdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-download"
+                        title="Download Invoice PDF"
+                      >
+                        📥 Download PDF
+                      </a>
+                    ) : invoice.invoiceUrl ? (
+                      <a 
+                        href={invoice.invoiceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-download"
+                        title="View Invoice"
+                      >
+                        👁️ View Invoice
+                      </a>
+                    ) : (
+                      <button 
+                        className="btn btn-download"
+                        onClick={() => handleDownloadInvoice(invoice)}
+                        title="Generate Invoice"
+                      >
+                        📄 Generate
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
