@@ -113,25 +113,36 @@ function SignUpPageContent() {
     if (!isValidEmail(formState.email))
       nextErrors.email = "Valid email required";
     if (!formState.phone.trim()) nextErrors.phone = "Required";
-    // SECURITY FIX: Enforce strong password requirements to match backend
-    if (!formState.password || formState.password.length < 8) {
+    // SECURITY FIX: Enforce strong password requirements to match backend exactly
+    // Backend regex: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+    const backendPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    
+    if (!formState.password || formState.password.trim().length === 0) {
+      nextErrors.password = "Password is required";
+    } else if (formState.password.length < 8) {
       nextErrors.password = "Password must be at least 8 characters long";
-    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(formState.password)) {
-      // Provide specific feedback on what's missing
-      const missing = [];
-      if (!/[A-Z]/.test(formState.password)) missing.push("uppercase letter (A-Z)");
-      if (!/[a-z]/.test(formState.password)) missing.push("lowercase letter (a-z)");
-      if (!/\d/.test(formState.password)) missing.push("number (0-9)");
-      if (!/[@$!%*?&]/.test(formState.password)) missing.push("special character (@$!%*?&)");
-      
-      if (missing.length === 1) {
-        nextErrors.password = `Password must include: ${missing[0]}`;
-      } else if (missing.length === 2) {
-        nextErrors.password = `Password must include: ${missing[0]} and ${missing[1]}`;
-      } else if (missing.length > 2) {
-        nextErrors.password = `Password must include: ${missing.slice(0, -1).join(", ")}, and ${missing[missing.length - 1]}`;
+    } else if (!backendPasswordPattern.test(formState.password)) {
+      // Check for characters that are NOT allowed (only allow A-Z, a-z, 0-9, @$!%*?&)
+      const invalidChars = formState.password.match(/[^A-Za-z\d@$!%*?&]/);
+      if (invalidChars) {
+        nextErrors.password = `Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @$!%*?&`;
       } else {
-        nextErrors.password = "Password must contain: uppercase letter, lowercase letter, number, and special character (@$!%*?&)";
+        // Provide specific feedback on what's missing
+        const missing = [];
+        if (!/[a-z]/.test(formState.password)) missing.push("lowercase letter (a-z)");
+        if (!/[A-Z]/.test(formState.password)) missing.push("uppercase letter (A-Z)");
+        if (!/\d/.test(formState.password)) missing.push("number (0-9)");
+        if (!/[@$!%*?&]/.test(formState.password)) missing.push("special character (@$!%*?&)");
+        
+        if (missing.length === 1) {
+          nextErrors.password = `Password must include: ${missing[0]}`;
+        } else if (missing.length === 2) {
+          nextErrors.password = `Password must include: ${missing[0]} and ${missing[1]}`;
+        } else if (missing.length > 2) {
+          nextErrors.password = `Password must include: ${missing.slice(0, -1).join(", ")}, and ${missing[missing.length - 1]}`;
+        } else {
+          nextErrors.password = "Password must contain: uppercase letter, lowercase letter, number, and special character (@$!%*?&)";
+        }
       }
     }
     if (formState.password !== formState.confirmPassword)
@@ -485,7 +496,7 @@ function SignUpPageContent() {
                 {errors.password && (
                   <div className="error-message show">{errors.password}</div>
                 )}
-                {!errors.password && formState.password && (
+                {formState.password && (
                   <div className="password-hints" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
                     <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Password must include:</div>
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
@@ -504,7 +515,15 @@ function SignUpPageContent() {
                       <li style={{ color: /[@$!%*?&]/.test(formState.password) ? '#22c55e' : '#666' }}>
                         One special character (@$!%*?&) {/[@$!%*?&]/.test(formState.password) ? '✓' : ''}
                       </li>
+                      <li style={{ color: /^[A-Za-z\d@$!%*?&]+$/.test(formState.password) ? '#22c55e' : '#ef4444' }}>
+                        Only allowed characters (A-Z, a-z, 0-9, @$!%*?&) {/^[A-Za-z\d@$!%*?&]+$/.test(formState.password) ? '✓' : '✗'}
+                      </li>
                     </ul>
+                    {!/^[A-Za-z\d@$!%*?&]+$/.test(formState.password) && (
+                      <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', color: '#991b1b', fontSize: '0.8125rem' }}>
+                        ⚠️ Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @$!%*?&
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
