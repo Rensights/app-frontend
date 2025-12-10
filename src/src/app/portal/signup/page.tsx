@@ -114,10 +114,25 @@ function SignUpPageContent() {
       nextErrors.email = "Valid email required";
     if (!formState.phone.trim()) nextErrors.phone = "Required";
     // SECURITY FIX: Enforce strong password requirements to match backend
-    if (formState.password.length < 8) {
-      nextErrors.password = "Min. 8 characters";
+    if (!formState.password || formState.password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters long";
     } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(formState.password)) {
-      nextErrors.password = "Must contain uppercase, lowercase, number, and special character";
+      // Provide specific feedback on what's missing
+      const missing = [];
+      if (!/[A-Z]/.test(formState.password)) missing.push("uppercase letter (A-Z)");
+      if (!/[a-z]/.test(formState.password)) missing.push("lowercase letter (a-z)");
+      if (!/\d/.test(formState.password)) missing.push("number (0-9)");
+      if (!/[@$!%*?&]/.test(formState.password)) missing.push("special character (@$!%*?&)");
+      
+      if (missing.length === 1) {
+        nextErrors.password = `Password must include: ${missing[0]}`;
+      } else if (missing.length === 2) {
+        nextErrors.password = `Password must include: ${missing[0]} and ${missing[1]}`;
+      } else if (missing.length > 2) {
+        nextErrors.password = `Password must include: ${missing.slice(0, -1).join(", ")}, and ${missing[missing.length - 1]}`;
+      } else {
+        nextErrors.password = "Password must contain: uppercase letter, lowercase letter, number, and special character (@$!%*?&)";
+      }
     }
     if (formState.password !== formState.confirmPassword)
       nextErrors.confirmPassword = "Passwords must match";
@@ -189,7 +204,22 @@ function SignUpPageContent() {
       setIsSubmitting(false);
       setTimeout(() => codeRefs.current[0]?.focus(), 200);
     } catch (error: any) {
-      setSubmitError(error.message || "Registration failed. Please try again.");
+      // Handle validation errors with field-specific messages
+      if (error.fieldErrors && error.fieldErrors.password) {
+        setErrors((prev) => ({ ...prev, password: error.fieldErrors.password }));
+        setSubmitError("Please fix the password requirements above");
+      } else if (error.message) {
+        // Check if error message contains password-related info
+        if (error.message.toLowerCase().includes('password')) {
+          const passwordError = error.fieldErrors?.password || error.message;
+          setErrors((prev) => ({ ...prev, password: passwordError }));
+          setSubmitError("Please check the password requirements");
+        } else {
+          setSubmitError(error.message);
+        }
+      } else {
+        setSubmitError("Registration failed. Please check all fields and try again.");
+      }
       setIsSubmitting(false);
     }
   };
@@ -439,15 +469,45 @@ function SignUpPageContent() {
             </div>
 
             <div className="form-row">
-              <Field
-                id="password"
-                label="Password"
-                type="password"
-                placeholder="Min. 8 characters"
-                value={formState.password}
-                onChange={(value) => handleChange("password", value)}
-                error={errors.password}
-              />
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label" htmlFor="password">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  className={`form-input ${errors.password ? "error" : ""}`}
+                  placeholder="Create a strong password"
+                  value={formState.password}
+                  onChange={(event) => handleChange("password", event.target.value)}
+                  required
+                />
+                {errors.password && (
+                  <div className="error-message show">{errors.password}</div>
+                )}
+                {!errors.password && formState.password && (
+                  <div className="password-hints" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                    <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Password must include:</div>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
+                      <li style={{ color: formState.password.length >= 8 ? '#22c55e' : '#666' }}>
+                        At least 8 characters {formState.password.length >= 8 ? '✓' : ''}
+                      </li>
+                      <li style={{ color: /[A-Z]/.test(formState.password) ? '#22c55e' : '#666' }}>
+                        One uppercase letter (A-Z) {/[A-Z]/.test(formState.password) ? '✓' : ''}
+                      </li>
+                      <li style={{ color: /[a-z]/.test(formState.password) ? '#22c55e' : '#666' }}>
+                        One lowercase letter (a-z) {/[a-z]/.test(formState.password) ? '✓' : ''}
+                      </li>
+                      <li style={{ color: /\d/.test(formState.password) ? '#22c55e' : '#666' }}>
+                        One number (0-9) {/\d/.test(formState.password) ? '✓' : ''}
+                      </li>
+                      <li style={{ color: /[@$!%*?&]/.test(formState.password) ? '#22c55e' : '#666' }}>
+                        One special character (@$!%*?&) {/[@$!%*?&]/.test(formState.password) ? '✓' : ''}
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
               <Field
                 id="confirmPassword"
                 label="Confirm Password"

@@ -192,6 +192,25 @@ class ApiClient {
           if (process.env.NODE_ENV === 'development') {
             console.error(`API Error [${response.status}]: ${endpoint}`, error);
           }
+          
+          // Handle validation errors with field-specific messages
+          if (error.errors && typeof error.errors === 'object') {
+            const fieldErrors = Object.entries(error.errors as Record<string, string>)
+              .map(([field, msg]) => {
+                // Capitalize field name and format error
+                const fieldName = field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1');
+                return `${fieldName}: ${msg}`;
+              })
+              .join('. ');
+            
+            const errorMessage = fieldErrors || error.message || error.error || errorText;
+            const apiError = new Error(errorMessage);
+            (apiError as any).status = response.status;
+            (apiError as any).response = error;
+            (apiError as any).fieldErrors = error.errors;
+            throw apiError;
+          }
+          
           const errorMessage = error.error || error.message || error.details || errorText || `Request failed with status ${response.status}`;
           const apiError = new Error(errorMessage);
           (apiError as any).status = response.status;
