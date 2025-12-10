@@ -241,9 +241,9 @@ textarea {
   z-index: 0;
 }
 
-/* Leaflet map container styling */
-#map .leaflet-container {
-  height: 100%;
+/* Google Maps container styling */
+#map {
+  height: 400px;
   width: 100%;
   border-radius: 10px;
 }

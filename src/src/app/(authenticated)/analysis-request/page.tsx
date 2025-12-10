@@ -7,7 +7,7 @@ import { apiClient } from "@/lib/api";
 import "../dashboard/dashboard.css";
 import "./analysis-request.css";
 
-// Dynamically import Leaflet to avoid SSR issues
+// Dynamically import Google Maps component to avoid SSR issues
 const MapComponent = dynamic(() => import("./MapComponent"), { ssr: false });
 
 type FormState = {
