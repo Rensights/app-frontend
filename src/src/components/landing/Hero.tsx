@@ -30,17 +30,17 @@ export default function LandingHero() {
             Data-driven insights for retail investors seeking exceptional real estate opportunities in Dubai's dynamic market
           </p>
           <div className="flex flex-wrap gap-4">
-            <button
-              onClick={scrollToSolutions}
+            <Link
+              href="/portal/signup"
               className="inline-flex items-center text-lg px-8 py-4 text-primary-foreground bg-primary rounded-lg shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all"
             >
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
-            </button>
+            </Link>
             <Link
-              href="/portal/signup"
+              href="/portal/login"
               className="inline-flex items-center text-lg px-8 py-4 text-primary border-2 border-primary rounded-lg hover:bg-primary/10 transition-all"
             >
-              Sign Up Free
+              Login
             </Link>
           </div>
         </div>
