@@ -1,13 +1,48 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import { apiClient } from "@/lib/api";
 import "./dashboard.css";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { subscription } = useUser();
+  const { subscription, user } = useUser();
+  const [analysisRequests, setAnalysisRequests] = useState<any[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
+
+  // Fetch user's analysis requests
+  useEffect(() => {
+    const fetchReports = async () => {
+      if (!user) return;
+      
+      try {
+        setLoadingReports(true);
+        const requests = await apiClient.getMyAnalysisRequests();
+        setAnalysisRequests(Array.isArray(requests) ? requests : []);
+      } catch (error: any) {
+        console.error("Error fetching analysis requests:", error);
+        setAnalysisRequests([]);
+      } finally {
+        setLoadingReports(false);
+      }
+    };
+
+    fetchReports();
+  }, [user]);
+
+  // Get most recent report
+  const recentReport = useMemo(() => {
+    if (!analysisRequests || analysisRequests.length === 0) return null;
+    // Sort by createdAt (most recent first) and get the first one
+    const sorted = [...analysisRequests].sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+    return sorted[0];
+  }, [analysisRequests]);
 
   // Optimized: Memoize subscription badge style
   const subscriptionBadgeStyle = useMemo(() => {
@@ -32,39 +67,108 @@ export default function DashboardPage() {
     };
   }, [subscription]);
 
+  const formatDate = (dateStr: string | undefined | null): string => {
+    if (!dateStr) return "N/A";
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatPropertyDescription = (request: any): string => {
+    const parts = [];
+    if (request.bedrooms) parts.push(`${request.bedrooms}-bed`);
+    if (request.propertyType) parts.push(request.propertyType.toLowerCase());
+    if (request.area || request.buildingName) {
+      parts.push(`in ${request.area || request.buildingName || 'Dubai'}`);
+    }
+    return parts.length > 0 ? parts.join(' ') : 'Property analysis request';
+  };
+
   return (
     <section className="content-section active">
       <div className="section-card">
         <div className="section-title">Property Reports</div>
 
-        <div className="report-item">
-          <div className="report-header">
-            <div className="report-title">Recent Report</div>
-            <div className="report-status">Ready</div>
+        {loadingReports ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+            Loading reports...
           </div>
-          <div className="report-desc">
-            2-bed apartment in Dubai Marina - Analysis complete
-          </div>
-          <div className="report-stats">
-            <div>📍 Location Score: 9.2/10</div>
-            <div>💰 Fair Value: AED 2,850,000</div>
-            <div>📊 Rental Yield Potential: 6.5%</div>
-          </div>
-        </div>
+        ) : recentReport ? (
+          <>
+            <div className="report-item">
+              <div className="report-header">
+                <div className="report-title">Recent Report</div>
+                <div className="report-status">
+                  {recentReport.status === 'COMPLETED' ? 'Ready' : 
+                   recentReport.status === 'PENDING' ? 'Processing' : 
+                   recentReport.status || 'Processing'}
+                </div>
+              </div>
+              <div className="report-desc">
+                {formatPropertyDescription(recentReport)} - {formatDate(recentReport.createdAt)}
+              </div>
+              {recentReport.status === 'COMPLETED' && (
+                <div className="report-stats">
+                  {recentReport.locationScore && (
+                    <div>📍 Location Score: {recentReport.locationScore}/10</div>
+                  )}
+                  {recentReport.fairValue && (
+                    <div>💰 Fair Value: AED {parseFloat(recentReport.fairValue).toLocaleString()}</div>
+                  )}
+                  {recentReport.rentalYield && (
+                    <div>📊 Rental Yield Potential: {recentReport.rentalYield}%</div>
+                  )}
+                </div>
+              )}
+            </div>
 
-        <button className="btn">View Report</button>
+            {recentReport.status === 'COMPLETED' && (
+              <button 
+                className="btn"
+                onClick={() => router.push(`/analysis-request?id=${recentReport.id}`)}
+              >
+                View Report
+              </button>
+            )}
 
-        <div className="report-actions">
-          <button 
-            className="btn btn-outline"
-            onClick={() => router.push("/analysis-request")}
-          >
-            Request New Report
-          </button>
-          <div className="report-note">
-            3 reports remaining this month
-          </div>
-        </div>
+            <div className="report-actions">
+              <button 
+                className="btn btn-outline"
+                onClick={() => router.push("/analysis-request")}
+              >
+                Request New Report
+              </button>
+              {analysisRequests.length > 1 && (
+                <div className="report-note">
+                  {analysisRequests.length} {analysisRequests.length === 1 ? 'report' : 'reports'} total
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+              <p style={{ color: '#666', marginBottom: '20px' }}>
+                You haven't submitted any property analysis requests yet.
+              </p>
+            </div>
+            <div className="report-actions">
+              <button 
+                className="btn btn-primary"
+                onClick={() => router.push("/analysis-request")}
+              >
+                Request Your First Report
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="section-card">
