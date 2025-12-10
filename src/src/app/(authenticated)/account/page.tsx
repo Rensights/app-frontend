@@ -428,159 +428,159 @@ function AccountPageContent() {
           )}
         </div>
 
-      {/* Subscription Management */}
-      <div className="account-card">
-        <h2 className="card-title">Subscription Management</h2>
-        <div className="subscription-info">
-          <div className="info-item">
-            <span className="info-label">Current Plan:</span>
-            <span className={`status-badge ${getPlanColor(subscription?.planType)}`}>
-              {subscription?.planType || "FREE"}
-            </span>
-          </div>
-          {subscription?.status && (
+      {/* Subscription Management and Invoice History - Side by Side */}
+      <div className="account-row">
+        {/* Subscription Management - Left */}
+        <div className="account-card account-card-half">
+          <h2 className="card-title">Subscription Management</h2>
+          <div className="subscription-info">
             <div className="info-item">
-              <span className="info-label">Status:</span>
-              <span className={`status-badge ${(subscription.status || "ACTIVE").toLowerCase()}`}>
-                {subscription.status || "ACTIVE"}
-                    </span>
-                  </div>
-          )}
-              {subscription?.startDate && (
-            <div className="info-item">
-              <span className="info-label">Start Date:</span>
-              <span className="info-value">{formatDate(subscription.startDate)}</span>
-                    </div>
-                  )}
-          {subscription?.endDate && (
-            <div className="info-item">
-              <span className="info-label">End Date:</span>
-              <span className="info-value">{formatDate(subscription.endDate)}</span>
-                </div>
-              )}
+              <span className="info-label">Current Plan:</span>
+              <span className={`status-badge ${getPlanColor(subscription?.planType)}`}>
+                {subscription?.planType || "FREE"}
+              </span>
             </div>
-
-            <div className="subscription-actions">
-              {!subscription || subscription?.planType === "FREE" ? (
-            <div className="upgrade-options">
-              <button className="btn btn-primary" onClick={() => handleUpgrade("PREMIUM")}>
-                Upgrade to Premium
-                    </button>
-              <button className="btn btn-primary" onClick={() => handleUpgrade("ENTERPRISE")}>
-                Upgrade to Enterprise
-                    </button>
-                </div>
-              ) : (
-                <div className="subscription-management">
-                  {subscription?.status === "ACTIVE" && (
-                    <>
-                  <button className="btn btn-primary" onClick={handleRenew}>
-                        Renew Subscription
-                      </button>
-                  <button className="btn btn-danger" onClick={handleCancelSubscription}>
-                        Cancel Subscription
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+            {subscription?.status && (
+              <div className="info-item">
+                <span className="info-label">Status:</span>
+                <span className={`status-badge ${(subscription.status || "ACTIVE").toLowerCase()}`}>
+                  {subscription.status || "ACTIVE"}
+                </span>
+              </div>
+            )}
+            {subscription?.startDate && (
+              <div className="info-item">
+                <span className="info-label">Start Date:</span>
+                <span className="info-value">{formatDate(subscription.startDate)}</span>
+              </div>
+            )}
+            {subscription?.endDate && (
+              <div className="info-item">
+                <span className="info-label">End Date:</span>
+                <span className="info-value">{formatDate(subscription.endDate)}</span>
+              </div>
+            )}
           </div>
 
-      {/* Invoice History */}
-      <div className="account-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 className="card-title">Invoice History</h2>
-          <button 
-            className="btn btn-secondary" 
-            onClick={async () => {
-              try {
-                setLoading(true);
-                await apiClient.syncInvoices();
-                const invoicesData = await apiClient.getInvoices();
-                setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
-                setSuccess("Invoices synced successfully!");
-                setTimeout(() => setSuccess(""), 3000);
-              } catch (err: any) {
-                setError(err?.message || "Failed to sync invoices");
-              } finally {
-                setLoading(false);
-              }
-            }}
-            disabled={loading}
-            style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-          >
-            🔄 Sync Invoices
-          </button>
+          <div className="subscription-actions">
+            {!subscription || subscription?.planType === "FREE" ? (
+              <div className="upgrade-options">
+                <button className="btn btn-primary" onClick={() => handleUpgrade("PREMIUM")}>
+                  Upgrade to Premium
+                </button>
+              </div>
+            ) : (
+              <div className="subscription-management">
+                {subscription?.status === "ACTIVE" && (
+                  <>
+                    <button className="btn btn-primary" onClick={handleRenew}>
+                      Renew Subscription
+                    </button>
+                    <button className="btn btn-danger" onClick={handleCancelSubscription}>
+                      Cancel Subscription
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-        {!invoices || invoices.length === 0 ? (
-          <div className="empty-state">
-            <p>No invoices found</p>
-            <p className="empty-subtext">Your invoice history will appear here once you make a purchase. Invoices are automatically sent to your email by Stripe.</p>
+
+        {/* Invoice History - Right */}
+        <div className="account-card account-card-half">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 className="card-title">Invoice History</h2>
+            <button 
+              className="btn btn-secondary" 
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  await apiClient.syncInvoices();
+                  const invoicesData = await apiClient.getInvoices();
+                  setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+                  setSuccess("Invoices synced successfully!");
+                  setTimeout(() => setSuccess(""), 3000);
+                } catch (err: any) {
+                  setError(err?.message || "Failed to sync invoices");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+            >
+              🔄 Sync
+            </button>
+          </div>
+          {!invoices || invoices.length === 0 ? (
+            <div className="empty-state">
+              <p>No invoices found</p>
+              <p className="empty-subtext">Your invoice history will appear here once you make a purchase.</p>
             </div>
           ) : (
-          <div className="invoice-list">
-            {invoices.map((invoice: any, index: number) => (
-              <div key={invoice.id || index} className="invoice-item">
-                <div className="invoice-header">
-                  <div className="invoice-info">
-                    <div className="invoice-plan">
-                      Invoice #{invoice.invoiceNumber || invoice.id}
-                    </div>
-                    <div className="invoice-date">
-                      {formatDate(invoice.invoiceDate)}
-                      {invoice.amount && (
-                        <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>
-                          {invoice.currency || 'USD'} ${parseFloat(invoice.amount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
+            <div className="invoice-list">
+              {invoices.map((invoice: any, index: number) => (
+                <div key={invoice.id || index} className="invoice-item">
+                  <div className="invoice-header">
+                    <div className="invoice-info">
+                      <div className="invoice-plan">
+                        Invoice #{invoice.invoiceNumber || invoice.id}
+                      </div>
+                      <div className="invoice-date">
+                        {formatDate(invoice.invoiceDate)}
+                        {invoice.amount && (
+                          <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>
+                            {invoice.currency || 'USD'} ${parseFloat(invoice.amount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </div>
+                      {invoice.description && (
+                        <div className="invoice-period" style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
+                          {invoice.description}
+                        </div>
                       )}
                     </div>
-                    {invoice.description && (
-                      <div className="invoice-period" style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
-                        {invoice.description}
-                      </div>
-                    )}
+                    <div className="invoice-actions">
+                      <span className={`invoice-status ${(invoice.status || "paid").toLowerCase()}`}>
+                        {invoice.status || "paid"}
+                      </span>
+                      {invoice.invoicePdf ? (
+                        <a 
+                          href={invoice.invoicePdf}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-download"
+                          title="Download Receipt (Stripe Invoice PDF)"
+                          download
+                        >
+                          📥 Download Receipt
+                        </a>
+                      ) : invoice.invoiceUrl ? (
+                        <a 
+                          href={invoice.invoiceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-download"
+                          title="View Receipt"
+                        >
+                          👁️ View Receipt
+                        </a>
+                      ) : (
+                        <button 
+                          className="btn btn-download"
+                          onClick={() => handleDownloadInvoice(invoice)}
+                          title="Generate Receipt"
+                        >
+                          📄 Generate
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="invoice-actions">
-                    <span className={`invoice-status ${(invoice.status || "paid").toLowerCase()}`}>
-                      {invoice.status || "paid"}
-                    </span>
-                    {invoice.invoicePdf ? (
-                      <a 
-                        href={invoice.invoicePdf}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-download"
-                        title="Download Receipt (Stripe Invoice PDF)"
-                        download
-                      >
-                        📥 Download Receipt
-                      </a>
-                    ) : invoice.invoiceUrl ? (
-                      <a 
-                        href={invoice.invoiceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-download"
-                        title="View Receipt"
-                      >
-                        👁️ View Receipt
-                      </a>
-                    ) : (
-                      <button 
-                        className="btn btn-download"
-                        onClick={() => handleDownloadInvoice(invoice)}
-                        title="Generate Receipt"
-                      >
-                        📄 Generate
-                      </button>
-                    )}
-                  </div>
-                </div>
                 </div>
               ))}
             </div>
           )}
+        </div>
       </div>
     </div>
   );

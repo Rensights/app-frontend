@@ -79,6 +79,28 @@
   border: 1px solid rgba(243, 156, 18, 0.1);
 }
 
+/* Account Row - Side by Side Layout */
+.account-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.account-card-half {
+  margin-bottom: 0;
+}
+
+@media (max-width: 1024px) {
+  .account-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .account-card-half {
+    margin-bottom: 24px;
+  }
+}
+
 .card-title {
   font-size: 1.5rem;
   font-weight: 700;
