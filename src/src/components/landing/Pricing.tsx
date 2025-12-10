@@ -12,7 +12,7 @@ export default function LandingPricing() {
       period: "/month",
       description: "Get started with basic insights",
       features: [
-        "1 report per month",
+        "1 tailored pricing analysis of properties selected by you",
         "City analysis",
       ],
     },
@@ -23,17 +23,16 @@ export default function LandingPricing() {
       annualPrice: "$16",
       description: "Perfect for active property seekers",
       features: [
-        "5 reports per month",
-        "City analysis",
-        "Underpriced deals",
+        "5 tailored pricing analysis of properties selected by you",
+        "Advanced city analysis",
+        "Potentially underpriced deals",
       ],
       popular: true,
     },
     {
       name: "Trusted Advisor",
-      price: "$200",
-      period: "/month",
-      annualPrice: "$160",
+      price: "$2,000",
+      period: "/year",
       description: "Full support for confident investing",
       features: [
         "Everything in Standard",
@@ -109,3 +108,4 @@ export default function LandingPricing() {
     </section>
   );
 }
+

@@ -20,17 +20,17 @@ export default function LandingFooter() {
           <div>
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#solutions" className="hover:text-primary transition-colors">Solutions</a></li>
-              <li><a href="#about" className="hover:text-primary transition-colors">About Us</a></li>
-              <li><a href="#pricing" className="hover:text-primary transition-colors">Pricing</a></li>
-              <li><a href="#contact" className="hover:text-primary transition-colors">Contact</a></li>
+              <li><Link href="/solutions" className="hover:text-primary transition-colors">Solutions</Link></li>
+              <li><a href="/#about" className="hover:text-primary transition-colors">About Us</a></li>
+              <li><Link href="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+              <li><a href="/#contact" className="hover:text-primary transition-colors">Contact</a></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#privacy-terms" className="hover:text-primary transition-colors">Privacy Policy & Terms</a></li>
+              <li><Link href="/privacy-terms" className="hover:text-primary transition-colors">Privacy Policy & Terms</Link></li>
             </ul>
           </div>
         </div>
@@ -42,3 +42,4 @@ export default function LandingFooter() {
     </footer>
   );
 }
+

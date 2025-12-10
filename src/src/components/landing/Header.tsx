@@ -19,12 +19,12 @@ export default function LandingHeader() {
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
-            <a href="#solutions" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/solutions" className="text-sm font-medium hover:text-primary transition-colors">
               Solutions
-            </a>
-            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
+            </Link>
+            <Link href="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
               Pricing
-            </a>
+            </Link>
             <div className="relative">
               <button
                 onClick={() => setSolutionsOpen(!solutionsOpen)}
@@ -69,12 +69,12 @@ export default function LandingHeader() {
       {mobileMenuOpen && (
         <div className="border-t bg-background md:hidden">
           <div className="container mx-auto space-y-3 px-4 py-4 sm:px-6 lg:px-8">
-            <a href="#solutions" className="block text-sm">
+            <Link href="/solutions" className="block text-sm">
               Solutions
-            </a>
-            <a href="#pricing" className="block text-sm">
+            </Link>
+            <Link href="/pricing" className="block text-sm">
               Pricing
-            </a>
+            </Link>
             <a href="#how-it-works" className="block text-sm">
               How it Works
             </a>
@@ -97,3 +97,4 @@ export default function LandingHeader() {
     </header>
   );
 }
+

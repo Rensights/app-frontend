@@ -66,3 +66,4 @@ export default function PortalLayout({
   // User is not authenticated, show portal pages
   return <>{children}</>;
 }
+
