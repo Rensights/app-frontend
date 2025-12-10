@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
-// Fix for default marker icon in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
+// Extend Window interface for Google Maps callback
+declare global {
+  interface Window {
+    google?: {
+      maps: {
+        Map: new (element: HTMLElement, options: any) => any;
+        Marker: new (options: any) => any;
+        Animation: {
+          DROP: any;
+        };
+        LatLng: new (lat: number, lng: number) => any;
+      };
+    };
+    initMap?: () => void;
+  }
+}
 
 interface MapComponentProps {
   mapRef: React.RefObject<HTMLDivElement | null>;
@@ -20,105 +27,139 @@ interface MapComponentProps {
 }
 
 export default function MapComponent({ mapRef, center, onLocationSelect, coordinates }: MapComponentProps) {
-  const mapInstance = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
+  const mapInstance = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const scriptLoaded = useRef(false);
 
+  // Load Google Maps script and initialize
   useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
+    // Check if Google Maps is already loaded
+    if (typeof window !== 'undefined' && window.google && window.google.maps) {
+      initMap();
+      return;
+    }
 
-    // Initialize map
-    mapInstance.current = L.map(mapRef.current, {
-      center: [center.lat, center.lng],
-      zoom: 11,
-      zoomControl: true,
-    });
+    // Check if script is already loading
+    if (scriptLoaded.current) return;
 
-    // Add OpenStreetMap tile layer (no API key required)
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(mapInstance.current);
+    // Use API key from environment or fallback to the one from the HTML file
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg';
+    
+    // Store reference to component's initMap in closure
+    const componentInitMap = () => {
+      initMap();
+    };
 
-    // Add click handler
-    mapInstance.current.on("click", (e: L.LeafletMouseEvent) => {
-      if (!mapInstance.current) return;
+    // Check if script already exists
+    const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
+    if (existingScript) {
+      // If script exists, wait for it to load and then init
+      const checkGoogle = setInterval(() => {
+        if (window.google && window.google.maps) {
+          clearInterval(checkGoogle);
+          initMap();
+        }
+      }, 100);
       
-      const { lat, lng } = e.latlng;
-      onLocationSelect(lat, lng);
+      return () => clearInterval(checkGoogle);
+    }
 
-      // Remove existing marker
-      if (markerRef.current && mapInstance.current) {
-        mapInstance.current.removeLayer(markerRef.current);
-      }
+    scriptLoaded.current = true;
 
-      // Add new marker
-      if (mapInstance.current) {
-        markerRef.current = L.marker([lat, lng], {
-          icon: L.icon({
-            iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-            iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-            shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41],
-          }),
-        }).addTo(mapInstance.current);
+    // Create initMap callback on window (needed for Google Maps callback)
+    (window as any).initMap = componentInitMap;
 
-        // Add popup with coordinates
-        markerRef.current.bindPopup(`📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`).openPopup();
-      }
-    });
+    // Load Google Maps script with callback
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      console.error('Failed to load Google Maps');
+    };
+    document.head.appendChild(script);
 
     return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
+      // Cleanup - remove callback if it exists
+      if (window.initMap) {
+        (window as any).initMap = undefined;
       }
     };
   }, []);
 
+  // Initialize map function
+  const initMap = () => {
+    if (!mapRef.current || mapInstance.current) return;
+
+    // Default center: Dubai
+    const defaultCenter = { lat: center.lat, lng: center.lng };
+
+    mapInstance.current = new window.google.maps.Map(mapRef.current as HTMLElement, {
+      center: defaultCenter,
+      zoom: 11,
+      mapTypeControl: true,
+      streetViewControl: false,
+    });
+
+    // Add click listener to map
+    mapInstance.current.addListener('click', (event: any) => {
+      placeMarker(event.latLng);
+    });
+
+    // If coordinates are already set, place marker
+    if (coordinates) {
+      const lat = parseFloat(coordinates.lat);
+      const lng = parseFloat(coordinates.lng);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const location = new window.google.maps.LatLng(lat, lng);
+        placeMarker(location);
+      }
+    }
+  };
+
+  // Place marker function
+  const placeMarker = (location: any) => {
+    if (!mapInstance.current) return;
+
+    // Remove existing marker
+    if (markerRef.current) {
+      markerRef.current.setMap(null);
+    }
+
+    // Create new marker
+    markerRef.current = new window.google.maps.Marker({
+      position: location,
+      map: mapInstance.current,
+      animation: window.google.maps.Animation.DROP,
+    });
+
+    // Get coordinates
+    const lat = location.lat().toFixed(6);
+    const lng = location.lng().toFixed(6);
+
+    // Call callback to update parent component
+    onLocationSelect(parseFloat(lat), parseFloat(lng));
+  };
+
   // Update map center when city changes
   useEffect(() => {
-    if (mapInstance.current) {
-      mapInstance.current.setView([center.lat, center.lng], 11);
+    if (mapInstance.current && window.google) {
+      mapInstance.current.setCenter({ lat: center.lat, lng: center.lng });
+      mapInstance.current.setZoom(11);
     }
   }, [center]);
 
   // Update marker if coordinates are set externally
   useEffect(() => {
-    if (coordinates && mapInstance.current) {
-      const lat = parseFloat(coordinates.lat);
-      const lng = parseFloat(coordinates.lng);
-      
-      if (!isNaN(lat) && !isNaN(lng) && mapInstance.current) {
-        // Remove existing marker
-        if (markerRef.current && mapInstance.current) {
-          mapInstance.current.removeLayer(markerRef.current);
-        }
+    if (!coordinates || !mapInstance.current || !window.google) return;
 
-        // Add new marker
-        if (mapInstance.current) {
-          markerRef.current = L.marker([lat, lng], {
-            icon: L.icon({
-              iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-              iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-              shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowSize: [41, 41],
-            }),
-          }).addTo(mapInstance.current);
+    const lat = parseFloat(coordinates.lat);
+    const lng = parseFloat(coordinates.lng);
 
-          // Add popup with coordinates
-          markerRef.current.bindPopup(`📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`).openPopup();
-          
-          // Center map on marker
-          mapInstance.current.setView([lat, lng], 11);
-        }
-      }
-    }
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    const location = new window.google.maps.LatLng(lat, lng);
+    placeMarker(location);
   }, [coordinates]);
 
   return null;
