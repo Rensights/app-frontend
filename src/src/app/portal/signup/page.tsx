@@ -312,6 +312,34 @@ function SignUpPageContent() {
     }
   };
 
+  const handleCodePaste = (event: React.ClipboardEvent<HTMLInputElement>, index: number) => {
+    event.preventDefault();
+    const pastedText = event.clipboardData.getData('text');
+    
+    // Extract only digits from pasted text
+    const digitsOnly = pastedText.replace(/\D/g, '');
+    
+    if (digitsOnly.length === 0) return;
+    
+    // Create a new array with existing digits
+    const nextDigits = [...codeDigits];
+    
+    // Fill digits starting from the current index
+    for (let i = 0; i < digitsOnly.length && (index + i) < CODE_LENGTH; i++) {
+      nextDigits[index + i] = digitsOnly[i];
+    }
+    
+    setCodeDigits(nextDigits);
+    setCodeError(""); // Clear error when user pastes
+    
+    // Focus the last filled input or the last input if all filled
+    const lastFilledIndex = Math.min(index + digitsOnly.length - 1, CODE_LENGTH - 1);
+    const nextFocusIndex = Math.min(lastFilledIndex + 1, CODE_LENGTH - 1);
+    setTimeout(() => {
+      codeRefs.current[nextFocusIndex]?.focus();
+    }, 0);
+  };
+
   const handleCodeChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
     const nextDigits = [...codeDigits];
@@ -364,6 +392,7 @@ function SignUpPageContent() {
                       value={digit}
                       onChange={(event) => handleCodeChange(event.target.value, index)}
                       onKeyDown={(event) => handleCodeKeyDown(event, index)}
+                      onPaste={(event) => handleCodePaste(event, index)}
                       ref={(ref) => { codeRefs.current[index] = ref; }}
                     />
                   ))}
