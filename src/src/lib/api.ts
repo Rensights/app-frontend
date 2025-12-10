@@ -92,7 +92,7 @@ export interface InvoiceResponse {
   currency: string;
   status: string;
   invoiceUrl?: string; // Stripe hosted invoice URL
-  invoicePdf?: string; // PDF download URL
+  invoicePdf?: string; // Stripe invoice/receipt PDF download URL
   description?: string;
   invoiceDate?: string;
   dueDate?: string;

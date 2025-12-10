@@ -262,3 +262,4 @@ function SolutionSection({
     </section>
   );
 }
+

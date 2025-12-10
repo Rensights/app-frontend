@@ -360,63 +360,63 @@ function AccountPageContent() {
       {/* Account Information */}
       <div className="account-card">
         <h2 className="card-title">Account Information</h2>
-        {isEditing ? (
-          <div className="edit-form">
-            <div className="form-group">
+          {isEditing ? (
+            <div className="edit-form">
+              <div className="form-group">
               <label htmlFor="firstName">First Name</label>
-              <input
-                id="firstName"
-                type="text"
-                value={editForm.firstName}
+                <input
+                  id="firstName"
+                  type="text"
+                  value={editForm.firstName}
                 onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                placeholder="Enter your first name"
-                disabled={saving}
-              />
-            </div>
-            <div className="form-group">
+                  placeholder="Enter your first name"
+                  disabled={saving}
+                />
+              </div>
+              <div className="form-group">
               <label htmlFor="lastName">Last Name</label>
-              <input
-                id="lastName"
-                type="text"
-                value={editForm.lastName}
+                <input
+                  id="lastName"
+                  type="text"
+                  value={editForm.lastName}
                 onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                placeholder="Enter your last name"
-                disabled={saving}
-              />
-            </div>
-            <div className="form-actions">
+                  placeholder="Enter your last name"
+                  disabled={saving}
+                />
+              </div>
+              <div className="form-actions">
               <button className="btn btn-secondary" onClick={handleCancel} disabled={saving}>
-                Cancel
-              </button>
+                  Cancel
+                </button>
               <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
                 {saving ? "Saving..." : "Save Changes"}
-              </button>
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
+          ) : (
           <div className="account-info">
             <div className="info-item">
               <span className="info-label">Full Name:</span>
               <span className="info-value">
-                {user?.firstName || user?.lastName
-                  ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
-                  : "Not set"}
-              </span>
-            </div>
+                    {user?.firstName || user?.lastName
+                      ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
+                      : "Not set"}
+                  </span>
+                </div>
             <div className="info-item">
               <span className="info-label">Email:</span>
               <span className="info-value">{user?.email || "N/A"}</span>
-            </div>
+              </div>
             <div className="info-item">
               <span className="info-label">Customer ID:</span>
               <span className="info-value">{user?.customerId && user.customerId.trim() !== "" ? user.customerId : "N/A"}</span>
-            </div>
+                </div>
             <div className="info-item">
               <span className="info-label">Account Status:</span>
-              <span className={`status-badge ${getPlanColor(user?.userTier)}`}>
-                {user?.userTier || "FREE"}
-              </span>
-            </div>
+                  <span className={`status-badge ${getPlanColor(user?.userTier)}`}>
+                    {user?.userTier || "FREE"}
+                  </span>
+                </div>
             <div className="info-item">
               <span className="info-label">Member Since:</span>
               <span className="info-value">{formatDate(user?.createdAt)}</span>
@@ -424,9 +424,9 @@ function AccountPageContent() {
             <button className="btn btn-edit" onClick={handleEdit}>
               Edit Profile
             </button>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
 
       {/* Subscription Management */}
       <div className="account-card">
@@ -443,49 +443,49 @@ function AccountPageContent() {
               <span className="info-label">Status:</span>
               <span className={`status-badge ${(subscription.status || "ACTIVE").toLowerCase()}`}>
                 {subscription.status || "ACTIVE"}
-              </span>
-            </div>
+                    </span>
+                  </div>
           )}
-          {subscription?.startDate && (
+              {subscription?.startDate && (
             <div className="info-item">
               <span className="info-label">Start Date:</span>
               <span className="info-value">{formatDate(subscription.startDate)}</span>
-            </div>
-          )}
+                    </div>
+                  )}
           {subscription?.endDate && (
             <div className="info-item">
               <span className="info-label">End Date:</span>
               <span className="info-value">{formatDate(subscription.endDate)}</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className="subscription-actions">
-          {!subscription || subscription?.planType === "FREE" ? (
+            <div className="subscription-actions">
+              {!subscription || subscription?.planType === "FREE" ? (
             <div className="upgrade-options">
               <button className="btn btn-primary" onClick={() => handleUpgrade("PREMIUM")}>
                 Upgrade to Premium
-              </button>
+                    </button>
               <button className="btn btn-primary" onClick={() => handleUpgrade("ENTERPRISE")}>
                 Upgrade to Enterprise
-              </button>
-            </div>
-          ) : (
-            <div className="subscription-management">
-              {subscription?.status === "ACTIVE" && (
-                <>
+                    </button>
+                </div>
+              ) : (
+                <div className="subscription-management">
+                  {subscription?.status === "ACTIVE" && (
+                    <>
                   <button className="btn btn-primary" onClick={handleRenew}>
-                    Renew Subscription
-                  </button>
+                        Renew Subscription
+                      </button>
                   <button className="btn btn-danger" onClick={handleCancelSubscription}>
-                    Cancel Subscription
-                  </button>
-                </>
+                        Cancel Subscription
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
       {/* Invoice History */}
       <div className="account-card">
@@ -517,8 +517,8 @@ function AccountPageContent() {
           <div className="empty-state">
             <p>No invoices found</p>
             <p className="empty-subtext">Your invoice history will appear here once you make a purchase. Invoices are automatically sent to your email by Stripe.</p>
-          </div>
-        ) : (
+            </div>
+          ) : (
           <div className="invoice-list">
             {invoices.map((invoice: any, index: number) => (
               <div key={invoice.id || index} className="invoice-item">
@@ -532,7 +532,7 @@ function AccountPageContent() {
                       {invoice.amount && (
                         <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>
                           {invoice.currency || 'USD'} ${parseFloat(invoice.amount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
+                    </span>
                       )}
                     </div>
                     {invoice.description && (
@@ -551,9 +551,10 @@ function AccountPageContent() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn btn-download"
-                        title="Download Invoice PDF"
+                        title="Download Receipt (Stripe Invoice PDF)"
+                        download
                       >
-                        📥 Download PDF
+                        📥 Download Receipt
                       </a>
                     ) : invoice.invoiceUrl ? (
                       <a 
@@ -561,25 +562,25 @@ function AccountPageContent() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn btn-download"
-                        title="View Invoice"
+                        title="View Receipt"
                       >
-                        👁️ View Invoice
+                        👁️ View Receipt
                       </a>
                     ) : (
                       <button 
                         className="btn btn-download"
                         onClick={() => handleDownloadInvoice(invoice)}
-                        title="Generate Invoice"
+                        title="Generate Receipt"
                       >
                         📄 Generate
                       </button>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          )}
       </div>
     </div>
   );
