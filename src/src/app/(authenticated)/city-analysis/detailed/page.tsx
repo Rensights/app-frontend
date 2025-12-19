@@ -301,7 +301,6 @@ export default function DetailedCityAnalysisPage() {
         {/* Section 5: Price Negotiation Intelligence - Standard+ only */}
         {!isFreeUser && (
         <section id="negotiation" className="section-card">
-        <section id="negotiation" className="section-card">
           <div className="section-card-header">
             <h3>
               <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
