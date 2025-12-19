@@ -11,19 +11,25 @@ export default function DashboardPage() {
   const { subscription, user } = useUser();
   const [analysisRequests, setAnalysisRequests] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
+  const [reportCount, setReportCount] = useState<{ used: number; remaining: number; max: number } | null>(null);
 
-  // Fetch user's analysis requests
+  // Fetch user's analysis requests and report count
   useEffect(() => {
     const fetchReports = async () => {
       if (!user) return;
       
       try {
         setLoadingReports(true);
-        const requests = await apiClient.getMyAnalysisRequests();
+        const [requests, countInfo] = await Promise.all([
+          apiClient.getMyAnalysisRequests(),
+          apiClient.getReportCount()
+        ]);
         setAnalysisRequests(Array.isArray(requests) ? requests : []);
+        setReportCount(countInfo);
       } catch (error: any) {
         console.error("Error fetching analysis requests:", error);
         setAnalysisRequests([]);
+        setReportCount(null);
       } finally {
         setLoadingReports(false);
       }
@@ -94,7 +100,16 @@ export default function DashboardPage() {
   return (
     <section className="content-section active">
       <div className="section-card">
-        <div className="section-title">Property Reports</div>
+        <div className="section-title">
+          Property Reports
+          {reportCount && (
+            <span className="report-count-badge">
+              {reportCount.max === Number.MAX_SAFE_INTEGER || reportCount.max === 2147483647 
+                ? 'Unlimited' 
+                : `${reportCount.remaining} of ${reportCount.max} remaining`}
+            </span>
+          )}
+        </div>
 
         {loadingReports ? (
           <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>

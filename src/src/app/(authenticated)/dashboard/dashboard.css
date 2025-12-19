@@ -224,6 +224,17 @@
   margin-bottom: 20px;
 }
 
+.report-count-badge {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(243, 156, 18, 0.1);
+  color: #f39c12;
+  margin-left: 12px;
+  display: inline-block;
+}
+
 .section-title {
   font-size: 1.4rem;
   font-weight: 600;
