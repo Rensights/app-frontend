@@ -88,22 +88,22 @@
 /* Toast Types */
 .toast-success {
   border-left-color: #2ecc71;
-  background: linear-gradient(135deg, #d5f4e6, #ffffff);
+  background: #ffffff;
 }
 
 .toast-error {
   border-left-color: #e74c3c;
-  background: linear-gradient(135deg, #fadbd8, #ffffff);
+  background: #ffffff;
 }
 
 .toast-warning {
   border-left-color: #f39c12;
-  background: linear-gradient(135deg, #fdebd0, #ffffff);
+  background: #ffffff;
 }
 
 .toast-info {
   border-left-color: #3498db;
-  background: linear-gradient(135deg, #d6eaf8, #ffffff);
+  background: #ffffff;
 }
 
 /* Toast Icon */
