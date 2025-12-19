@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
+import { useToast } from "@/components/ui/Toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "./account.css";
@@ -152,22 +154,25 @@ function AccountPageContent() {
     }
   };
 
-  const handleCancelSubscription = async () => {
-    const confirmed = window.confirm("Are you sure you want to cancel your subscription? You'll lose access to premium features at the end of your billing period.");
-    if (!confirmed) {
-      return;
-    }
-    
+  const handleCancelSubscription = () => {
+    setShowCancelConfirm(true);
+  };
+
+  const confirmCancelSubscription = async () => {
+    setShowCancelConfirm(false);
     try {
       setError("");
       setSuccess("");
       await apiClient.cancelSubscription();
       await refreshSubscription();
       await refreshUser();
+      toast.showSuccess("Subscription cancelled successfully. Your access will continue until the end of your billing period.");
       setSuccess("Subscription cancelled successfully. Your access will continue until the end of your billing period.");
       setTimeout(() => setSuccess(""), 5000);
     } catch (err: any) {
-      setError(err?.message || "Failed to cancel subscription. Please try again or contact support.");
+      const errorMessage = err?.message || "Failed to cancel subscription. Please try again or contact support.";
+      toast.showError(errorMessage);
+      setError(errorMessage);
     }
   };
 
@@ -580,6 +585,16 @@ function AccountPageContent() {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        isOpen={showCancelConfirm}
+        title="Cancel Subscription"
+        message="Are you sure you want to cancel your subscription? You'll lose access to premium features at the end of your billing period."
+        onConfirm={confirmCancelSubscription}
+        onCancel={() => setShowCancelConfirm(false)}
+        confirmText="Yes, Cancel"
+        cancelText="Keep Subscription"
+        confirmVariant="danger"
+      />
     </div>
   );
 }

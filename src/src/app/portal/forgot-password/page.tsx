@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 import "../../login.css";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,12 +37,21 @@ export default function ForgotPasswordPage() {
     try {
       await apiClient.forgotPassword(email);
       setSuccess(true);
+      toast.showSuccess("Password reset code sent to your email");
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Forgot password error:", err);
       }
-      const errorMessage = err?.message || err?.error || "Failed to send reset code. Please try again.";
-      setError(errorMessage);
+      // Handle 404 (email not found) specifically
+      if (err?.status === 404 || err?.response?.status === 404) {
+        const errorMessage = err?.message || err?.error || "No account found with this email address. Please check your email and try again.";
+        toast.showError(errorMessage);
+        setError(errorMessage);
+      } else {
+        const errorMessage = err?.message || err?.error || "Failed to send reset code. Please try again.";
+        toast.showError(errorMessage);
+        setError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
