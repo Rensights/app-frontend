@@ -159,14 +159,14 @@ export default function DealsPage() {
             <div className="upgrade-icon">🔒</div>
             <h2>Upgrade to Standard Package</h2>
             <div className="upgrade-pricing">
-              <div className="pricing-amount">AED 99<span className="pricing-period">/month</span></div>
+              <div className="pricing-amount">$20<span className="pricing-period">/month</span></div>
             </div>
-            <p>Weekly Deals are available for Standard Package and above.</p>
+            <p>Access exclusive deals and premium features with Standard Package.</p>
             <ul className="upgrade-features">
-              <li>✓ Access to exclusive underpriced property deals</li>
-              <li>✓ Detailed property analytics</li>
-              <li>✓ 5 property analysis reports per month</li>
-              <li>✓ Advanced city analysis features</li>
+              <li>✓ 5 tailored pricing analysis of properties selected by you</li>
+              <li>✓ Advanced city analysis</li>
+              <li>✓ Potentially underpriced deals</li>
+              <li>✓ Full access to property analytics</li>
             </ul>
             <button 
               className="upgrade-button" 
