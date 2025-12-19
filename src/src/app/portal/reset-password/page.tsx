@@ -169,6 +169,13 @@ function ResetPasswordPageContent() {
       if (process.env.NODE_ENV === 'development') {
         console.error("Reset password error:", err);
       }
+      // Handle rate limiting errors (429)
+      if (err?.status === 429 || err?.response?.status === 429) {
+        const rateLimitMessage = err?.message || err?.error || "Too many password reset requests. Please wait a minute and try again.";
+        toast.showError(rateLimitMessage, 8000); // Show longer for rate limit errors
+        setError(rateLimitMessage);
+        return;
+      }
       // Handle validation errors from backend
       let errorMessage = "Failed to reset password. Please try again.";
       if (err?.fieldErrors) {
