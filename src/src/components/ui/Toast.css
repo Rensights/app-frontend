@@ -121,22 +121,22 @@
 }
 
 .toast-success .toast-icon {
-  background: #2ecc71;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
 }
 
 .toast-error .toast-icon {
-  background: #e74c3c;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
 }
 
 .toast-warning .toast-icon {
-  background: #f39c12;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
 }
 
 .toast-info .toast-icon {
-  background: #3498db;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
 }
 
@@ -153,9 +153,10 @@
   flex: 1;
   font-size: 14px;
   line-height: 1.5;
-  color: #333;
+  color: #ffffff;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {
