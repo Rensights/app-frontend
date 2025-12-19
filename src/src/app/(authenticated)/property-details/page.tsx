@@ -141,13 +141,23 @@ function PropertyDetailsPageContent() {
           <div className="upgrade-content">
             <div className="upgrade-icon">🔒</div>
             <h2>Upgrade to Standard Package</h2>
+            <div className="upgrade-pricing">
+              <div className="pricing-amount">AED 99<span className="pricing-period">/month</span></div>
+            </div>
             <p>Weekly Deals are available for Standard Package and above.</p>
-            <p className="upgrade-subtext">Get access to exclusive underpriced property deals, detailed analytics, and more investment opportunities.</p>
-            <Link href="/pricing">
-              <button className="upgrade-button">
-                Upgrade to Standard Package
-              </button>
-            </Link>
+            <ul className="upgrade-features">
+              <li>✓ Access to exclusive underpriced property deals</li>
+              <li>✓ Detailed property analytics</li>
+              <li>✓ 5 property analysis reports per month</li>
+              <li>✓ Advanced city analysis features</li>
+            </ul>
+            <button 
+              className="upgrade-button" 
+              onClick={handleUpgrade}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? "Processing..." : "Upgrade to Standard Package"}
+            </button>
           </div>
         </div>
       )}
