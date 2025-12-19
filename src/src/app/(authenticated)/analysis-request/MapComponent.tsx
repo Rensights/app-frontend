@@ -67,22 +67,25 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
     scriptLoaded.current = true;
 
     // Create initMap callback on window (needed for Google Maps callback)
-    (window as any).initMap = componentInitMap;
+    // Use unique name to avoid conflicts with multiple instances
+    const callbackName = `initMap_${Date.now()}`;
+    (window as any)[callbackName] = componentInitMap;
 
     // Load Google Maps script with callback
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=${callbackName}`;
     script.async = true;
     script.defer = true;
     script.onerror = () => {
-      console.error('Failed to load Google Maps');
+      console.error('Failed to load Google Maps. Please check API key restrictions in Google Cloud Console.');
+      console.error('See GOOGLE_MAPS_SETUP.md for instructions on adding your domain to allowed referrers.');
     };
     document.head.appendChild(script);
 
     return () => {
       // Cleanup - remove callback if it exists
-      if (window.initMap) {
-        (window as any).initMap = undefined;
+      if ((window as any)[callbackName]) {
+        (window as any)[callbackName] = undefined;
       }
     };
   }, []);

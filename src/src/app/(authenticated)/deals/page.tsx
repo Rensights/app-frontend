@@ -12,7 +12,7 @@ export default function DealsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [city, setCity] = useState<"dubai" | "abudhabi">("dubai");
+  const [city, setCity] = useState<"dubai">("dubai");
   const [filters, setFilters] = useState({
     status: "all",
     area: "all",
@@ -114,7 +114,7 @@ export default function DealsPage() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleCityChange = (nextCity: "dubai" | "abudhabi") => {
+  const handleCityChange = (nextCity: "dubai") => {
     setCity(nextCity);
     setFilters({ status: "all", area: "all", bedroom: "all", price: "all" });
   };
@@ -138,16 +138,10 @@ export default function DealsPage() {
         </div>
         <div className="city-filter">
           <button
-            className={`city-tab ${city === "dubai" ? "active" : ""}`}
-            onClick={() => handleCityChange("dubai")}
+            className="city-tab active"
+            disabled
           >
             Dubai
-          </button>
-          <button
-            className={`city-tab ${city === "abudhabi" ? "active" : ""}`}
-            onClick={() => handleCityChange("abudhabi")}
-          >
-            Abu Dhabi
           </button>
         </div>
       </header>
@@ -261,29 +255,29 @@ export default function DealsPage() {
             ) : (
               filteredDeals.map((deal) => (
               <tr key={deal.id} onClick={() => handleViewDetails(deal.id)}>
-                <td>
+                <td data-label="Property">
                   <div className="property-name">{deal.name}</div>
                   <div className="property-location">{deal.location}</div>
                 </td>
-                <td>
+                <td data-label="Bedrooms">
                   <span className="bedroom-badge">{deal.bedrooms}</span>
                 </td>
-                <td>
+                <td data-label="Size">
                   <span className="size-info">{deal.size}</span>
                 </td>
-                <td>
+                <td data-label="Listed Price">
                   <div className="price-current">{deal.listedPrice}</div>
                 </td>
-                <td>
+                <td data-label="Estimate">
                     <div className="price-estimate">{deal.estimateRange || "N/A"}</div>
                 </td>
-                <td>
+                <td data-label="Discount">
                     <span className="delta-positive">-{deal.discount || "N/A"}</span>
                 </td>
-                <td>
+                <td data-label="Yield">
                     <span className="yield-info">{deal.rentalYield || "N/A"}</span>
                 </td>
-                <td>
+                <td data-label="">
                   <button
                     className="details-btn"
                     onClick={(event) => {

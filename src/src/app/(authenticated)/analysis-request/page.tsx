@@ -11,7 +11,6 @@ import "./analysis-request.css";
 const MapComponent = dynamic(() => import("./MapComponent"), { ssr: false });
 
 type FormState = {
-  email: string;
   city: string;
   area: string;
   buildingName: string;
@@ -35,7 +34,6 @@ type FormState = {
 };
 
 const initialFormState: FormState = {
-  email: "",
   city: "",
   area: "",
   buildingName: "",
@@ -136,7 +134,7 @@ export default function AnalysisRequestPage() {
       }
     }
     if (!agreeTerms) {
-      alert("Please agree to the Terms of Service and Privacy Policy.");
+      alert("Please accept the Terms of Service and Privacy Policy to continue.");
       return false;
     }
     return true;
@@ -151,22 +149,20 @@ export default function AnalysisRequestPage() {
       // Create FormData for multipart/form-data
       const formData = new FormData();
       
-      // Get email from form or authenticated user
-      let userEmail = formState.email;
-      
-      // If user is authenticated and email is not provided, try to get from user profile
-      // SECURITY: Cookie-based auth - cookie is automatically sent with request
-      if (!userEmail) {
-        try {
-          const user = await apiClient.getCurrentUser();
-          userEmail = user.email;
-        } catch (e) {
-          // If not authenticated, email is required from form
-        }
+      // Get email from authenticated user (user is logged in)
+      let userEmail = "";
+      try {
+        const user = await apiClient.getCurrentUser();
+        userEmail = user.email;
+      } catch (e) {
+        // If not authenticated, show error
+        alert("You must be logged in to submit an analysis request. Please log in and try again.");
+        setIsSubmitting(false);
+        return;
       }
       
       if (!userEmail) {
-        alert("Please provide your email address");
+        alert("Unable to retrieve your email. Please log out and log back in.");
         setIsSubmitting(false);
         return;
       }
@@ -255,13 +251,12 @@ export default function AnalysisRequestPage() {
               />
               <div className="form-grid">
                 <FormSelect
-                  label="Emirate"
+                  label="City"
                   required
                   value={formState.city}
                   options={[
-                    { value: "", label: "Select Emirate" },
+                    { value: "", label: "Select City" },
                     { value: "dubai", label: "Dubai" },
-                    { value: "abudhabi", label: "Abu Dhabi" },
                   ]}
                   onChange={(value) => handleInputChange("city", value)}
                 />
@@ -358,7 +353,6 @@ export default function AnalysisRequestPage() {
                     { value: "", label: "Select Status" },
                     { value: "ready", label: "Ready to Move" },
                     { value: "off-plan", label: "Off-Plan" },
-                    { value: "under-construction", label: "Under Construction" },
                   ]}
                   onChange={(value) => handleInputChange("buildingStatus", value)}
                 />
@@ -386,13 +380,15 @@ export default function AnalysisRequestPage() {
                   property&apos;s exact location. This helps us provide more
                   accurate pricing analysis based on the specific area.
                 </div>
-                <div id="map" ref={mapRef} />
-                <MapComponent
-                  mapRef={mapRef}
-                  center={currentCenter}
-                  onLocationSelect={handleLocationSelect}
-                  coordinates={coordinates}
-                />
+                <div id="map" ref={mapRef} style={{ minHeight: '300px', width: '100%' }} />
+                {typeof window !== 'undefined' && (
+                  <MapComponent
+                    mapRef={mapRef}
+                    center={currentCenter}
+                    onLocationSelect={handleLocationSelect}
+                    coordinates={coordinates}
+                  />
+                )}
                 {coordinates && (
                   <div className="location-display">
                     <strong>Selected Location:</strong>{" "}
@@ -551,12 +547,15 @@ export default function AnalysisRequestPage() {
                       setFilesMessage("");
                       return;
                     }
+                    // Mobile-friendly file handling
+                    const fileArray = Array.from(files);
                     setFilesMessage(
-                      files.length === 1
-                        ? `${files[0].name} selected`
-                        : `${files.length} files selected`
+                      fileArray.length === 1
+                        ? `${fileArray[0].name} selected`
+                        : `${fileArray.length} files selected`
                     );
                   }}
+                  capture="environment"
                 />
               </div>
             </section>

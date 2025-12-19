@@ -122,8 +122,26 @@ function ResetPasswordPageContent() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
+    // SECURITY: Enforce strong password requirements to match backend
+    const backendPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
+    
+    if (!backendPasswordPattern.test(newPassword)) {
+      const missing = [];
+      if (!/[a-z]/.test(newPassword)) missing.push("lowercase letter (a-z)");
+      if (!/[A-Z]/.test(newPassword)) missing.push("uppercase letter (A-Z)");
+      if (!/\d/.test(newPassword)) missing.push("number (0-9)");
+      if (!/[@$!%*?&]/.test(newPassword)) missing.push("special character (@$!%*?&)");
+      
+      if (missing.length > 0) {
+        setError(`Password must include: ${missing.join(", ")}`);
+        return;
+      }
+      setError("Password must contain: uppercase letter, lowercase letter, number, and special character (@$!%*?&)");
       return;
     }
 

@@ -153,18 +153,21 @@ function AccountPageContent() {
   };
 
   const handleCancelSubscription = async () => {
-    if (!confirm("Are you sure you want to cancel your subscription? You'll lose access to premium features at the end of your billing period.")) {
+    const confirmed = window.confirm("Are you sure you want to cancel your subscription? You'll lose access to premium features at the end of your billing period.");
+    if (!confirmed) {
       return;
     }
     
     try {
       setError("");
+      setSuccess("");
       await apiClient.cancelSubscription();
       await refreshSubscription();
-      setSuccess("Subscription cancelled successfully");
-      setTimeout(() => setSuccess(""), 3000);
+      await refreshUser();
+      setSuccess("Subscription cancelled successfully. Your access will continue until the end of your billing period.");
+      setTimeout(() => setSuccess(""), 5000);
     } catch (err: any) {
-      setError(err?.message || "Failed to cancel subscription");
+      setError(err?.message || "Failed to cancel subscription. Please try again or contact support.");
     }
   };
 
@@ -472,14 +475,9 @@ function AccountPageContent() {
             ) : (
               <div className="subscription-management">
                 {subscription?.status === "ACTIVE" && (
-                  <>
-                    <button className="btn btn-primary" onClick={handleRenew}>
-                      Renew Subscription
-                    </button>
-                    <button className="btn btn-danger" onClick={handleCancelSubscription}>
-                      Cancel Subscription
-                    </button>
-                  </>
+                  <button className="btn btn-danger" onClick={handleCancelSubscription}>
+                    Cancel Subscription
+                  </button>
                 )}
               </div>
             )}

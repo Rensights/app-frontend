@@ -29,16 +29,17 @@ export default function LandingHero() {
           <p className="text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">
             Data-driven insights for retail investors seeking exceptional real estate opportunities in Dubai's dynamic market
           </p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4">
             <Link
-              href="/portal/signup"
-              className="inline-flex items-center text-lg px-8 py-4 text-primary-foreground bg-primary rounded-lg shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all"
+              href="/pricing"
+              className="inline-flex items-center justify-center text-lg px-8 py-4 text-primary-foreground bg-primary rounded-lg shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all w-full sm:w-auto"
             >
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
               href="/portal/login"
-              className="inline-flex items-center text-lg px-8 py-4 text-primary border-2 border-primary rounded-lg hover:bg-primary/10 transition-all"
+              className="inline-flex items-center justify-center text-lg px-8 py-4 text-primary bg-white border-2 border-primary rounded-lg hover:bg-primary/10 hover:border-primary/80 transition-all shadow-md hover:shadow-lg font-semibold w-full sm:w-auto opacity-100"
+              style={{ opacity: 1 }}
             >
               Login
             </Link>

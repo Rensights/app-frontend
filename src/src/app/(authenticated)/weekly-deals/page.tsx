@@ -1,13 +1,59 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
+import Link from "next/link";
 import "../dashboard/dashboard.css";
 
 export default function WeeklyDealsPage() {
   const router = useRouter();
+  const { user } = useUser();
+  const isFreeUser = !user || user.userTier === 'FREE';
 
   return (
-    <section className="content-section active">
+    <section className="content-section active" style={{ position: 'relative' }}>
+      {isFreeUser && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+          borderRadius: '12px',
+          textAlign: 'center',
+          color: 'white'
+        }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: '600' }}>
+            Upgrade to Standard Package
+          </h2>
+          <p style={{ marginBottom: '1.5rem', fontSize: '1rem', opacity: 0.9 }}>
+            Weekly deals are available for Standard Package subscribers. Upgrade now to access potentially underpriced property deals.
+          </p>
+          <Link href="/pricing">
+            <button style={{
+              padding: '12px 24px',
+              background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+            }}>
+              Upgrade Now
+            </button>
+          </Link>
+        </div>
+      )}
       <div className="section-card">
         <div className="section-title">Weekly Property Deals</div>
 

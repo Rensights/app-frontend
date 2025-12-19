@@ -7,7 +7,6 @@ import { Button } from "./ui/button";
 
 export default function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [solutionsOpen, setSolutionsOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur-md">
@@ -25,25 +24,10 @@ export default function LandingHeader() {
             <Link href="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
               Pricing
             </Link>
-            <div className="relative">
-              <button
-                onClick={() => setSolutionsOpen(!solutionsOpen)}
-                className="inline-flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
-              >
-                <span>Get Help</span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-              {solutionsOpen && (
-                <div className="absolute right-0 mt-3 w-48 overflow-hidden rounded-2xl border bg-card shadow-xl z-50">
-                  <a href="#how-it-works" className="block px-4 py-3 text-sm hover:bg-accent/10 transition-colors">
-                    How it Works
-                  </a>
-                  <a href="#faq" className="block px-4 py-3 text-sm hover:bg-accent/10 transition-colors">
-                    FAQ
-                  </a>
-                </div>
-              )}
-            </div>
+            {/* Hidden for now - will be enabled later */}
+            <Link href="/whats-new" className="text-sm font-medium hover:text-primary transition-colors hidden">
+              What&apos;s New
+            </Link>
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
@@ -52,7 +36,7 @@ export default function LandingHeader() {
                 Login
               </Button>
             </Link>
-            <Link href="/portal/signup">
+            <Link href="/pricing">
               <Button size="sm">Get Started</Button>
             </Link>
           </div>
@@ -75,19 +59,13 @@ export default function LandingHeader() {
             <Link href="/pricing" className="block text-sm">
               Pricing
             </Link>
-            <a href="#how-it-works" className="block text-sm">
-              How it Works
-            </a>
-            <a href="#faq" className="block text-sm">
-              FAQ
-            </a>
             <div className="pt-3 space-x-3">
               <Link href="/portal/login">
                 <Button variant="outline" size="sm">
                   Login
                 </Button>
               </Link>
-              <Link href="/portal/signup">
+              <Link href="/pricing">
                 <Button size="sm">Get Started</Button>
               </Link>
             </div>

@@ -1,13 +1,14 @@
 "use client";
 
-import { Button } from "./ui/button";
+import { Button, buttonVariants } from "./ui/button";
 import { Map, TrendingUp, FileCheck, ArrowRight, Building2, Search, CheckCircle2, LineChart, Target, Shield } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function LandingSolutions() {
   const solutions = [
     {
-      id: "city-analysis",
+      id: "explore-learn",
       icon: Map,
       badge: "Step 1",
       title: "Explore & Learn",
@@ -18,10 +19,10 @@ export default function LandingSolutions() {
         { icon: FileCheck, text: "Step-by-step guide on buying process and ownership" },
       ],
       color: "from-blue-500 to-cyan-500",
-      link: "#solutions",
+      link: "/solutions",
     },
     {
-      id: "deal-sourcing",
+      id: "find-deals",
       icon: Search,
       badge: "Step 2",
       title: "Find Deals",
@@ -32,10 +33,10 @@ export default function LandingSolutions() {
         { icon: TrendingUp, text: "Expert-filtered shortlists matching your criteria" },
       ],
       color: "from-purple-500 to-pink-500",
-      link: "#solutions",
+      link: "/solutions",
     },
     {
-      id: "expert-validation",
+      id: "validate-invest",
       icon: FileCheck,
       badge: "Step 3",
       title: "Validate & Invest",
@@ -46,7 +47,7 @@ export default function LandingSolutions() {
         { icon: Shield, text: "Risk, liquidity, and appreciation insights" },
       ],
       color: "from-orange-500 to-red-500",
-      link: "#solutions",
+      link: "/solutions",
     },
   ];
 
@@ -82,7 +83,7 @@ export default function LandingSolutions() {
                 {/* Card */}
                 <div className="relative h-full rounded-3xl border-2 border-border bg-card p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
                   {/* Gradient Background */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${solution.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${solution.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`} />
                   
                   {/* Badge */}
                   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6">
@@ -120,12 +121,13 @@ export default function LandingSolutions() {
                   </ul>
 
                   {/* CTA Button */}
-                  <div className="pt-6 border-t border-border">
-                    <Link href="/portal/signup">
-                      <Button size="sm" className="group/btn w-full">
-                        Explore
-                        <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                      </Button>
+                  <div className="pt-6 border-t border-border relative z-10">
+                    <Link 
+                      href="/solutions"
+                      className={cn(buttonVariants({ size: "sm", variant: "default" }), "w-full group/btn relative z-10")}
+                    >
+                      Explore
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
                     </Link>
                   </div>
                 </div>
@@ -142,7 +144,7 @@ export default function LandingSolutions() {
             <p className="text-muted-foreground max-w-2xl">
               Join thousands of smart investors who are using data-driven insights to find the best property deals in Dubai
             </p>
-            <Link href="/portal/signup">
+            <Link href="/pricing">
               <Button size="lg" className="mt-4">
                 Get Started Today <ArrowRight className="ml-2" />
               </Button>

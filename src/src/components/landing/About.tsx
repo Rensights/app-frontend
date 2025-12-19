@@ -48,23 +48,6 @@ export default function LandingAbout() {
             </div>
           ))}
         </div>
-
-        <div className="mt-16 mx-auto max-w-3xl bg-card rounded-2xl p-8 shadow-lg">
-          <h3 className="text-2xl font-semibold mb-4">Our Story</h3>
-          <div className="space-y-4 text-muted-foreground">
-            <p>
-              Founded by investors who experienced the challenges of buying property in the UAE firsthand, 
-              Rensights was born from frustration with opaque markets and information asymmetry.
-            </p>
-            <p>
-              We combined our expertise in real estate, data science, and local market knowledge to build 
-              a platform that levels the playing field for foreign investors.
-            </p>
-            <p>
-              Today, we help thousands of investors make informed decisions backed by data, not hype.
-            </p>
-          </div>
-        </div>
       </div>
     </section>
   );

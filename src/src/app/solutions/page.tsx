@@ -96,14 +96,6 @@ export default function SolutionsPage() {
                   Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="text-lg px-10 py-7 h-auto"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              >
-                Learn More
-              </Button>
             </div>
           </motion.div>
         </div>

@@ -287,9 +287,53 @@
     padding: 20px;
   }
 
+  .deals-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .deals-table thead {
+    display: none;
+  }
+
+  .deals-table tbody {
+    display: block;
+  }
+
+  .deals-table tr {
+    display: block;
+    margin-bottom: 20px;
+    border: 1px solid #e1e5e9;
+    border-radius: 12px;
+    padding: 15px;
+    background: white;
+  }
+
+  .deals-table td {
+    display: block;
+    text-align: left;
+    padding: 8px 0;
+    border: none;
+    font-size: 0.9rem;
+  }
+
+  .deals-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #666;
+    display: block;
+    margin-bottom: 4px;
+  }
+
   .deals-table th,
   .deals-table td {
     font-size: 0.85rem;
+  }
+
+  .details-btn {
+    width: 100%;
+    margin-top: 10px;
   }
 }
 

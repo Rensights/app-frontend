@@ -130,7 +130,6 @@ function PropertyDetailsPageContent() {
             <button className="back-btn" onClick={handleGoBack}>
               ← Back to Deals
             </button>
-            <div className="logo">Rensights</div>
           </div>
           <div className="verified-badge">Verified Listing</div>
         </header>

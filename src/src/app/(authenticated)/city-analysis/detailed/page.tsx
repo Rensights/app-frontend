@@ -1,11 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
+import Link from "next/link";
 import "../../dashboard/dashboard.css";
 import "../city-analysis.css";
 
 export default function DetailedCityAnalysisPage() {
   const router = useRouter();
+  const { user } = useUser();
+  const isFreeUser = !user || user.userTier === 'FREE';
+  const isStandardUser = user && user.userTier === 'PREMIUM';
+  const isTrustedAdvisor = user && user.userTier === 'ENTERPRISE';
 
   const handleSectionClick = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -35,16 +41,8 @@ export default function DetailedCityAnalysisPage() {
         <div className="top-bar-left">
           <select className="filter-select">
             <option>Dubai</option>
-            <option>Abu Dhabi</option>
-            <option>Riyadh</option>
-          </select>
-          <select className="filter-select">
-            <option>Last 30 days</option>
-            <option>Last 90 days</option>
-            <option>Last 12 months</option>
           </select>
         </div>
-        <button className="export-btn">Export Report</button>
       </div>
 
       <div className="container">
@@ -150,7 +148,20 @@ export default function DetailedCityAnalysisPage() {
                     src="https://app.powerbi.com/view?r=eyJrIjoiYzgyNTIwZDYtZmY5Zi00NDExLWI3ZjQtZGMxM2I1ZGEyNjNjIiwidCI6ImRhODIxMGM4LWY5ZTQtNDBmYy1iZDI3LTZkM2U0ZjA0NmNjNyIsImMiOjl9"
                     frameBorder="0"
                     allowFullScreen={true}
-                    style={{ border: 'none', borderRadius: '8px' }}
+                    style={{ border: 'none', borderRadius: '8px', minHeight: '600px' }}
+                    onError={(e) => {
+                      console.error('Power BI iframe error:', e);
+                      const target = e.target as HTMLIFrameElement;
+                      if (target) {
+                        target.style.display = 'none';
+                        const errorDiv = document.createElement('div');
+                        errorDiv.textContent = 'Unable to load Power BI dashboard. Please refresh the page or contact support.';
+                        errorDiv.style.padding = '2rem';
+                        errorDiv.style.textAlign = 'center';
+                        errorDiv.style.color = '#666';
+                        target.parentElement?.appendChild(errorDiv);
+                      }
+                    }}
                   />
                 </div>
               </div>
@@ -246,7 +257,8 @@ export default function DetailedCityAnalysisPage() {
           </div>
         </section>
 
-        {/* Section 4: Which Property to Buy */}
+        {/* Section 4: Which Property to Buy - Standard+ only */}
+        {!isFreeUser && (
         <section id="which-to-buy" className="section-card">
           <div className="section-card-header">
             <h3>
@@ -284,8 +296,11 @@ export default function DetailedCityAnalysisPage() {
             </div>
           </div>
         </section>
+        )}
 
-        {/* Section 5: Price Negotiation Intelligence */}
+        {/* Section 5: Price Negotiation Intelligence - Standard+ only */}
+        {!isFreeUser && (
+        <section id="negotiation" className="section-card">
         <section id="negotiation" className="section-card">
           <div className="section-card-header">
             <h3>
@@ -324,8 +339,10 @@ export default function DetailedCityAnalysisPage() {
             </div>
           </div>
         </section>
+        )}
 
-        {/* Section 6: Analysis by Budget */}
+        {/* Section 6: Analysis by Budget - Trusted Advisor only */}
+        {isTrustedAdvisor && (
         <section id="budget" className="section-card">
           <div className="section-card-header">
             <h3>
@@ -365,6 +382,54 @@ export default function DetailedCityAnalysisPage() {
             </div>
           </div>
         </section>
+        )}
+
+        {/* Upgrade prompts for restricted sections */}
+        {isFreeUser && (
+          <section className="section-card" style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)', border: '2px solid rgba(245, 158, 11, 0.3)' }}>
+            <h3 style={{ marginBottom: '1rem', color: '#d97706' }}>🔒 Upgrade to Access More Analysis</h3>
+            <p style={{ marginBottom: '1.5rem', color: '#666' }}>
+              Sections 4-6 (Which Property to Buy, Price Negotiation Intelligence, and Analysis by Budget) are available for Standard Package and above.
+            </p>
+            <Link href="/pricing">
+              <button style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}>
+                Upgrade to Standard Package
+              </button>
+            </Link>
+          </section>
+        )}
+
+        {isStandardUser && (
+          <section className="section-card" style={{ background: 'linear-gradient(135deg, rgba(155, 89, 182, 0.1) 0%, rgba(155, 89, 182, 0.05) 100%)', border: '2px solid rgba(155, 89, 182, 0.3)' }}>
+            <h3 style={{ marginBottom: '1rem', color: '#9b59b6' }}>💎 Upgrade to Trusted Advisor</h3>
+            <p style={{ marginBottom: '1.5rem', color: '#666' }}>
+              Section 6 (Overall Analysis by Investor Budget) is available for Trusted Advisor subscribers.
+            </p>
+            <Link href="/portal/early-access">
+              <button style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #9b59b6, #8e44ad)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}>
+                Request Early Access
+              </button>
+            </Link>
+          </section>
+        )}
 
         {/* Contact Bar */}
         <div className="contact-bar">

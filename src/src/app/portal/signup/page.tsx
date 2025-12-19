@@ -285,7 +285,13 @@ function SignUpPageContent() {
       }
       router.push("/dashboard");
     } catch (error: any) {
-      setCodeError(error.message || "Invalid verification code. Please try again.");
+      // Handle expired code or network errors
+      const errorMessage = error?.message || error?.error || "Invalid verification code. Please try again.";
+      if (errorMessage.toLowerCase().includes("expired") || errorMessage.toLowerCase().includes("failed to fetch")) {
+        setCodeError("The verification code has expired. Please request a new code.");
+      } else {
+        setCodeError(errorMessage);
+      }
       setIsSubmitting(false);
     }
   };
@@ -387,6 +393,8 @@ function SignUpPageContent() {
                     <input
                       key={index}
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       className={`code-input ${codeError ? "error" : ""}`}
                       maxLength={1}
                       value={digit}
@@ -623,21 +631,26 @@ function SignUpPageContent() {
 
             <div className="plans-grid two-cols">
               <PlanCard
-                title="Free"
+                title="Free Registration"
                 price="$0"
                 cadence="/mo"
-                features={["1 report per month", "City analysis"]}
+                description="Get started with basic insights"
+                features={[
+                  "1 tailored pricing analysis of properties selected by you",
+                  "City analysis",
+                ]}
                 selected={formState.plan === "free"}
                 onSelect={() => handlePlanSelect("free")}
               />
               <PlanCard
-                title="Standard Premium Package"
+                title="Standard Package"
                 price="$20"
                 cadence="/mo"
+                description="Perfect for active property seekers"
                 features={[
-                  "5 reports per month",
-                  "City analysis",
-                  "Weekly insights with potentially underpriced deals",
+                  "5 tailored pricing analysis of properties selected by you",
+                  "Advanced city analysis",
+                  "Potentially underpriced deals",
                 ]}
                 selected={formState.plan === "premium"}
                 onSelect={() => handlePlanSelect("premium")}
@@ -660,7 +673,7 @@ function SignUpPageContent() {
                   Creating Account...
                 </>
               ) : (
-                "Start Your Free Trial"
+                formState.plan === "premium" ? "Pay" : "Register"
               )}
             </button>
           </form>
@@ -772,6 +785,7 @@ type PlanCardProps = {
   title: string;
   price: string;
   cadence: string;
+  description?: string;
   features: string[];
   selected: boolean;
   onSelect: () => void;
@@ -781,6 +795,7 @@ const PlanCard = ({
   title,
   price,
   cadence,
+  description,
   features,
   selected,
   onSelect,
@@ -795,6 +810,11 @@ const PlanCard = ({
       {price}
       <span>{cadence}</span>
     </div>
+    {description && (
+      <div className="plan-description" style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.5rem', marginBottom: '1rem' }}>
+        {description}
+      </div>
+    )}
     <div className="plan-features">
       {features.map((feature) => (
         <div key={feature} className="plan-feature">

@@ -40,6 +40,8 @@ export default function LandingPricing() {
         "Deal with agents assistance",
         "Personalized guidance",
       ],
+      ctaText: "Request Early Access",
+      ctaHref: "/portal/early-access",
     },
   ];
 
@@ -95,9 +97,9 @@ export default function LandingPricing() {
               </ul>
 
               <div className="mt-8 flex justify-center">
-                <Link href="/portal/signup">
+                <Link href={plan.ctaHref ?? "/pricing"}>
                   <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
-                    Get Started
+                    {plan.ctaText ?? "Get Started"}
                   </Button>
                 </Link>
               </div>
