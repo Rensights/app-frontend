@@ -102,6 +102,22 @@ function PropertyDetailsPageContent() {
     // For now, just show info toast
   };
 
+  const handleUpgrade = async () => {
+    try {
+      setIsUpgrading(true);
+      const { url } = await apiClient.createCheckoutSession('PREMIUM');
+      if (url) {
+        window.location.href = url;
+      } else {
+        toast.showError("Failed to create checkout session. Please try again.");
+        setIsUpgrading(false);
+      }
+    } catch (err: any) {
+      toast.showError(err?.message || "Failed to start upgrade process. Please try again.");
+      setIsUpgrading(false);
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner message="Loading Property Details..." />;
   }
