@@ -115,7 +115,7 @@ export default function DashboardPage() {
   };
 
   // Check if button should be disabled
-  const isReportLimitReached = reportCount && reportCount.remaining <= 0;
+  const isReportLimitReached = reportCount ? reportCount.remaining <= 0 : false;
 
   return (
     <section className="content-section active">
