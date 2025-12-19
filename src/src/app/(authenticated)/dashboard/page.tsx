@@ -4,11 +4,13 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 import "./dashboard.css";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { subscription, user } = useUser();
+  const toast = useToast();
   const [analysisRequests, setAnalysisRequests] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
   const [reportCount, setReportCount] = useState<{ used: number; remaining: number; max: number } | null>(null);
@@ -97,6 +99,23 @@ export default function DashboardPage() {
     return parts.length > 0 ? parts.join(' ') : 'Property analysis request';
   };
 
+  const handleRequestNewReport = () => {
+    // Check if user has remaining reports
+    if (reportCount && reportCount.remaining <= 0) {
+      const maxReports = reportCount.max === Number.MAX_SAFE_INTEGER || reportCount.max === 2147483647 
+        ? 'unlimited' 
+        : reportCount.max;
+      toast.showError(
+        `You have reached your monthly report limit (${maxReports} report${reportCount.max !== 1 ? 's' : ''}). Please upgrade your account to get more reports.`
+      );
+      // Redirect to account page to upgrade
+      router.push("/account");
+      return;
+    }
+    // If user has remaining reports, navigate to analysis request page
+    router.push("/analysis-request");
+  };
+
   return (
     <section className="content-section active">
       <div className="section-card">
@@ -156,7 +175,7 @@ export default function DashboardPage() {
             <div className="report-actions">
               <button 
                 className="btn btn-outline"
-                onClick={() => router.push("/analysis-request")}
+                onClick={handleRequestNewReport}
               >
                 Request New Report
               </button>
@@ -177,7 +196,7 @@ export default function DashboardPage() {
             <div className="report-actions">
               <button 
                 className="btn btn-primary"
-                onClick={() => router.push("/analysis-request")}
+                onClick={handleRequestNewReport}
               >
                 Request Your First Report
               </button>
