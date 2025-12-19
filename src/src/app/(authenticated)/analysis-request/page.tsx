@@ -131,12 +131,13 @@ export default function AnalysisRequestPage() {
   const validateForm = () => {
     for (const field of requiredFields) {
       if (!formState[field]) {
-        alert(`Please fill in the ${field.replace(/([A-Z])/g, " $1")} field.`);
+        const fieldName = field.replace(/([A-Z])/g, " $1").toLowerCase();
+        toast.showError(`Please fill in the ${fieldName} field.`);
         return false;
       }
     }
     if (!agreeTerms) {
-      alert("Please accept the Terms of Service and Privacy Policy to continue.");
+      toast.showError("Please accept the Terms of Service and Privacy Policy to continue.");
       return false;
     }
     return true;
