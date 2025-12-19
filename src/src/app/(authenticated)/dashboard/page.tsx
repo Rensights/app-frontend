@@ -108,13 +108,14 @@ export default function DashboardPage() {
       toast.showError(
         `You have reached your monthly report limit (${maxReports} report${reportCount.max !== 1 ? 's' : ''}). Please upgrade your account to get more reports.`
       );
-      // Redirect to account page to upgrade
-      router.push("/account");
       return;
     }
     // If user has remaining reports, navigate to analysis request page
     router.push("/analysis-request");
   };
+
+  // Check if button should be disabled
+  const isReportLimitReached = reportCount && reportCount.remaining <= 0;
 
   return (
     <section className="content-section active">
@@ -176,6 +177,8 @@ export default function DashboardPage() {
               <button 
                 className="btn btn-outline"
                 onClick={handleRequestNewReport}
+                disabled={isReportLimitReached}
+                style={isReportLimitReached ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
               >
                 Request New Report
               </button>
@@ -197,6 +200,8 @@ export default function DashboardPage() {
               <button 
                 className="btn btn-primary"
                 onClick={handleRequestNewReport}
+                disabled={isReportLimitReached}
+                style={isReportLimitReached ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
               >
                 Request Your First Report
               </button>
