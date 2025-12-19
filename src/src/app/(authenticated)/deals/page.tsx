@@ -178,7 +178,7 @@ export default function DealsPage() {
           </div>
         </div>
       )}
-      <div className="container" style={{ opacity: isFreeUser ? 0.4 : 1, pointerEvents: isFreeUser ? 'none' : 'auto' }}>
+      <div style={{ opacity: isFreeUser ? 0.4 : 1, pointerEvents: isFreeUser ? 'none' : 'auto' }}>
       <header className="header">
         <div className="header-left">
           <div className="page-title">Underpriced Property Deals</div>
