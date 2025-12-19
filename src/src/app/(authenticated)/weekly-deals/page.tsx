@@ -1,59 +1,64 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import Link from "next/link";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 import "../dashboard/dashboard.css";
+import "../deals/deals.css";
 
 export default function WeeklyDealsPage() {
   const router = useRouter();
+  const toast = useToast();
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleUpgrade = async () => {
+    try {
+      setIsUpgrading(true);
+      const { url } = await apiClient.createCheckoutSession('PREMIUM');
+      if (url) {
+        window.location.href = url;
+      } else {
+        toast.showError("Failed to create checkout session. Please try again.");
+        setIsUpgrading(false);
+      }
+    } catch (err: any) {
+      toast.showError(err?.message || "Failed to start upgrade process. Please try again.");
+      setIsUpgrading(false);
+    }
+  };
 
   return (
     <section className="content-section active" style={{ position: 'relative' }}>
       {isFreeUser && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(4px)',
-          zIndex: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem',
-          borderRadius: '12px',
-          textAlign: 'center',
-          color: 'white'
-        }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: '600' }}>
-            Upgrade to Standard Package
-          </h2>
-          <p style={{ marginBottom: '1.5rem', fontSize: '1rem', opacity: 0.9 }}>
-            Weekly deals are available for Standard Package subscribers. Upgrade now to access potentially underpriced property deals.
-          </p>
-          <Link href="/pricing">
-            <button style={{
-              padding: '12px 24px',
-              background: 'linear-gradient(135deg, #f39c12, #e67e22)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
-            }}>
-              Upgrade Now
+        <div className="upgrade-overlay">
+          <div className="upgrade-content">
+            <div className="upgrade-icon">🔒</div>
+            <h2>Upgrade to Standard Package</h2>
+            <div className="upgrade-pricing">
+              <div className="pricing-amount">AED 99<span className="pricing-period">/month</span></div>
+            </div>
+            <p>Weekly Deals are available for Standard Package and above.</p>
+            <ul className="upgrade-features">
+              <li>✓ Access to exclusive underpriced property deals</li>
+              <li>✓ Detailed property analytics</li>
+              <li>✓ 5 property analysis reports per month</li>
+              <li>✓ Advanced city analysis features</li>
+            </ul>
+            <button 
+              className="upgrade-button" 
+              onClick={handleUpgrade}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? "Processing..." : "Upgrade to Standard Package"}
             </button>
-          </Link>
+          </div>
         </div>
       )}
+      <div style={{ opacity: isFreeUser ? 0.4 : 1, pointerEvents: isFreeUser ? 'none' : 'auto' }}>
       <div className="section-card">
         <div className="section-title">Weekly Property Deals</div>
 
