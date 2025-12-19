@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { apiClient, Deal } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
+import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "./property-details.css";
@@ -13,9 +13,11 @@ type TabId = "listed" | "transactions";
 
 function PropertyDetailsPageContent() {
   const router = useRouter();
+  const toast = useToast();
   const searchParams = useSearchParams();
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
+  const [isUpgrading, setIsUpgrading] = useState(false);
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comparableDeals, setComparableDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);

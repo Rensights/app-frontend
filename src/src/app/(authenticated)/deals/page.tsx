@@ -2,9 +2,9 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { apiClient, Deal, PaginatedDealResponse } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
+import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useDebounce } from "@/hooks/useDebounce";
 import "../dashboard/dashboard.css";
@@ -12,9 +12,11 @@ import "./deals.css";
 
 export default function DealsPage() {
   const router = useRouter();
+  const toast = useToast();
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
   const [loading, setLoading] = useState(true);
+  const [isUpgrading, setIsUpgrading] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [city, setCity] = useState<"dubai">("dubai");
   const [filters, setFilters] = useState({
@@ -127,6 +129,22 @@ export default function DealsPage() {
     router.push(`/property-details?id=${id}`);
   };
 
+  const handleUpgrade = async () => {
+    try {
+      setIsUpgrading(true);
+      const { url } = await apiClient.createCheckoutSession('PREMIUM');
+      if (url) {
+        window.location.href = url;
+      } else {
+        toast.showError("Failed to create checkout session. Please try again.");
+        setIsUpgrading(false);
+      }
+    } catch (err: any) {
+      toast.showError(err?.message || "Failed to start upgrade process. Please try again.");
+      setIsUpgrading(false);
+    }
+  };
+
   if (loading && deals.length === 0) {
     return (
       <LoadingSpinner fullPage={false} message="Loading Deals..." />
@@ -140,13 +158,23 @@ export default function DealsPage() {
           <div className="upgrade-content">
             <div className="upgrade-icon">🔒</div>
             <h2>Upgrade to Standard Package</h2>
+            <div className="upgrade-pricing">
+              <div className="pricing-amount">AED 99<span className="pricing-period">/month</span></div>
+            </div>
             <p>Weekly Deals are available for Standard Package and above.</p>
-            <p className="upgrade-subtext">Get access to exclusive underpriced property deals, detailed analytics, and more investment opportunities.</p>
-            <Link href="/pricing">
-              <button className="upgrade-button">
-                Upgrade to Standard Package
-              </button>
-            </Link>
+            <ul className="upgrade-features">
+              <li>✓ Access to exclusive underpriced property deals</li>
+              <li>✓ Detailed property analytics</li>
+              <li>✓ 5 property analysis reports per month</li>
+              <li>✓ Advanced city analysis features</li>
+            </ul>
+            <button 
+              className="upgrade-button" 
+              onClick={handleUpgrade}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? "Processing..." : "Upgrade to Standard Package"}
+            </button>
           </div>
         </div>
       )}
