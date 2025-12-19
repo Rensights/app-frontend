@@ -164,7 +164,26 @@ function ResetPasswordPageContent() {
       if (process.env.NODE_ENV === 'development') {
         console.error("Reset password error:", err);
       }
-      const errorMessage = err?.message || err?.error || "Failed to reset password. Please try again.";
+      // Handle validation errors from backend
+      let errorMessage = "Failed to reset password. Please try again.";
+      if (err?.fieldErrors) {
+        // Extract field-specific errors (e.g., newPassword validation)
+        const fieldErrors = err.fieldErrors;
+        if (fieldErrors.newPassword) {
+          errorMessage = fieldErrors.newPassword;
+        } else if (fieldErrors.code) {
+          errorMessage = fieldErrors.code;
+        } else if (fieldErrors.email) {
+          errorMessage = fieldErrors.email;
+        } else {
+          // Combine all field errors
+          errorMessage = Object.values(fieldErrors).join(". ");
+        }
+      } else if (err?.message) {
+        errorMessage = err.message;
+      } else if (err?.error) {
+        errorMessage = err.error;
+      }
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
