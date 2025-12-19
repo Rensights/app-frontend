@@ -12,6 +12,7 @@ import "./account.css";
 
 function AccountPageContent() {
   const router = useRouter();
+  const toast = useToast();
   const searchParams = useSearchParams();
   const { user: contextUser, subscription: contextSubscription, refreshUser, refreshSubscription, loading: contextLoading } = useUser();
   const [invoices, setInvoices] = useState<any[]>([]);
