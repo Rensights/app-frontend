@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 import "../dashboard/dashboard.css";
 import "./analysis-request.css";
 
@@ -74,6 +75,7 @@ const defaultCenters = {
 
 export default function AnalysisRequestPage() {
   const router = useRouter();
+  const toast = useToast();
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [features, setFeatures] = useState<string[]>([]);
   const [filesMessage, setFilesMessage] = useState("");
@@ -156,13 +158,13 @@ export default function AnalysisRequestPage() {
         userEmail = user.email;
       } catch (e) {
         // If not authenticated, show error
-        alert("You must be logged in to submit an analysis request. Please log in and try again.");
+        toast.showError("You must be logged in to submit an analysis request. Please log in and try again.");
         setIsSubmitting(false);
         return;
       }
       
       if (!userEmail) {
-        alert("Unable to retrieve your email. Please log out and log back in.");
+        toast.showError("Unable to retrieve your email. Please log out and log back in.");
         setIsSubmitting(false);
         return;
       }
@@ -212,9 +214,7 @@ export default function AnalysisRequestPage() {
       // Submit to API
       const response = await apiClient.submitAnalysisRequest(formData);
       
-      alert(
-        "🎉 " + response.message + "\n\nThank you for choosing Rensights!"
-      );
+      toast.showSuccess(response.message + " Thank you for choosing Rensights!");
       
       // Reset form
       setFormState(initialFormState);
@@ -224,7 +224,7 @@ export default function AnalysisRequestPage() {
       setCoordinates(null);
       if (fileInput) fileInput.value = '';
     } catch (error: any) {
-      alert("❌ Failed to submit request: " + (error.message || "Please try again later."));
+      toast.showError("Failed to submit request: " + (error.message || "Please try again later."));
     } finally {
       setIsSubmitting(false);
     }

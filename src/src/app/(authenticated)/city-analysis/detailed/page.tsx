@@ -2,12 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import { useToast } from "@/components/ui/Toast";
 import Link from "next/link";
 import "../../dashboard/dashboard.css";
 import "../city-analysis.css";
 
 export default function DetailedCityAnalysisPage() {
   const router = useRouter();
+  const toast = useToast();
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
   const isStandardUser = user && user.userTier === 'PREMIUM';
@@ -21,7 +23,7 @@ export default function DetailedCityAnalysisPage() {
   };
 
   const handleContactUs = () => {
-    alert('Contact Form\n\nOur team will get back to you within 24 hours.\n\nEmail: support@rensight.com\nPhone: +971 4 XXX XXXX');
+    toast.showInfo('Our team will get back to you within 24 hours. Email: support@rensight.com | Phone: +971 4 XXX XXXX');
   };
 
   const handleFilterClick = (e: React.MouseEvent<HTMLDivElement>) => {

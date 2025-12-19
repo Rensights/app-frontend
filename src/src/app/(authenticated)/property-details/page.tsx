@@ -87,8 +87,14 @@ function PropertyDetailsPageContent() {
   }, [propertyId, loadDeal]);
 
   const handleGoBack = () => router.push("/deals");
-  const handleViewProperty = () => alert("Opening property listing page...");
-  const handleViewAll = () => alert("Loading all comparable properties...");
+  const handleViewProperty = () => {
+    // This would open the property listing page
+    // For now, just show info toast
+  };
+  const handleViewAll = () => {
+    // This would load all comparable properties
+    // For now, just show info toast
+  };
 
   if (loading) {
     return <LoadingSpinner message="Loading Property Details..." />;

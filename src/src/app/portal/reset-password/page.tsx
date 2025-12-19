@@ -3,12 +3,14 @@
 import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 import "../../login.css";
 
 const CODE_LENGTH = 6;
 
 function ResetPasswordPageContent() {
   const router = useRouter();
+  const toast = useToast();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [codeDigits, setCodeDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
@@ -88,13 +90,13 @@ function ResetPasswordPageContent() {
     setCodeError("");
     
     if (!email) {
-      setError("Email is required");
+      toast.showError("Email is required");
       return;
     }
 
     const code = codeDigits.join("");
     if (code.length !== CODE_LENGTH) {
-      setCodeError("Please enter the complete 6-digit code");
+      toast.showError("Please enter the complete 6-digit code");
       return;
     }
 
@@ -102,11 +104,13 @@ function ResetPasswordPageContent() {
     try {
       await apiClient.verifyResetCode(email, code);
       setStep("password");
+      toast.showSuccess("Code verified successfully");
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Verify reset code error:", err);
       }
       const errorMessage = err?.message || err?.error || "Invalid or expired code. Please try again.";
+      toast.showError(errorMessage);
       setCodeError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -118,7 +122,7 @@ function ResetPasswordPageContent() {
     setError("");
 
     if (!newPassword) {
-      setError("Password is required");
+      toast.showError("Password is required");
       return;
     }
 
@@ -126,7 +130,7 @@ function ResetPasswordPageContent() {
     const backendPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     
     if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters long");
+      toast.showError("Password must be at least 8 characters long");
       return;
     }
     
@@ -138,21 +142,21 @@ function ResetPasswordPageContent() {
       if (!/[@$!%*?&]/.test(newPassword)) missing.push("special character (@$!%*?&)");
       
       if (missing.length > 0) {
-        setError(`Password must include: ${missing.join(", ")}`);
+        toast.showError(`Password must include: ${missing.join(", ")}`);
         return;
       }
-      setError("Password must contain: uppercase letter, lowercase letter, number, and special character (@$!%*?&)");
+      toast.showError("Password must contain: uppercase letter, lowercase letter, number, and special character (@$!%*?&)");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      toast.showError("Passwords do not match");
       return;
     }
 
     const code = codeDigits.join("");
     if (code.length !== CODE_LENGTH) {
-      setError("Please enter the complete 6-digit code");
+      toast.showError("Please enter the complete 6-digit code");
       return;
     }
 
@@ -160,6 +164,7 @@ function ResetPasswordPageContent() {
     try {
       await apiClient.resetPassword(email, code, newPassword);
       setStep("success");
+      toast.showSuccess("Password reset successfully!");
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Reset password error:", err);
@@ -184,6 +189,7 @@ function ResetPasswordPageContent() {
       } else if (err?.error) {
         errorMessage = err.error;
       }
+      toast.showError(errorMessage);
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -195,7 +201,7 @@ function ResetPasswordPageContent() {
     setCodeError("");
     
     if (!email) {
-      setError("Email is required");
+      toast.showError("Email is required");
       return;
     }
 
@@ -204,12 +210,14 @@ function ResetPasswordPageContent() {
       setResendTimer(60);
       setCodeDigits(Array(CODE_LENGTH).fill(""));
       setCodeError("");
+      toast.showSuccess("Reset code sent to your email");
       setTimeout(() => codeRefs.current[0]?.focus(), 200);
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Resend code error:", err);
       }
       const errorMessage = err?.message || err?.error || "Failed to resend code. Please try again.";
+      toast.showError(errorMessage);
       setError(errorMessage);
     }
   };

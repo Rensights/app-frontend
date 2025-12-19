@@ -153,15 +153,25 @@ class ApiClient {
     
     // SECURITY: Token is now stored in HttpOnly cookie, automatically sent by browser
     // No need to manually add Authorization header - cookie is sent automatically
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
+    // IMPORTANT: Don't set Content-Type for FormData - browser needs to set it with boundary
+    const headers: Record<string, string> = {};
+    
+    // Only set Content-Type if body is not FormData
+    // FormData requests should let browser set Content-Type automatically with boundary
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+    
+    // Merge any additional headers from options
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
+    
     // Note: Authorization header removed - using HttpOnly cookie instead
 
     const requestPromise = fetch(url, {
       ...options,
-      headers,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
       credentials: 'include', // CRITICAL: Include credentials (cookies) for cookie-based authentication
     })
       .then(async (response) => {
@@ -539,6 +549,7 @@ class ApiClient {
       method: 'POST',
       headers,
       body: formData,
+      credentials: 'include', // CRITICAL: Include credentials (cookies) for cookie-based authentication
     });
     
     if (!response.ok) {

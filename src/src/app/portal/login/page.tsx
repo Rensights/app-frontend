@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 import "../../login.css";
 
 type Step = "login" | "verification" | "success";
@@ -12,6 +13,7 @@ const CODE_LENGTH = 6;
 
 export default function LoginPage() {
   const router = useRouter();
+  const toast = useToast();
   const [step, setStep] = useState<Step>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -252,7 +254,7 @@ export default function LoginPage() {
       if (process.env.NODE_ENV === 'development') {
         console.error("Failed to resend code:", error);
       }
-      alert("Failed to resend code: " + (error.message || "Unknown error"));
+      toast.showError("Failed to resend code: " + (error.message || "Unknown error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -321,9 +323,7 @@ export default function LoginPage() {
   }, [codeDigits]);
 
   const handleSocialLogin = useCallback((provider: string) => {
-    alert(
-      `Initiating ${provider} login...\n\nIn a real application, this would redirect to the ${provider} OAuth flow.`
-    );
+    toast.showInfo(`Initiating ${provider} login... In a real application, this would redirect to the ${provider} OAuth flow.`);
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
