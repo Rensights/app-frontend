@@ -236,7 +236,6 @@ export default function AnalysisRequestPage() {
       <div className="analysis-page-wrapper">
         <header className="header">
           <div className="header-left">
-            <div className="logo">Rensights</div>
             <div className="page-title">Property Price Analysis Request</div>
           </div>
           <div className="verified-badge">✓ Expert Analysis</div>
