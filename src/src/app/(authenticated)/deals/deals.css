@@ -10,6 +10,116 @@
   width: 100%;
   /* Prevent layout shifts during content load */
   contain: layout;
+  position: relative;
+}
+
+/* Upgrade Overlay for Free Users */
+.upgrade-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.upgrade-content {
+  background: white;
+  border-radius: 20px;
+  padding: 48px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(243, 156, 18, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.upgrade-icon {
+  font-size: 4rem;
+  margin-bottom: 24px;
+}
+
+.upgrade-content h2 {
+  font-size: 1.75rem;
+  color: #d97706;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.upgrade-content p {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.upgrade-subtext {
+  font-size: 0.95rem;
+  color: #888;
+  margin-bottom: 32px !important;
+}
+
+.upgrade-button {
+  padding: 14px 32px;
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.upgrade-button:hover {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .upgrade-content {
+    padding: 32px 24px;
+    margin: 20px;
+  }
+
+  .upgrade-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+  }
+
+  .upgrade-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .upgrade-content p {
+    font-size: 0.9rem;
+  }
+
+  .upgrade-button {
+    width: 100%;
+    padding: 12px 24px;
+  }
 }
 
 .container {

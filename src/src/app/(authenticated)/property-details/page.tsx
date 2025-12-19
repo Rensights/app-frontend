@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { apiClient, Deal } from "@/lib/api";
+import { useUser } from "@/context/UserContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "./property-details.css";
@@ -12,6 +14,8 @@ type TabId = "listed" | "transactions";
 function PropertyDetailsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useUser();
+  const isFreeUser = !user || user.userTier === 'FREE';
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comparableDeals, setComparableDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,8 +133,23 @@ function PropertyDetailsPageContent() {
     : 0;
 
   return (
-    <div className="property-page">
-      <div className="container">
+    <div className="property-page" style={{ position: 'relative' }}>
+      {isFreeUser && (
+        <div className="upgrade-overlay">
+          <div className="upgrade-content">
+            <div className="upgrade-icon">🔒</div>
+            <h2>Upgrade to Standard Package</h2>
+            <p>Weekly Deals are available for Standard Package and above.</p>
+            <p className="upgrade-subtext">Get access to exclusive underpriced property deals, detailed analytics, and more investment opportunities.</p>
+            <Link href="/pricing">
+              <button className="upgrade-button">
+                Upgrade to Standard Package
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+      <div className="container" style={{ opacity: isFreeUser ? 0.4 : 1, pointerEvents: isFreeUser ? 'none' : 'auto' }}>
         <header className="header">
           <div className="header-left">
             <button className="back-btn" onClick={handleGoBack}>
