@@ -24,7 +24,7 @@ function AccountPageContent() {
   const [success, setSuccess] = useState("");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [invoicesPerPage] = useState(5);
+  const [invoicesPerPage] = useState(3);
 
   useEffect(() => {
     const loadData = async () => {
