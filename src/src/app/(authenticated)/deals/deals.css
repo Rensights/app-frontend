@@ -26,7 +26,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 20; /* Lower than sidebar (z-index: 40) so menu appears above blur */
   padding: 20px;
 }
 
