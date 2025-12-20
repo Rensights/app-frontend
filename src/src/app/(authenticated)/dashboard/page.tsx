@@ -40,16 +40,15 @@ export default function DashboardPage() {
     fetchReports();
   }, [user]);
 
-  // Get most recent report
-  const recentReport = useMemo(() => {
-    if (!analysisRequests || analysisRequests.length === 0) return null;
-    // Sort by createdAt (most recent first) and get the first one
-    const sorted = [...analysisRequests].sort((a, b) => {
+  // Get sorted reports (most recent first)
+  const sortedReports = useMemo(() => {
+    if (!analysisRequests || analysisRequests.length === 0) return [];
+    // Sort by createdAt (most recent first)
+    return [...analysisRequests].sort((a, b) => {
       const dateA = new Date(a.createdAt || 0).getTime();
       const dateB = new Date(b.createdAt || 0).getTime();
       return dateB - dateA;
     });
-    return sorted[0];
   }, [analysisRequests]);
 
   // Optimized: Memoize subscription badge style
@@ -135,43 +134,49 @@ export default function DashboardPage() {
           <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
             Loading reports...
           </div>
-        ) : recentReport ? (
+        ) : sortedReports.length > 0 ? (
           <>
-            <div className="report-item">
-              <div className="report-header">
-                <div className="report-title">Recent Report</div>
-                <div className="report-status">
-                  {recentReport.status === 'COMPLETED' ? 'Ready' : 
-                   recentReport.status === 'PENDING' ? 'Processing' : 
-                   recentReport.status || 'Processing'}
+            <div style={{ marginBottom: '20px' }}>
+              {sortedReports.map((report, index) => (
+                <div key={report.id || index} className="report-item" style={{ marginBottom: index < sortedReports.length - 1 ? '20px' : '0' }}>
+                  <div className="report-header">
+                    <div className="report-title">
+                      {index === 0 ? 'Recent Report' : `Report #${sortedReports.length - index}`}
+                    </div>
+                    <div className="report-status">
+                      {report.status === 'COMPLETED' ? 'Ready' : 
+                       report.status === 'PENDING' ? 'Processing' : 
+                       report.status || 'Processing'}
+                    </div>
+                  </div>
+                  <div className="report-desc">
+                    {formatPropertyDescription(report)} - {formatDate(report.createdAt)}
+                  </div>
+                  {report.status === 'COMPLETED' && (
+                    <div className="report-stats">
+                      {report.locationScore && (
+                        <div>📍 Location Score: {report.locationScore}/10</div>
+                      )}
+                      {report.fairValue && (
+                        <div>💰 Fair Value: AED {parseFloat(report.fairValue).toLocaleString()}</div>
+                      )}
+                      {report.rentalYield && (
+                        <div>📊 Rental Yield Potential: {report.rentalYield}%</div>
+                      )}
+                    </div>
+                  )}
+                  {report.status === 'COMPLETED' && (
+                    <button 
+                      className="btn"
+                      style={{ marginTop: '12px' }}
+                      onClick={() => router.push(`/analysis-request?id=${report.id}`)}
+                    >
+                      View Report
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div className="report-desc">
-                {formatPropertyDescription(recentReport)} - {formatDate(recentReport.createdAt)}
-              </div>
-              {recentReport.status === 'COMPLETED' && (
-                <div className="report-stats">
-                  {recentReport.locationScore && (
-                    <div>📍 Location Score: {recentReport.locationScore}/10</div>
-                  )}
-                  {recentReport.fairValue && (
-                    <div>💰 Fair Value: AED {parseFloat(recentReport.fairValue).toLocaleString()}</div>
-                  )}
-                  {recentReport.rentalYield && (
-                    <div>📊 Rental Yield Potential: {recentReport.rentalYield}%</div>
-                  )}
-                </div>
-              )}
+              ))}
             </div>
-
-            {recentReport.status === 'COMPLETED' && (
-              <button 
-                className="btn"
-                onClick={() => router.push(`/analysis-request?id=${recentReport.id}`)}
-              >
-                View Report
-              </button>
-            )}
 
             <div className="report-actions">
               <button 
@@ -182,9 +187,9 @@ export default function DashboardPage() {
               >
                 Request New Report
               </button>
-              {analysisRequests.length > 1 && (
+              {sortedReports.length > 1 && (
                 <div className="report-note">
-                  {analysisRequests.length} {analysisRequests.length === 1 ? 'report' : 'reports'} total
+                  {sortedReports.length} {sortedReports.length === 1 ? 'report' : 'reports'} total
                 </div>
               )}
             </div>
