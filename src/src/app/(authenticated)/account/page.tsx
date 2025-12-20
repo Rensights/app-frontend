@@ -495,8 +495,7 @@ function AccountPageContent() {
                   await apiClient.syncInvoices();
                   const invoicesData = await apiClient.getInvoices();
                   setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
-                  setSuccess("Invoices synced successfully!");
-                  setTimeout(() => setSuccess(""), 3000);
+                  toast.showSuccess("Invoices synced successfully!");
                 } catch (err: any) {
                   toast.showError(err?.message || "Failed to sync invoices");
                 } finally {
