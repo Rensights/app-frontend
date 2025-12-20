@@ -23,6 +23,8 @@ function AccountPageContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [invoicesPerPage] = useState(5);
 
   useEffect(() => {
     const loadData = async () => {
@@ -514,67 +516,121 @@ function AccountPageContent() {
               <p className="empty-subtext">Your invoice history will appear here once you make a purchase.</p>
             </div>
           ) : (
-            <div className="invoice-list">
-              {invoices.map((invoice: any, index: number) => (
-                <div key={invoice.id || index} className="invoice-item">
-                  <div className="invoice-header">
-                    <div className="invoice-info">
-                      <div className="invoice-plan">
-                        Invoice #{invoice.invoiceNumber || invoice.id}
-                      </div>
-                      <div className="invoice-date">
-                        {formatDate(invoice.invoiceDate)}
-                        {invoice.amount && (
-                          <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>
-                            {invoice.currency || 'USD'} ${parseFloat(invoice.amount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                        )}
-                      </div>
-                      {invoice.description && (
-                        <div className="invoice-period" style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
-                          {invoice.description}
+            <>
+              {/* Invoice Summary */}
+              <div className="invoice-summary">
+                <span className="invoice-count">
+                  {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} total
+                </span>
+              </div>
+
+              {/* Invoice List */}
+              <div className="invoice-list">
+                {(() => {
+                  // Sort invoices by date (most recent first)
+                  const sortedInvoices = [...invoices].sort((a, b) => {
+                    const dateA = new Date(a.invoiceDate || a.createdAt || 0).getTime();
+                    const dateB = new Date(b.invoiceDate || b.createdAt || 0).getTime();
+                    return dateB - dateA;
+                  });
+
+                  // Calculate pagination
+                  const indexOfLastInvoice = currentPage * invoicesPerPage;
+                  const indexOfFirstInvoice = indexOfLastInvoice - invoicesPerPage;
+                  const currentInvoices = sortedInvoices.slice(indexOfFirstInvoice, indexOfLastInvoice);
+                  const totalPages = Math.ceil(sortedInvoices.length / invoicesPerPage);
+
+                  return (
+                    <>
+                      {currentInvoices.map((invoice: any, index: number) => (
+                        <div key={invoice.id || index} className="invoice-item">
+                          <div className="invoice-header">
+                            <div className="invoice-info">
+                              <div className="invoice-plan">
+                                Invoice #{invoice.invoiceNumber || invoice.id}
+                              </div>
+                              <div className="invoice-date">
+                                {formatDate(invoice.invoiceDate || invoice.createdAt)}
+                                {invoice.amount && (
+                                  <span className="invoice-amount">
+                                    {invoice.currency || 'USD'} ${parseFloat(invoice.amount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                )}
+                              </div>
+                              {invoice.description && (
+                                <div className="invoice-period">
+                                  {invoice.description}
+                                </div>
+                              )}
+                            </div>
+                            <div className="invoice-actions">
+                              <span className={`invoice-status ${(invoice.status || "paid").toLowerCase()}`}>
+                                {invoice.status || "paid"}
+                              </span>
+                              {invoice.invoicePdf ? (
+                                <a 
+                                  href={invoice.invoicePdf}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-download"
+                                  title="Download Receipt (Stripe Invoice PDF)"
+                                  download
+                                >
+                                  📥 Download
+                                </a>
+                              ) : invoice.invoiceUrl ? (
+                                <a 
+                                  href={invoice.invoiceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-download"
+                                  title="View Receipt"
+                                >
+                                  👁️ View
+                                </a>
+                              ) : (
+                                <button 
+                                  className="btn btn-download"
+                                  onClick={() => handleDownloadInvoice(invoice)}
+                                  title="Generate Receipt"
+                                >
+                                  📄 Generate
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="invoice-pagination">
+                          <button
+                            className="pagination-btn"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            aria-label="Previous page"
+                          >
+                            ← Previous
+                          </button>
+                          <div className="pagination-info">
+                            Page {currentPage} of {totalPages}
+                          </div>
+                          <button
+                            className="pagination-btn"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            aria-label="Next page"
+                          >
+                            Next →
+                          </button>
                         </div>
                       )}
-                    </div>
-                    <div className="invoice-actions">
-                      <span className={`invoice-status ${(invoice.status || "paid").toLowerCase()}`}>
-                        {invoice.status || "paid"}
-                      </span>
-                      {invoice.invoicePdf ? (
-                        <a 
-                          href={invoice.invoicePdf}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-download"
-                          title="Download Receipt (Stripe Invoice PDF)"
-                          download
-                        >
-                          📥 Download Receipt
-                        </a>
-                      ) : invoice.invoiceUrl ? (
-                        <a 
-                          href={invoice.invoiceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-download"
-                          title="View Receipt"
-                        >
-                          👁️ View Receipt
-                        </a>
-                      ) : (
-                        <button 
-                          className="btn btn-download"
-                          onClick={() => handleDownloadInvoice(invoice)}
-                          title="Generate Receipt"
-                        >
-                          📄 Generate
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </>
           )}
         </div>
       </div>
