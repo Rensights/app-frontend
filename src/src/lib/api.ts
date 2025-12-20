@@ -183,7 +183,21 @@ class ApiClient {
             // Redirect to login page if we're in the browser and not already on a public page
             if (typeof window !== 'undefined') {
               const currentPath = window.location.pathname;
-              const publicPaths = ['/', '/portal/login', '/portal/signup', '/portal/forgot-password', '/portal/reset-password', '/portal/early-access'];
+              // Public paths: landing pages, portal pages (login, signup, forgot password, etc.)
+              const publicPaths = [
+                '/', // Landing page
+                '/about',
+                '/contact',
+                '/faq',
+                '/pricing',
+                '/privacy-terms',
+                '/solutions',
+                '/portal/login',
+                '/portal/signup',
+                '/portal/forgot-password',
+                '/portal/reset-password',
+                '/portal/early-access'
+              ];
               const isPublicPath = publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'));
               
               if (!isPublicPath) {
@@ -567,7 +581,21 @@ class ApiClient {
             // Redirect to login page if we're in the browser and not already on a public page
             if (typeof window !== 'undefined') {
               const currentPath = window.location.pathname;
-              const publicPaths = ['/', '/portal/login', '/portal/signup', '/portal/forgot-password', '/portal/reset-password', '/portal/early-access'];
+              // Public paths: landing pages, portal pages (login, signup, forgot password, etc.)
+              const publicPaths = [
+                '/', // Landing page
+                '/about',
+                '/contact',
+                '/faq',
+                '/pricing',
+                '/privacy-terms',
+                '/solutions',
+                '/portal/login',
+                '/portal/signup',
+                '/portal/forgot-password',
+                '/portal/reset-password',
+                '/portal/early-access'
+              ];
               const isPublicPath = publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'));
               
               if (!isPublicPath) {
