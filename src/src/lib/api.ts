@@ -630,6 +630,15 @@ class ApiClient {
   async getDealById(dealId: string): Promise<Deal> {
     return this.request<Deal>(`/api/deals/${dealId}`, {}, true);
   }
+
+  // Landing Page Content
+  async getLandingPageContent(language: string = 'en'): Promise<Record<string, any>> {
+    return this.request<Record<string, any>>(`/api/landing-page?language=${language}`, {}, false);
+  }
+
+  async getLandingPageSection(section: string, language: string = 'en'): Promise<any> {
+    return this.request<any>(`/api/landing-page/section/${section}?language=${language}`, {}, false);
+  }
 }
 
 export interface Deal {

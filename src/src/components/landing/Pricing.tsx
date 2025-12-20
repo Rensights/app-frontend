@@ -3,9 +3,39 @@
 import { Check } from "lucide-react";
 import { Button } from "./ui/button";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { apiClient } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function LandingPricing() {
-  const plans = [
+  const { language } = useLanguage();
+  const [content, setContent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadContent();
+  }, [language]);
+
+  const loadContent = async () => {
+    try {
+      const data = await apiClient.getLandingPageSection('pricing', language);
+      setContent(data.content || {});
+    } catch (error) {
+      console.error("Error loading pricing content:", error);
+      setContent({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="py-16 text-center">Loading...</div>;
+  }
+
+  const title = content?.title || "Choose Your Plan";
+  const subtitle = content?.subtitle || "Transparent pricing for every stage of your investment journey";
+  const savingsText = content?.savingsText || "Save 20% with annual billing";
+  const plans = content?.plans || (content?.plansJson ? JSON.parse(content.plansJson) : [
     {
       name: "Free Registration",
       price: "$0",
@@ -43,25 +73,25 @@ export default function LandingPricing() {
       ctaText: "Request Early Access",
       ctaHref: "/portal/early-access",
     },
-  ];
+  ]);
 
   return (
     <section id="pricing" className="py-16 bg-muted/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center mb-12">
-          <h2 className="text-3xl font-bold sm:text-4xl">Choose Your Plan</h2>
+          <h2 className="text-3xl font-bold sm:text-4xl">{title}</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Transparent pricing for every stage of your investment journey
+            {subtitle}
           </p>
           <p className="mt-2 text-sm text-primary font-semibold">
-            Save 20% with annual billing
+            {savingsText}
           </p>
         </div>
 
         <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
-          {plans.map((plan) => (
+          {plans.map((plan: any, index: number) => (
             <div
-              key={plan.name}
+              key={index}
               className={`rounded-2xl bg-card p-8 shadow-lg hover:shadow-xl transition-shadow relative ${
                 plan.popular ? "border-2 border-primary" : "border"
               }`}
@@ -69,7 +99,7 @@ export default function LandingPricing() {
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-semibold">
-                    MOST POPULAR
+                    {plan.popularBadge || "MOST POPULAR"}
                   </span>
                 </div>
               )}
@@ -88,7 +118,7 @@ export default function LandingPricing() {
               </div>
 
               <ul className="mt-8 space-y-3">
-                {plan.features.map((feature, idx) => (
+                {plan.features?.map((feature: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                     <span className="text-sm">{feature}</span>
@@ -110,4 +140,3 @@ export default function LandingPricing() {
     </section>
   );
 }
-
