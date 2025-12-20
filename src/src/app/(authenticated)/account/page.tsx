@@ -36,11 +36,10 @@ function AccountPageContent() {
             const updatedSubscription = await apiClient.checkoutSuccess(sessionId);
             await refreshSubscription();
             await refreshUser();
-            setSuccess("Payment processed successfully! Your subscription has been updated.");
+            toast.showSuccess("Payment processed successfully! Your subscription has been updated.");
             router.replace('/account', { scroll: false });
-            setTimeout(() => setSuccess(""), 5000);
           } catch (err: any) {
-            setError(err?.message || "Failed to process payment");
+            toast.showError(err?.message || "Failed to process payment");
           }
         }
 
@@ -124,35 +123,33 @@ function AccountPageContent() {
 
   const handleUpgrade = async (planType: "PREMIUM" | "ENTERPRISE") => {
     try {
-      setError("");
       const { url } = await apiClient.createCheckoutSession(planType);
       if (url) {
         window.location.href = url;
       } else {
-        setError("Failed to create checkout session");
+        toast.showError("Failed to create checkout session");
       }
     } catch (err: any) {
-      setError(err?.message || "Failed to create checkout session");
+      toast.showError(err?.message || "Failed to create checkout session");
     }
   };
 
   const handleRenew = async () => {
     if (!contextSubscription?.planType) {
-      setError("Unable to determine current plan");
+      toast.showError("Unable to determine current plan");
       return;
     }
     
     try {
-      setError("");
       const planType = contextSubscription.planType === "PREMIUM" ? "PREMIUM" : "ENTERPRISE";
       const { url } = await apiClient.createCheckoutSession(planType);
       if (url) {
         window.location.href = url;
       } else {
-        setError("Failed to create checkout session");
+        toast.showError("Failed to create checkout session");
       }
     } catch (err: any) {
-      setError(err?.message || "Failed to renew subscription");
+      toast.showError(err?.message || "Failed to renew subscription");
     }
   };
 
@@ -163,18 +160,13 @@ function AccountPageContent() {
   const confirmCancelSubscription = async () => {
     setShowCancelConfirm(false);
     try {
-      setError("");
-      setSuccess("");
       await apiClient.cancelSubscription();
       await refreshSubscription();
       await refreshUser();
       toast.showSuccess("Subscription cancelled successfully. Your access will continue until the end of your billing period.");
-      setSuccess("Subscription cancelled successfully. Your access will continue until the end of your billing period.");
-      setTimeout(() => setSuccess(""), 5000);
     } catch (err: any) {
       const errorMessage = err?.message || "Failed to cancel subscription. Please try again or contact support.";
       toast.showError(errorMessage);
-      setError(errorMessage);
     }
   };
 
@@ -506,7 +498,7 @@ function AccountPageContent() {
                   setSuccess("Invoices synced successfully!");
                   setTimeout(() => setSuccess(""), 3000);
                 } catch (err: any) {
-                  setError(err?.message || "Failed to sync invoices");
+                  toast.showError(err?.message || "Failed to sync invoices");
                 } finally {
                   setLoading(false);
                 }
