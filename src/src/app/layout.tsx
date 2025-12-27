@@ -9,13 +9,17 @@ import { validateApiUrl } from "../lib/env-validation";
 export const metadata: Metadata = {
   title: "Rensights",
   description: "Property Intelligence Platform",
-  // Optimized: Add performance metadata
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
-  themeColor: "#f6b042", // Match the actual background color
   other: {
-    "theme-color": "#f6b042", // For older browsers
     "apple-mobile-web-app-status-bar-style": "default",
   },
+};
+
+// Next.js 13+ requires viewport and themeColor as separate exports
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#f6b042",
 };
 
 export default function RootLayout({
