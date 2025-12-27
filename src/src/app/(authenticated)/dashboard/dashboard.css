@@ -215,6 +215,13 @@
   height: 44px;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.menu-toggle.hidden {
+  display: none !important;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .menu-toggle span {
@@ -649,6 +656,10 @@
 
   .menu-toggle {
     display: flex;
+  }
+  
+  .menu-toggle.hidden {
+    display: none !important;
   }
 
   /* Show overlay only on mobile when sidebar is open */

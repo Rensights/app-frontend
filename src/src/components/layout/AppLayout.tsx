@@ -110,7 +110,7 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
       
       <main className="main-content">
         <button
-          className="menu-toggle"
+          className={`menu-toggle ${isSidebarOpen ? 'hidden' : ''}`}
           type="button"
           aria-label="Toggle navigation"
           onClick={toggleSidebar}
