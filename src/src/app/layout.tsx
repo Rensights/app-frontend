@@ -33,10 +33,11 @@ export default function RootLayout({
   
   if (typeof window === 'undefined') {
     // Server-side: try environment variables first
+    // SECURITY: Never hardcode API URLs - always use environment variables
     apiUrl = process.env.API_URL 
       || process.env.NEXT_PUBLIC_API_URL 
       || getRuntimeApiUrl()
-      || 'http://dev-api.72.62.40.154.nip.io:31416'; // Hardcoded fallback for dev
+      || ''; // No hardcoded fallback - fail fast if not configured
     
     if (process.env.NODE_ENV === 'development') {
       console.log('[Layout] process.env.API_URL:', process.env.API_URL);
