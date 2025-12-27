@@ -43,7 +43,14 @@ export default function LandingHeader() {
     
     // Check if API client is available
     if (!apiClient || typeof apiClient.getLandingPageSection !== 'function') {
-      console.warn("API client not available, using default header content");
+      // Silently use default content - no need to log warning
+      return;
+    }
+    
+    // Check if API URL is configured - if not, skip the request
+    const apiUrl = (apiClient as any).baseUrl || (window as any).__API_URL__ || process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl || apiUrl === '') {
+      // API URL not configured, use default content
       return;
     }
     
@@ -53,8 +60,11 @@ export default function LandingHeader() {
       if (data?.content) {
         setContent(data.content);
       }
-    } catch (error) {
-      console.error("Error loading header content:", error);
+    } catch (error: any) {
+      // Only log errors that aren't 404s (404 means section doesn't exist, which is fine)
+      if (error?.status !== 404) {
+        console.error("Error loading header content:", error);
+      }
       // Use empty object as fallback - don't crash
       // Content already initialized to {} so this is safe
     } finally {

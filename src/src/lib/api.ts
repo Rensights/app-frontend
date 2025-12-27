@@ -187,11 +187,34 @@ class ApiClient {
           
           const errorText = await response.text().catch(() => 'Unknown error');
           let error;
-          try {
-            error = JSON.parse(errorText);
-          } catch {
-            error = { error: errorText || `Request failed with status ${response.status}` };
+          
+          // Detect HTML responses (e.g., Next.js 404 pages) and handle them gracefully
+          const isHtmlResponse = errorText.trim().startsWith('<!DOCTYPE') || 
+                                 errorText.trim().startsWith('<!doctype') || 
+                                 errorText.includes('<html');
+          
+          if (isHtmlResponse) {
+            // For HTML responses (usually 404 from Next.js routing), provide a cleaner error
+            if (response.status === 404) {
+              error = { 
+                error: `Resource not found: ${endpoint}`,
+                message: `The requested endpoint ${endpoint} was not found on the server.`
+              };
+            } else {
+              error = { 
+                error: `Server returned HTML instead of JSON (status ${response.status})`,
+                message: `The server returned an HTML page instead of a JSON response for ${endpoint}.`
+              };
+            }
+          } else {
+            // Try to parse as JSON
+            try {
+              error = JSON.parse(errorText);
+            } catch {
+              error = { error: errorText || `Request failed with status ${response.status}` };
+            }
           }
+          
           if (process.env.NODE_ENV === 'development') {
             console.error(`API Error [${response.status}]: ${endpoint}`, error);
           }
