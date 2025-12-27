@@ -124,9 +124,15 @@ export default function PricingPage() {
 
                 <div className="pt-8 flex justify-center mt-auto">
                   {(() => {
-                    // Hide Free plan button
+                    // For Free Registration plan, show "Get Started" button
                     if (plan.name === "Free Registration" || plan.name?.toLowerCase().includes("free")) {
-                      return null;
+                      return (
+                        <Link href="/portal/signup">
+                          <Button className="w-full h-12" variant="outline">
+                            Get Started
+                          </Button>
+                        </Link>
+                      );
                     }
                     
                     // For Standard Package
