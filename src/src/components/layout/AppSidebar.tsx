@@ -68,21 +68,27 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
         </div>
 
         <nav className="menu">
-          {MENU_ITEMS.map((item) => (
-            <LinkWithPrefetch
-              key={item.id}
-              href={item.path}
-              aria-current={pathname === item.path ? "page" : undefined}
-              className={`menu-item ${pathname === item.path ? "active" : ""}`}
-              onClick={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleSectionChange(item, e)}
-              prefetch={true}
-            >
-              <span className="menu-icon" aria-hidden>
-                {item.icon}
-              </span>
-              <span className="menu-text">{item.label}</span>
-            </LinkWithPrefetch>
-          ))}
+          {MENU_ITEMS.map((item) => {
+            // Check if current path matches or starts with the item path
+            // This handles sub-routes like /city-analysis/detailed
+            const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+            
+            return (
+              <LinkWithPrefetch
+                key={item.id}
+                href={item.path}
+                aria-current={isActive ? "page" : undefined}
+                className={`menu-item ${isActive ? "active" : ""}`}
+                onClick={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => handleSectionChange(item, e)}
+                prefetch={true}
+              >
+                <span className="menu-icon" aria-hidden>
+                  {item.icon}
+                </span>
+                <span className="menu-text">{item.label}</span>
+              </LinkWithPrefetch>
+            );
+          })}
         </nav>
 
         <div className="logout-section">
