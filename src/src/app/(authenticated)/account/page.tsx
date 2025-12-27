@@ -25,6 +25,7 @@ function AccountPageContent() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [invoicesPerPage] = useState(2);
+  const [processedSessionId, setProcessedSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -33,15 +34,20 @@ function AccountPageContent() {
         setError("");
         
         const sessionId = searchParams?.get('session_id');
-        if (sessionId) {
+        // Only process if we have a session_id and haven't processed it yet
+        if (sessionId && sessionId !== processedSessionId) {
           try {
+            // Remove session_id from URL immediately to prevent duplicate processing
+            router.replace('/account', { scroll: false });
+            setProcessedSessionId(sessionId);
+            
             const updatedSubscription = await apiClient.checkoutSuccess(sessionId);
             await refreshSubscription();
             await refreshUser();
             toast.showSuccess("Payment processed successfully! Your subscription has been updated.");
-            router.replace('/account', { scroll: false });
           } catch (err: any) {
             toast.showError(err?.message || "Failed to process payment");
+            setProcessedSessionId(null); // Reset on error so user can retry
           }
         }
 
@@ -77,7 +83,7 @@ function AccountPageContent() {
     if (!contextLoading && contextUser) {
       loadData();
     }
-  }, [router, searchParams, contextUser, contextLoading, refreshUser, refreshSubscription]);
+  }, [router, searchParams, contextUser, contextLoading, refreshUser, refreshSubscription, processedSessionId]);
 
   const handleEdit = () => {
     setIsEditing(true);

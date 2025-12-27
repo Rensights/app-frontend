@@ -43,6 +43,12 @@
   animation-delay: 10s;
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
 @keyframes float {
   0%,
   100% {
@@ -66,7 +72,7 @@
   z-index: 10;
 }
 
-.header {
+.page-header {
   text-align: center;
   margin-bottom: 30px;
   max-width: 800px;
@@ -74,7 +80,7 @@
   margin-right: auto;
 }
 
-.header h1 {
+.page-header h1 {
   font-size: 42px;
   font-weight: 700;
   margin-bottom: 12px;
@@ -84,7 +90,7 @@
   background-clip: text;
 }
 
-.header p {
+.page-header p {
   font-size: 18px;
   font-weight: 400;
   color: #6b7280;
@@ -180,6 +186,35 @@ textarea:focus {
   background-color: #fffbeb;
 }
 
+input.error,
+select.error,
+textarea.error {
+  border: none !important;
+  background-color: #fef2f2 !important;
+  box-shadow: none !important;
+}
+
+input.error:focus,
+select.error:focus,
+textarea.error:focus {
+  border: none !important;
+  background-color: #fee2e2 !important;
+  box-shadow: none !important;
+}
+
+.form-group.has-error {
+  position: relative;
+}
+
+.form-group.has-error input.error,
+.form-group.has-error select.error {
+  padding-right: 40px;
+}
+
+.checkbox-group.has-error {
+  background-color: #fef2f2;
+}
+
 textarea {
   resize: vertical;
   min-height: 80px;
@@ -236,9 +271,12 @@ textarea {
 }
 
 .error-message {
-  background-color: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #ef4444;
+  background-color: #fee !important;
+  color: #c33 !important;
+  border: 3px solid #f33 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .submit-section {
@@ -392,11 +430,11 @@ textarea {
     padding: 20px 15px;
   }
 
-  .header h1 {
+  .page-header h1 {
     font-size: 32px;
   }
 
-  .header p {
+  .page-header p {
     font-size: 16px;
   }
 

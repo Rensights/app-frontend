@@ -34,13 +34,19 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
 
   const handleSectionChange = useCallback((item: typeof MENU_ITEMS[number], e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     e.preventDefault();
-    if (item.id === "account") {
-      router.push("/account");
-    } else {
-      router.push(item.path);
+    // Close sidebar immediately on mobile before navigation
+    if (isMobile) {
+      onClose();
     }
-    onClose();
-  }, [router, onClose]);
+    // Small delay to ensure sidebar closes before navigation
+    setTimeout(() => {
+      if (item.id === "account") {
+        router.push("/account");
+      } else {
+        router.push(item.path);
+      }
+    }, isMobile ? 100 : 0);
+  }, [router, onClose, isMobile]);
 
   // Only show overlay on mobile when sidebar is open
   const showOverlay = isMobile && isOpen;

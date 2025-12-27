@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LandingHeader from "@/components/landing/Header";
 
 /**
  * Portal Layout - For authentication pages
@@ -36,34 +37,45 @@ export default function PortalLayout({
   // Show loading spinner while checking auth state
   if (loading || isRedirecting) {
     return (
-      <div style={{ 
-        minHeight: "100vh", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #f6b042 0%, #f39c12 100%)"
-      }}>
-        <LoadingSpinner message={isRedirecting ? "Redirecting..." : "Loading..."} />
-      </div>
+      <>
+        <LandingHeader />
+        <div style={{ 
+          minHeight: "calc(100vh - 20px)", 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #f6b042 0%, #f39c12 100%)"
+        }}>
+          <LoadingSpinner message={isRedirecting ? "Redirecting..." : "Loading..."} />
+        </div>
+      </>
     );
   }
 
   // If user is authenticated, show loading (redirect is in progress)
   if (user) {
     return (
-      <div style={{ 
-        minHeight: "100vh", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #f6b042 0%, #f39c12 100%)"
-      }}>
-        <LoadingSpinner message="Redirecting..." />
-      </div>
+      <>
+        <LandingHeader />
+        <div style={{ 
+          minHeight: "calc(100vh - 20px)", 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #f6b042 0%, #f39c12 100%)"
+        }}>
+          <LoadingSpinner message="Redirecting..." />
+        </div>
+      </>
     );
   }
 
   // User is not authenticated, show portal pages
-  return <>{children}</>;
+  return (
+    <>
+      <LandingHeader />
+      {children}
+    </>
+  );
 }
 

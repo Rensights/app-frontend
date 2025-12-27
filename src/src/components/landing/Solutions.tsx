@@ -117,7 +117,7 @@ export default function LandingSolutions() {
                 )}
 
                 {/* Card */}
-                <div className="relative h-full rounded-3xl border-2 border-border bg-card p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+                <div className="relative h-full rounded-3xl border-2 border-border bg-card p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden flex flex-col">
                   {/* Gradient Background */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${solution.color || 'from-blue-500 to-cyan-500'} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`} />
                   
@@ -140,7 +140,7 @@ export default function LandingSolutions() {
                   <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{solution.description}</p>
                   
                   {/* Features with icons */}
-                  <ul className="space-y-4 mb-8">
+                  <ul className="space-y-4 mb-8 flex-grow">
                     {solution.features?.map((feature: any, idx: number) => {
                       const FeatureIcon = iconMap[feature.icon] || Building2;
                       return (
@@ -157,7 +157,7 @@ export default function LandingSolutions() {
                   </ul>
 
                   {/* CTA Button */}
-                  <div className="pt-6 border-t border-border relative z-10">
+                  <div className="pt-6 border-t border-border relative z-10 mt-auto">
                     <Link 
                       href={solution.link || "/solutions"}
                       className={cn(buttonVariants({ size: "sm", variant: "default" }), "w-full group/btn relative z-10")}

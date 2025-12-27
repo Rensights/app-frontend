@@ -79,6 +79,11 @@
   font-size: 0.9rem;
 }
 
+.required-label::after {
+  content: " *";
+  color: #ef4444;
+}
+
 .form-input,
 .form-select {
   width: 100%;
@@ -100,18 +105,40 @@
 
 .form-input.error,
 .form-select.error {
-  border-color: #dc3545;
+  border: none !important;
+  background-color: #fef2f2 !important;
+  box-shadow: none !important;
+}
+
+.form-input.error:focus,
+.form-select.error:focus {
+  border: none !important;
+  background-color: #fee2e2 !important;
+  box-shadow: none !important;
+}
+
+.form-group.has-error {
+  position: relative;
 }
 
 .error-message {
-  color: #dc3545;
-  font-size: 0.8rem;
-  margin-top: 4px;
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
   display: none;
+  font-weight: 500;
+  border: none !important;
+  box-shadow: none !important;
+  background: none !important;
 }
 
 .error-message.show {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none !important;
+  box-shadow: none !important;
+  background: none !important;
 }
 
 .plans-grid {
@@ -246,6 +273,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 10px;
+}
+
+.goals-grid.has-error {
+  background-color: #fef2f2;
 }
 
 .goal-option {

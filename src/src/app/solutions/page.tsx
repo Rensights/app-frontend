@@ -14,7 +14,7 @@ export default function SolutionsPage() {
       <LandingHeader />
       
       {/* Page Title Section */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-background to-muted/30">
+      <section className="pt-32 pb-8 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Solutions
@@ -74,7 +74,7 @@ export default function SolutionsPage() {
       />
 
       {/* Bottom CTA */}
-      <section className="py-24 bg-gradient-to-b from-muted/30 to-background">
+      <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             className="text-center max-w-4xl mx-auto"
@@ -148,25 +148,25 @@ function SolutionSection({
     <section 
       ref={sectionRef}
       id={id}
-      className="relative py-24 overflow-hidden"
+      className="relative py-12 overflow-hidden"
     >
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-background" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div 
-          className={`grid lg:grid-cols-2 gap-16 items-center ${reverse ? 'lg:flex-row-reverse' : ''}`}
+          className={`grid lg:grid-cols-2 gap-16 ${reverse ? 'lg:flex-row-reverse' : ''}`}
           style={{ opacity, scale }}
         >
           {/* Content */}
           <motion.div 
-            className={`space-y-8 ${reverse ? 'lg:order-2' : ''}`}
+            className={`flex flex-col ${reverse ? 'lg:order-2' : ''}`}
             initial={{ opacity: 0, x: reverse ? 50 : -50 }}
             animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: reverse ? 50 : -50 }}
             transition={{ duration: 0.8 }}
           >
             {/* Badge and Icon */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-8">
               <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 text-primary text-base font-semibold">
                 {badge}
               </div>
@@ -175,11 +175,11 @@ function SolutionSection({
               </div>
             </div>
 
-            {/* Text Content */}
+            {/* Text Content - Aligned with video top */}
             <div>
               <h2 className="text-5xl lg:text-6xl font-bold mb-4 leading-tight">{title}</h2>
               <p className="text-2xl text-muted-foreground mb-6 font-medium">{subtitle}</p>
-              <p className="text-xl leading-relaxed text-foreground/90">{description}</p>
+              <p className="text-xl leading-relaxed text-foreground/90 mb-8">{description}</p>
             </div>
 
             {/* Features */}
@@ -203,24 +203,6 @@ function SolutionSection({
               })}
             </ul>
 
-            {/* Metric and CTA - Only show if metric is provided */}
-            {metric && (
-              <div className="pt-8 border-t-2 border-border flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    {metric}
-                  </div>
-                </div>
-                {showButton && (
-                  <Link href="/portal/signup">
-                    <Button size="lg" className="group text-base px-8 py-6 h-auto shadow-lg">
-                      Explore Now
-                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            )}
           </motion.div>
 
           {/* YouTube Embed */}
@@ -229,6 +211,7 @@ function SolutionSection({
             initial={{ opacity: 0, x: reverse ? -50 : 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: reverse ? -50 : 50 }}
             transition={{ duration: 0.8, delay: 0.2 }}
+            style={{ paddingTop: '88px' }}
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-video bg-muted">
               <iframe
@@ -250,6 +233,20 @@ function SolutionSection({
             </div>
           </motion.div>
         </motion.div>
+        
+        {/* Metric - Show below video section, spanning full width */}
+        {metric && (
+          <motion.div 
+            className="mt-8 text-center w-full"
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {metric}
+            </div>
+          </motion.div>
+        )}
       </div>
     </section>
   );

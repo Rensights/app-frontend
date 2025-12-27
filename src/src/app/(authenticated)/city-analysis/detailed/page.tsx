@@ -2,14 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { useToast } from "@/components/ui/Toast";
-import Link from "next/link";
 import "../../dashboard/dashboard.css";
 import "../city-analysis.css";
 
 export default function DetailedCityAnalysisPage() {
   const router = useRouter();
-  const toast = useToast();
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
   const isStandardUser = user && user.userTier === 'PREMIUM';
@@ -23,7 +20,7 @@ export default function DetailedCityAnalysisPage() {
   };
 
   const handleContactUs = () => {
-    toast.showInfo('Our team will get back to you within 24 hours. Email: support@rensight.com | Phone: +971 4 XXX XXXX');
+    window.open('/contact', '_blank');
   };
 
   const handleFilterClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -392,8 +389,13 @@ export default function DetailedCityAnalysisPage() {
             <p style={{ marginBottom: '1.5rem', color: '#666' }}>
               Sections 4-6 (Which Property to Buy, Price Negotiation Intelligence, and Analysis by Budget) are available for Standard Package and above.
             </p>
-            <Link href="/pricing">
-              <button style={{
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                router.push('/pricing');
+              }}
+              style={{
                 padding: '12px 24px',
                 background: 'linear-gradient(135deg, #f39c12, #e67e22)',
                 color: 'white',
@@ -403,9 +405,8 @@ export default function DetailedCityAnalysisPage() {
                 fontWeight: '600',
                 cursor: 'pointer'
               }}>
-                Upgrade to Standard Package
-              </button>
-            </Link>
+              Upgrade to Standard Package
+            </button>
           </section>
         )}
 
@@ -415,8 +416,13 @@ export default function DetailedCityAnalysisPage() {
             <p style={{ marginBottom: '1.5rem', color: '#666' }}>
               Section 6 (Overall Analysis by Investor Budget) is available for Trusted Advisor subscribers.
             </p>
-            <Link href="/portal/early-access">
-              <button style={{
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                router.push('/portal/early-access');
+              }}
+              style={{
                 padding: '12px 24px',
                 background: 'linear-gradient(135deg, #9b59b6, #8e44ad)',
                 color: 'white',
@@ -426,9 +432,8 @@ export default function DetailedCityAnalysisPage() {
                 fontWeight: '600',
                 cursor: 'pointer'
               }}>
-                Request Early Access
-              </button>
-            </Link>
+              Request Early Access
+            </button>
           </section>
         )}
 

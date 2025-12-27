@@ -96,7 +96,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    // Return a default context instead of throwing to prevent crashes
+    // This can happen during SSR or if component renders before provider
+    console.warn('useLanguage called outside LanguageProvider, using defaults');
+    return {
+      language: 'en',
+      setLanguage: () => {},
+      translations: {},
+      loadTranslations: async () => {},
+      t: (key: string) => key,
+      isLoading: false,
+    };
   }
   return context;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, MessageSquare, Phone } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -26,28 +26,6 @@ export default function LandingContact() {
                 <h3 className="font-semibold mb-1">Email Us</h3>
                 <p className="text-sm text-muted-foreground">info@rensights.com</p>
                 <p className="text-sm text-muted-foreground">We'll respond within 24 hours</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <MessageSquare className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">Live Chat</h3>
-                <p className="text-sm text-muted-foreground">Available Mon-Fri, 9am-6pm GST</p>
-                <p className="text-sm text-muted-foreground">Get instant answers to your questions</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Phone className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">Phone Support</h3>
-                <p className="text-sm text-muted-foreground">+971 4 XXX XXXX</p>
-                <p className="text-sm text-muted-foreground">For urgent inquiries only</p>
               </div>
             </div>
           </div>

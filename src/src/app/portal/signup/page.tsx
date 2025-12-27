@@ -60,6 +60,7 @@ function SignUpPageContent() {
   const [codeDigits, setCodeDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [codeError, setCodeError] = useState<string>("");
   const [resendTimer, setResendTimer] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
   const codeRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
   // Check if user canceled Stripe checkout
@@ -112,7 +113,10 @@ function SignUpPageContent() {
     if (!formState.lastName.trim()) nextErrors.lastName = "Required";
     if (!isValidEmail(formState.email))
       nextErrors.email = "Valid email required";
-    if (!formState.phone.trim()) nextErrors.phone = "Required";
+    // Phone is optional, but if provided, validate it contains only numbers and phone characters
+    if (formState.phone.trim() && !/^[\d+\-() ]+$/.test(formState.phone.trim())) {
+      nextErrors.phone = "Phone number can only contain numbers, +, -, spaces, and parentheses";
+    }
     // SECURITY FIX: Enforce strong password requirements to match backend exactly
     // Backend regex: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
     const backendPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -154,6 +158,109 @@ function SignUpPageContent() {
     if (!formState.plan) nextErrors.plan = "Please select a plan";
 
     setErrors(nextErrors);
+    
+    if (Object.keys(nextErrors).length > 0) {
+      // Scroll to first error field after state updates
+      const firstErrorField = Object.keys(nextErrors)[0];
+      
+      // Function to scroll to error field
+      const scrollToErrorField = () => {
+        const fieldContainer = document.querySelector(`[data-field="${firstErrorField}"]`) as HTMLElement;
+        if (!fieldContainer) {
+          return false;
+        }
+        
+        // Look for input, select, or goals-grid within the container
+        const inputElement = fieldContainer.querySelector('input:not([type="checkbox"]), select, textarea') as HTMLElement;
+        const goalsGrid = fieldContainer.querySelector('.goals-grid') as HTMLElement;
+        const planCard = fieldContainer.querySelector('.plan-card') as HTMLElement;
+        const elementToScroll = inputElement || goalsGrid || planCard || fieldContainer;
+        
+        if (!elementToScroll) {
+          return false;
+        }
+        
+        // Get header
+        const header = document.querySelector('header') as HTMLElement;
+        
+        // Measure actual header height
+        const headerRect = header?.getBoundingClientRect();
+        const headerHeight = headerRect ? headerRect.height : 20;
+        
+        // Calculate total offset needed - header + padding
+        const totalOffset = headerHeight + 40;
+        
+        // Get element position BEFORE scrolling
+        const elementRect = elementToScroll.getBoundingClientRect();
+        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+        const elementTop = elementRect.top + currentScroll;
+        
+        // Calculate target scroll position
+        const targetScroll = elementTop - totalOffset;
+        
+        // Scroll directly to the calculated position (no smooth for immediate effect, then smooth)
+        // First do instant scroll to get close
+        window.scrollTo({
+          top: Math.max(0, targetScroll - 100), // Scroll a bit higher first
+          behavior: 'auto'
+        });
+        
+        // Then smooth scroll to exact position
+        setTimeout(() => {
+          const newElementRect = elementToScroll.getBoundingClientRect();
+          const newScroll = window.pageYOffset || document.documentElement.scrollTop;
+          const newElementTop = newElementRect.top + newScroll;
+          const finalTargetScroll = newElementTop - totalOffset;
+          
+          window.scrollTo({
+            top: Math.max(0, finalTargetScroll),
+            behavior: 'smooth'
+          });
+          
+          // Final verification after smooth scroll
+          setTimeout(() => {
+            const finalRect = elementToScroll.getBoundingClientRect();
+            const finalHeaderRect = header?.getBoundingClientRect();
+            const headerBottom = finalHeaderRect ? finalHeaderRect.bottom : 0;
+            
+            // If still under header, force one more time
+            if (finalRect.top <= headerBottom + 20) {
+              const forceScroll = (finalRect.top + (window.pageYOffset || document.documentElement.scrollTop)) - totalOffset;
+              window.scrollTo({
+                top: Math.max(0, forceScroll),
+                behavior: 'smooth'
+              });
+            }
+          }, 1000);
+        }, 50);
+        
+        // Focus input after scroll
+        if (inputElement && (inputElement.tagName === 'INPUT' || inputElement.tagName === 'SELECT')) {
+          setTimeout(() => {
+            (inputElement as HTMLElement).focus();
+            inputElement.style.transition = 'box-shadow 0.3s';
+            inputElement.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.3)';
+            setTimeout(() => {
+              inputElement.style.boxShadow = '';
+            }, 2000);
+          }, 600);
+        }
+        
+        return true;
+      };
+      
+      // Try scrolling with increasing delays to ensure DOM is ready
+      setTimeout(() => {
+        if (!scrollToErrorField()) {
+          setTimeout(() => {
+            if (!scrollToErrorField()) {
+              setTimeout(scrollToErrorField, 200);
+            }
+          }, 200);
+        }
+      }, 300);
+    }
+    
     return Object.keys(nextErrors).length === 0;
   };
 
@@ -250,6 +357,7 @@ function SignUpPageContent() {
       const deviceFingerprint = apiClient.getDeviceFingerprint();
       
       // Verify email and get token (device will be registered)
+      // Note: Token is set in HttpOnly cookie by backend, no need to manually set it
       const authResponse = await apiClient.verifyEmail(verificationEmail, code, deviceFingerprint);
       
       if (process.env.NODE_ENV === 'development') {
@@ -258,32 +366,57 @@ function SignUpPageContent() {
         console.log("Current step before check:", step);
       }
 
-      // IMPORTANT: Check plan BEFORE any redirect
-      // If a paid plan is selected, redirect to Stripe Checkout
+      // Show success message first
+      setShowSuccess(true);
+      setIsSubmitting(false);
+      
+      // Force a refresh of the user context to pick up the new authentication state
+      // This ensures the UserContext recognizes the user is authenticated
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('storage'));
+      }
+      
+      // IMPORTANT: Check plan AFTER showing success
+      // If a paid plan is selected, redirect to Stripe Checkout after success message
       if (formState.plan === "premium") {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("✅ Premium plan detected! Redirecting to Stripe Checkout");
-        }
-        setIsSubmitting(true);
-        try {
-          const checkoutResponse = await apiClient.createCheckoutSession("PREMIUM");
-          if (checkoutResponse.url) {
-            window.location.href = checkoutResponse.url;
-            return;
+        setTimeout(() => {
+          if (process.env.NODE_ENV === 'development') {
+            console.log("✅ Premium plan detected! Redirecting to Stripe Checkout");
           }
-        } catch (error: any) {
-          console.error("Failed to create checkout session:", error);
-          setCodeError(error.message || "Failed to start payment. Please try again.");
-          setIsSubmitting(false);
-          return;
-        }
+          setIsSubmitting(true);
+          try {
+            apiClient.createCheckoutSession("PREMIUM").then((checkoutResponse) => {
+              if (checkoutResponse.url) {
+                window.location.href = checkoutResponse.url;
+              }
+            }).catch((error: any) => {
+              console.error("Failed to create checkout session:", error);
+              setShowSuccess(false);
+              setCodeError(error.message || "Failed to start payment. Please try again.");
+              setIsSubmitting(false);
+            });
+          } catch (error: any) {
+            console.error("Failed to create checkout session:", error);
+            setShowSuccess(false);
+            setCodeError(error.message || "Failed to start payment. Please try again.");
+            setIsSubmitting(false);
+          }
+        }, 2000);
+        return;
       }
 
-      // Redirect to dashboard for free plan
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Free plan selected, redirecting to dashboard");
-      }
-      router.push("/dashboard");
+      // Redirect to dashboard for free plan after success message
+      setTimeout(() => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log("Free plan selected, redirecting to dashboard");
+        }
+        // Save token if present in response
+        if (authResponse.token) {
+          apiClient.setToken(authResponse.token);
+        }
+        // Use window.location.href for a full page reload to ensure auth state is picked up
+        window.location.href = "/dashboard";
+      }, 2000);
     } catch (error: any) {
       // Handle expired code or network errors
       const errorMessage = error?.message || error?.error || "Invalid verification code. Please try again.";
@@ -379,14 +512,43 @@ function SignUpPageContent() {
                 We&apos;ve sent a verification code to your email address
               </div>
 
-              <div className="device-info">
-                <div className="device-info-title">📧 Email Verification</div>
-                <div className="device-info-text">
-                  Please check your email and enter the 6-digit code sent to <strong>{maskEmail(verificationEmail)}</strong>
+              {showSuccess ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '2rem',
+                  backgroundColor: '#f0fdf4',
+                  borderRadius: '12px',
+                  border: '2px solid #22c55e',
+                  marginBottom: '2rem'
+                }}>
+                  <div style={{
+                    fontSize: '3rem',
+                    marginBottom: '1rem'
+                  }}>✓</div>
+                  <h2 style={{
+                    fontSize: '1.5rem',
+                    fontWeight: '700',
+                    color: '#16a34a',
+                    marginBottom: '0.5rem'
+                  }}>Email Verified Successfully!</h2>
+                  <p style={{
+                    fontSize: '1rem',
+                    color: '#166534',
+                    marginBottom: '1rem'
+                  }}>
+                    Your account has been created. Redirecting to the platform...
+                  </p>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="device-info">
+                    <div className="device-info-title">📧 Email Verification</div>
+                    <div className="device-info-text">
+                      Please check your email and enter the 6-digit code sent to <strong>{maskEmail(verificationEmail)}</strong>
+                    </div>
+                  </div>
 
-              <div className="form-group">
+                  <div className="form-group">
                 <label className="form-label">Verification Code</label>
                 <div className="verification-code">
                   {codeDigits.map((digit, index) => (
@@ -406,8 +568,9 @@ function SignUpPageContent() {
                   ))}
                 </div>
                 {codeError && (
-                  <div className="error-message show" style={{ marginTop: '0.5rem' }}>
-                    {codeError}
+                  <div className="error-message show" style={{ marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                    <span>⚠</span>
+                    <span>{codeError}</span>
                   </div>
                 )}
               </div>
@@ -446,19 +609,21 @@ function SignUpPageContent() {
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setStep("form");
-                  setCodeDigits(Array(CODE_LENGTH).fill(""));
-                  setCodeError("");
-                  setResendTimer(0);
-                }}
-                className="btn btn-secondary"
-                style={{ width: '100%', marginTop: '1rem' }}
-              >
-                ← Back to Registration
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("form");
+                      setCodeDigits(Array(CODE_LENGTH).fill(""));
+                      setCodeError("");
+                      setResendTimer(0);
+                    }}
+                    className="btn btn-secondary"
+                    style={{ width: '100%', marginTop: '1rem' }}
+                  >
+                    ← Back to Registration
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -474,51 +639,61 @@ function SignUpPageContent() {
           <div className="logo">Rensights</div>
           <div className="tagline">Property Intelligence Platform</div>
 
-          <form className="signup-form" onSubmit={handleSubmit}>
+          <form className="signup-form" onSubmit={handleSubmit} noValidate>
             <SectionTitle>Account Information</SectionTitle>
 
             <div className="form-row">
-              <Field
-                id="firstName"
-                label="First Name"
-                placeholder="John"
-                value={formState.firstName}
-                onChange={(value) => handleChange("firstName", value)}
-                error={errors.firstName}
-              />
-              <Field
-                id="lastName"
-                label="Last Name"
-                placeholder="Doe"
-                value={formState.lastName}
-                onChange={(value) => handleChange("lastName", value)}
-                error={errors.lastName}
-              />
+              <div data-field="firstName">
+                <Field
+                  id="firstName"
+                  label="First Name"
+                  placeholder="John"
+                  value={formState.firstName}
+                  onChange={(value) => handleChange("firstName", value)}
+                  error={errors.firstName}
+                />
+              </div>
+              <div data-field="lastName">
+                <Field
+                  id="lastName"
+                  label="Last Name"
+                  placeholder="Doe"
+                  value={formState.lastName}
+                  onChange={(value) => handleChange("lastName", value)}
+                  error={errors.lastName}
+                />
+              </div>
             </div>
 
             <div className="form-row">
-              <Field
-                id="email"
-                label="Email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={formState.email}
-                onChange={(value) => handleChange("email", value)}
-                error={errors.email}
-              />
-              <Field
-                id="phone"
-                label="Phone"
-                placeholder="+1 (555) 000-0000"
-                value={formState.phone}
-                onChange={(value) => handleChange("phone", value)}
-                error={errors.phone}
-              />
+              <div data-field="email">
+                <Field
+                  id="email"
+                  label="Email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={formState.email}
+                  onChange={(value) => handleChange("email", value)}
+                  error={errors.email}
+                />
+              </div>
+              <div data-field="phone">
+                <Field
+                  id="phone"
+                  label="Phone (Optional)"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  value={formState.phone}
+                  onChange={(value) => handleChange("phone", value)}
+                  error={errors.phone}
+                  required={false}
+                />
+              </div>
             </div>
 
             <div className="form-row">
-              <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label" htmlFor="password">
+              <div className={`form-group ${errors.password ? 'has-error' : ''}`} data-field="password" style={{ flex: 1 }}>
+                <label className="form-label required-label" htmlFor="password">
                   Password
                 </label>
                 <input
@@ -531,7 +706,10 @@ function SignUpPageContent() {
                   required
                 />
                 {errors.password && (
-                  <div className="error-message show">{errors.password}</div>
+                  <div className="error-message show" style={{ fontSize: '0.75rem' }}>
+                    <span>⚠</span>
+                    <span>{errors.password}</span>
+                  </div>
                 )}
                 {formState.password && (
                   <div className="password-hints" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
@@ -564,39 +742,43 @@ function SignUpPageContent() {
                   </div>
                 )}
               </div>
-              <Field
-                id="confirmPassword"
-                label="Confirm Password"
-                type="password"
-                placeholder="Re-enter password"
-                value={formState.confirmPassword}
-                onChange={(value) => handleChange("confirmPassword", value)}
-                error={errors.confirmPassword}
-              />
+              <div data-field="confirmPassword">
+                <Field
+                  id="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
+                  placeholder="Re-enter password"
+                  value={formState.confirmPassword}
+                  onChange={(value) => handleChange("confirmPassword", value)}
+                  error={errors.confirmPassword}
+                />
+              </div>
             </div>
 
             <SectionTitle>Your Profile</SectionTitle>
 
-            <SelectField
-              id="budget"
-              label="Investment Budget Range"
-              value={formState.budget}
-              onChange={(value) => handleChange("budget", value)}
-              options={[
-                { value: "", label: "Select budget range" },
-                { value: "under-100k", label: "Under $100,000" },
-                { value: "100k-250k", label: "$100,000 - $250,000" },
-                { value: "250k-500k", label: "$250,000 - $500,000" },
-                { value: "500k-1m", label: "$500,000 - $1M" },
-                { value: "1m-5m", label: "$1M - $5M" },
-                { value: "above-5m", label: "Above $5M" },
-              ]}
-              error={errors.budget}
-            />
+            <div data-field="budget">
+              <SelectField
+                id="budget"
+                label="Investment Budget Range"
+                value={formState.budget}
+                onChange={(value) => handleChange("budget", value)}
+                options={[
+                  { value: "", label: "Select budget range" },
+                  { value: "under-100k", label: "Under $100,000" },
+                  { value: "100k-250k", label: "$100,000 - $250,000" },
+                  { value: "250k-500k", label: "$250,000 - $500,000" },
+                  { value: "500k-1m", label: "$500,000 - $1M" },
+                  { value: "1m-5m", label: "$1M - $5M" },
+                  { value: "above-5m", label: "Above $5M" },
+                ]}
+                error={errors.budget}
+              />
+            </div>
 
-            <div className="form-group">
-              <label className="form-label">Primary Investment Goals</label>
-              <div className="goals-grid">
+            <div className={`form-group ${errors.goals ? 'has-error' : ''}`} data-field="goals">
+              <label className="form-label required-label">Primary Investment Goals</label>
+              <div className={`goals-grid ${errors.goals ? 'has-error' : ''}`}>
                 {goalOptions.map((goal) => (
                   <label key={goal.value} className="goal-option">
                     <input
@@ -609,27 +791,32 @@ function SignUpPageContent() {
                 ))}
               </div>
               {errors.goals && (
-                <div className="error-message show">{errors.goals}</div>
+                <div className="error-message show" style={{ fontSize: '0.75rem' }}>
+                  <span>⚠</span>
+                  <span>{errors.goals}</span>
+                </div>
               )}
             </div>
 
-            <SelectField
-              id="portfolio"
-              label="Current Investment Portfolio"
-              value={formState.portfolio}
-              onChange={(value) => handleChange("portfolio", value)}
-              options={[
-                { value: "", label: "Select portfolio size" },
-                { value: "below-5", label: "Below 5 properties" },
-                { value: "5-10", label: "5-10 properties" },
-                { value: "above-10", label: "Above 10 properties" },
-              ]}
-              error={errors.portfolio}
-            />
+            <div data-field="portfolio">
+              <SelectField
+                id="portfolio"
+                label="Current Investment Portfolio"
+                value={formState.portfolio}
+                onChange={(value) => handleChange("portfolio", value)}
+                options={[
+                  { value: "", label: "Select portfolio size" },
+                  { value: "below-5", label: "Below 5 properties" },
+                  { value: "5-10", label: "5-10 properties" },
+                  { value: "above-10", label: "Above 10 properties" },
+                ]}
+                error={errors.portfolio}
+              />
+            </div>
 
             <SectionTitle>Choose Your Plan</SectionTitle>
 
-            <div className="plans-grid two-cols">
+            <div className="plans-grid two-cols" data-field="plan">
               <PlanCard
                 title="Free Registration"
                 price="$0"
@@ -657,12 +844,16 @@ function SignUpPageContent() {
               />
             </div>
             {errors.plan && (
-              <div className="error-message show plan-error">{errors.plan}</div>
+              <div className="error-message show plan-error" style={{ marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                <span>⚠</span>
+                <span>{errors.plan}</span>
+              </div>
             )}
 
             {submitError && (
-              <div className="error-message show" style={{ marginBottom: "1rem" }}>
-                {submitError}
+              <div className="error-message show" style={{ marginBottom: "1rem", fontSize: '0.75rem' }}>
+                <span>⚠</span>
+                <span>{submitError}</span>
               </div>
             )}
 
@@ -715,6 +906,7 @@ type FieldProps = {
   placeholder?: string;
   type?: string;
   error?: string;
+  required?: boolean;
 };
 
 const Field = ({
@@ -725,23 +917,42 @@ const Field = ({
   placeholder,
   type = "text",
   error,
-}: FieldProps) => (
-  <div className="form-group">
-    <label className="form-label" htmlFor={id}>
-      {label}
-    </label>
-    <input
-      id={id}
-      type={type}
-      className={`form-input ${error ? "error" : ""}`}
-      value={value}
-      placeholder={placeholder}
-      onChange={(event) => onChange(event.target.value)}
-      required
-    />
-    {error && <div className="error-message show">{error}</div>}
-  </div>
-);
+  required = true,
+}: FieldProps) => {
+  const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (type === "tel") {
+      // Only allow numbers, +, -, spaces, and parentheses for phone numbers
+      const phoneValue = event.target.value.replace(/[^\d+\-() ]/g, '');
+      onChange(phoneValue);
+    } else {
+      onChange(event.target.value);
+    }
+  };
+
+  return (
+    <div className={`form-group ${error ? 'has-error' : ''}`}>
+      <label className={`form-label ${required ? "required-label" : ""}`} htmlFor={id}>
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        className={`form-input ${error ? "error" : ""}`}
+        value={value}
+        placeholder={placeholder}
+        onChange={type === "tel" ? handlePhoneChange : (event) => onChange(event.target.value)}
+        required={required}
+        pattern={type === "tel" ? "[0-9+\-() ]*" : undefined}
+      />
+      {error && (
+        <div className="error-message show" style={{ fontSize: '0.75rem' }}>
+          <span>⚠</span>
+          <span>{error}</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 type SelectFieldProps = {
   id: string;
@@ -760,8 +971,8 @@ const SelectField = ({
   options,
   error,
 }: SelectFieldProps) => (
-  <div className="form-group">
-    <label className="form-label" htmlFor={id}>
+  <div className={`form-group ${error ? 'has-error' : ''}`}>
+    <label className="form-label required-label" htmlFor={id}>
       {label}
     </label>
     <select
@@ -777,7 +988,12 @@ const SelectField = ({
         </option>
       ))}
     </select>
-    {error && <div className="error-message show">{error}</div>}
+    {error && (
+      <div className="error-message show" style={{ fontSize: '0.75rem' }}>
+        <span>⚠</span>
+        <span>{error}</span>
+      </div>
+    )}
   </div>
 );
 

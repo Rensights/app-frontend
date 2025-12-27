@@ -183,11 +183,55 @@ export default function DashboardPage() {
                 className="btn btn-outline"
                 onClick={handleRequestNewReport}
                 disabled={isReportLimitReached}
-                style={isReportLimitReached ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+                style={isReportLimitReached ? { cursor: 'not-allowed' } : {}}
               >
                 Request New Report
               </button>
-              {sortedReports.length > 1 && (
+              {isReportLimitReached && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
+                  border: '2px solid rgba(245, 158, 11, 0.3)',
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ 
+                    margin: 0, 
+                    color: '#d97706', 
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    marginBottom: '8px'
+                  }}>
+                    Upgrade to Standard Package to request more analysis
+                  </p>
+                  <button
+                    onClick={() => router.push('/pricing')}
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(243, 156, 18, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    View Pricing
+                  </button>
+                </div>
+              )}
+              {sortedReports.length > 1 && !isReportLimitReached && (
                 <div className="report-note">
                   {sortedReports.length} {sortedReports.length === 1 ? 'report' : 'reports'} total
                 </div>
@@ -203,13 +247,57 @@ export default function DashboardPage() {
             </div>
             <div className="report-actions">
               <button 
-                className="btn btn-primary"
+                className="btn btn-outline"
                 onClick={handleRequestNewReport}
                 disabled={isReportLimitReached}
-                style={isReportLimitReached ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+                style={isReportLimitReached ? { cursor: 'not-allowed' } : {}}
               >
                 Request Your First Report
               </button>
+              {isReportLimitReached && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
+                  border: '2px solid rgba(245, 158, 11, 0.3)',
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ 
+                    margin: 0, 
+                    color: '#d97706', 
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    marginBottom: '8px'
+                  }}>
+                    Upgrade to Standard Package to request more analysis
+                  </p>
+                  <button
+                    onClick={() => router.push('/pricing')}
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(243, 156, 18, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    View Pricing
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}

@@ -24,7 +24,7 @@
   height: 100vh;
   left: 0;
   top: 0;
-  z-index: 40;
+  z-index: 100;
   transition: transform 0.3s ease;
   /* Default: visible on desktop, hidden on mobile */
   transform: translateX(0);
@@ -69,6 +69,12 @@
   font-size: 1.5rem;
   cursor: pointer;
   color: #999;
+  z-index: 101;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .menu {
@@ -143,7 +149,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-  z-index: 30;
+  z-index: 99;
   display: none; /* Hidden by default */
 }
 
@@ -198,6 +204,14 @@
   background: transparent;
   cursor: pointer;
   margin-bottom: 20px;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 98;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .menu-toggle span {
@@ -292,9 +306,16 @@
   color: #f39c12;
 }
 
-.btn-outline:hover {
+.btn-outline:hover:not(:disabled) {
   background: linear-gradient(135deg, #f39c12, #e67e22);
   color: white;
+}
+
+.btn-outline:disabled {
+  opacity: 1;
+  border-color: #f39c12;
+  color: #f39c12;
+  cursor: not-allowed;
 }
 
 .top-areas {
@@ -619,7 +640,7 @@
   }
 
   .sidebar-close {
-    display: block;
+    display: flex;
   }
 
   .menu-toggle {

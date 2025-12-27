@@ -27,7 +27,7 @@ export default function LandingFooter() {
   };
 
   if (loading) {
-    return <footer className="border-t bg-card py-12"><div className="container mx-auto px-4 text-center">Loading...</div></footer>;
+    return <footer className="border-t bg-card py-6"><div className="container mx-auto px-4 text-center">Loading...</div></footer>;
   }
 
   const tagline = content?.tagline || "Data-backed real estate investing in Dubai";
@@ -35,18 +35,18 @@ export default function LandingFooter() {
     { label: "About Us", href: "/about" },
     { label: "Solutions", href: "/solutions" },
     { label: "Pricing", href: "/pricing" },
-    { label: "FAQ", href: "/faq" },
-    { label: "Contact", href: "/contact" },
   ]);
   const legalLinks = content?.legalLinks || (content?.legalLinksJson ? JSON.parse(content.legalLinksJson) : [
     { label: "Privacy Policy & Terms", href: "/privacy-terms" },
+    { label: "FAQ", href: "/faq" },
+    { label: "Contact", href: "/contact" },
   ]);
   const copyright = content?.copyright || `© ${new Date().getFullYear()} Rensights. All rights reserved.`;
 
   return (
-    <footer className="border-t bg-card py-12">
+    <footer className="border-t bg-card py-6">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="h-8 w-8 rounded-xl bg-primary"></div>
@@ -84,7 +84,7 @@ export default function LandingFooter() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
+        <div className="mt-6 pt-4 border-t text-center text-sm text-muted-foreground">
           <p>{copyright}</p>
         </div>
       </div>

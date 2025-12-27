@@ -196,6 +196,12 @@ html {
   margin-bottom: 0;
 }
 
+@media (max-width: 1024px) {
+  .top-bar {
+    padding-left: 60px; /* Make room for menu toggle button */
+  }
+}
+
 .top-bar-left {
   display: flex;
   gap: 12px;
@@ -344,16 +350,39 @@ html {
   text-decoration: none;
   color: inherit;
   display: block;
+  position: relative;
+  z-index: 1;
+  touch-action: manipulation;
 }
 
-.summary-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
-  border-top-color: var(--accent-light);
+.summary-card:hover,
+.summary-card:focus {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2) !important;
+  border-top-color: var(--accent-light) !important;
+  z-index: 10;
+  outline: none;
 }
 
 .summary-card:active {
   transform: translateY(-3px);
+}
+
+/* Ensure hover works on detailed page - more specific selector */
+.city-analysis-page.detailed-page .summary-card:hover,
+.city-analysis-page.detailed-page .summary-card:focus {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2) !important;
+  border-top-color: var(--accent-light) !important;
+  z-index: 10;
+}
+
+/* Also ensure hover works when cards are inside metrics-grid on detailed page */
+.city-analysis-page.detailed-page .metrics-grid .summary-card:hover,
+.city-analysis-page.detailed-page .metrics-grid .summary-card:focus {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2) !important;
+  border-top-color: var(--accent-light) !important;
 }
 
 .summary-card .icon {

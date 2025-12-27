@@ -92,7 +92,7 @@ export default function LandingPricing() {
           {plans.map((plan: any, index: number) => (
             <div
               key={index}
-              className={`rounded-2xl bg-card p-8 shadow-lg hover:shadow-xl transition-shadow relative ${
+              className={`rounded-2xl bg-card p-8 shadow-lg hover:shadow-xl transition-shadow relative flex flex-col ${
                 plan.popular ? "border-2 border-primary" : "border"
               }`}
             >
@@ -117,7 +117,7 @@ export default function LandingPricing() {
                 <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
               </div>
 
-              <ul className="mt-8 space-y-3">
+              <ul className="mt-8 space-y-3 flex-grow">
                 {plan.features?.map((feature: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
@@ -126,7 +126,7 @@ export default function LandingPricing() {
                 ))}
               </ul>
 
-              <div className="mt-8 flex justify-center">
+              <div className="pt-8 flex justify-center mt-auto">
                 <Link href={plan.ctaHref ?? "/pricing"}>
                   <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
                     {plan.ctaText ?? "Get Started"}

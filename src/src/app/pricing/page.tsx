@@ -66,13 +66,13 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-16 bg-muted/30">
+      <section id="packages" className="py-16 bg-muted/30 scroll-mt-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`rounded-2xl bg-card p-8 shadow-lg hover:shadow-xl transition-shadow relative ${
+                className={`rounded-2xl bg-card p-8 shadow-lg hover:shadow-xl transition-shadow relative flex flex-col ${
                   plan.popular ? "border-2 border-primary" : "border"
                 }`}
               >
@@ -97,7 +97,7 @@ export default function PricingPage() {
                   <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
                 </div>
 
-                <ul className="mt-8 space-y-3">
+                <ul className="mt-8 space-y-3 flex-grow">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
@@ -106,7 +106,7 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <div className="mt-8 flex justify-center">
+                <div className="pt-8 flex justify-center mt-auto">
                   {plan.ctaText === "Request Early Access" ? (
                     <Link href="/portal/early-access">
                       <Button className="w-full h-12" variant={plan.popular ? "default" : "outline"}>
