@@ -43,7 +43,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const loadUser = useCallback(async () => {
+  const loadUser = useCallback(async (retryCount = 0) => {
+    const maxRetries = 2; // Retry up to 2 times for manual navigation
     try {
       setLoading(true);
       // Don't use cache for user loading - always fetch fresh after login/logout
@@ -56,6 +57,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setSubscription(subscriptionData);
       setError(null);
     } catch (err: any) {
+      // Retry logic for manual navigation - cookie might not be immediately available
+      if ((err.status === 401 || err.status === 403) && retryCount < maxRetries) {
+        // Wait a bit before retrying (cookie might be propagating)
+        await new Promise(resolve => setTimeout(resolve, 300 * (retryCount + 1)));
+        return loadUser(retryCount + 1);
+      }
+      
       if (process.env.NODE_ENV === 'development') {
         console.error('Failed to load user:', err);
       }
@@ -63,8 +71,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSubscription(null);
       
-      // If authentication failed (401/403), clear token and ensure redirect
-      // The API client should already have cleared the token, but we ensure user state is cleared
+      // Only clear token after all retries have failed
+      // This prevents false logouts on manual navigation
       if (err.status === 401 || err.status === 403) {
         apiClient.clearToken();
         // Don't redirect here - AppLayout will handle it based on user state

@@ -176,34 +176,12 @@ class ApiClient {
     })
       .then(async (response) => {
         if (!response.ok) {
-          // Handle authentication/authorization errors (401/403) - redirect to login
+          // Handle authentication/authorization errors (401/403)
+          // Don't clear token or redirect here - let UserContext/AppLayout handle it
+          // This prevents aggressive clearing on manual navigation or temporary network issues
           if (response.status === 401 || response.status === 403) {
-            // Clear state on authentication failure (cookie is cleared by backend if needed)
-            this.clearToken();
-            // Redirect to login page if we're in the browser and not already on a public page
-            if (typeof window !== 'undefined') {
-              const currentPath = window.location.pathname;
-              // Public paths: landing pages, portal pages (login, signup, forgot password, etc.)
-              const publicPaths = [
-                '/', // Landing page
-                '/about',
-                '/contact',
-                '/faq',
-                '/pricing',
-                '/privacy-terms',
-                '/solutions',
-                '/portal/login',
-                '/portal/signup',
-                '/portal/forgot-password',
-                '/portal/reset-password',
-                '/portal/early-access'
-              ];
-              const isPublicPath = publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'));
-              
-              if (!isPublicPath) {
-                window.location.href = '/portal/login';
-              }
-            }
+            // Don't clear token here - let the calling component decide
+            // This prevents false logouts on manual navigation
           }
           
           const errorText = await response.text().catch(() => 'Unknown error');
@@ -574,34 +552,11 @@ class ApiClient {
     
     if (!response.ok) {
           // Handle authentication errors (401/403)
-          // Cookie is cleared by backend if needed
+          // Don't clear token or redirect here - let UserContext/AppLayout handle it
+          // This prevents aggressive clearing on manual navigation or temporary network issues
           if (response.status === 401 || response.status === 403) {
-            // Clear token on authentication failure
-            this.clearToken();
-            // Redirect to login page if we're in the browser and not already on a public page
-            if (typeof window !== 'undefined') {
-              const currentPath = window.location.pathname;
-              // Public paths: landing pages, portal pages (login, signup, forgot password, etc.)
-              const publicPaths = [
-                '/', // Landing page
-                '/about',
-                '/contact',
-                '/faq',
-                '/pricing',
-                '/privacy-terms',
-                '/solutions',
-                '/portal/login',
-                '/portal/signup',
-                '/portal/forgot-password',
-                '/portal/reset-password',
-                '/portal/early-access'
-              ];
-              const isPublicPath = publicPaths.some(path => currentPath === path || currentPath.startsWith(path + '/'));
-              
-              if (!isPublicPath) {
-                window.location.href = '/portal/login';
-              }
-            }
+            // Don't clear token here - let the calling component decide
+            // This prevents false logouts on manual navigation
           }
       
       const errorText = await response.text().catch(() => 'Unknown error');
