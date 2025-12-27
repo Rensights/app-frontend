@@ -7,6 +7,8 @@ import { Button } from "./ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import { useContext } from "react";
+import { UserContext } from "@/context/UserContext";
 
 export default function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -18,6 +20,11 @@ export default function LandingHeader() {
   // If context throws, React will handle it (component won't render)
   const languageContext = useLanguage();
   const language = languageContext?.language || 'en';
+  
+  // Get user info to check if logged in
+  const userContext = useContext(UserContext);
+  const user = userContext?.user || null;
+  const isLoggedIn = !!user;
 
   useEffect(() => {
     setMounted(true);
@@ -117,14 +124,22 @@ export default function LandingHeader() {
 
           <div className="hidden items-center gap-3 md:flex">
             <LanguageSwitcher />
-            <Link href="/portal/login">
-              <Button variant="outline" size="sm">
-                {navLogin}
-              </Button>
-            </Link>
-            <Link href="/pricing#packages">
-              <Button size="sm">{navGetStarted}</Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link href="/dashboard">
+                <Button size="sm">Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/portal/login">
+                  <Button variant="outline" size="sm">
+                    {navLogin}
+                  </Button>
+                </Link>
+                <Link href="/pricing#packages">
+                  <Button size="sm">{navGetStarted}</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -152,14 +167,22 @@ export default function LandingHeader() {
               {navPricing}
             </Link>
             <div className="pt-3 space-x-3">
-              <Link href="/portal/login">
-                <Button variant="outline" size="sm">
-                  {navLogin}
-                </Button>
-              </Link>
-              <Link href="/pricing#packages">
-                <Button size="sm">{navGetStarted}</Button>
-              </Link>
+              {isLoggedIn ? (
+                <Link href="/dashboard">
+                  <Button size="sm">Dashboard</Button>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/portal/login">
+                    <Button variant="outline" size="sm">
+                      {navLogin}
+                    </Button>
+                  </Link>
+                  <Link href="/pricing#packages">
+                    <Button size="sm">{navGetStarted}</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -5,8 +5,24 @@ import { Button } from "@/components/landing/ui/button";
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import Link from "next/link";
+import { useContext } from "react";
+import { UserContext } from "@/context/UserContext";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 
 export default function PricingPage() {
+  // Get toast
+  const toast = useToast();
+  
+  // Get user info to check tier
+  const userContext = useContext(UserContext);
+  const user = userContext?.user || null;
+  const subscription = userContext?.subscription || null;
+  
+  const userTier = user?.userTier || subscription?.planType || null;
+  const isPremiumTier = userTier === 'PREMIUM' || userTier === 'ENTERPRISE';
+  const isFreeTier = !userTier || userTier === 'FREE';
+  
   const plans = [
     {
       name: "Free Registration",
@@ -107,19 +123,75 @@ export default function PricingPage() {
                 </ul>
 
                 <div className="pt-8 flex justify-center mt-auto">
-                  {plan.ctaText === "Request Early Access" ? (
-                    <Link href="/portal/early-access">
-                      <Button className="w-full h-12" variant={plan.popular ? "default" : "outline"}>
-                        {plan.ctaText}
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Link href="/portal/signup">
-                      <Button className="w-full h-12" variant={plan.popular ? "default" : "outline"}>
-                        Get Started
-                      </Button>
-                    </Link>
-                  )}
+                  {(() => {
+                    // Hide Free plan button
+                    if (plan.name === "Free Registration" || plan.name?.toLowerCase().includes("free")) {
+                      return null;
+                    }
+                    
+                    // For Standard Package
+                    if (plan.name === "Standard Package" || plan.name?.toLowerCase().includes("standard")) {
+                      // Hide if user is premium tier
+                      if (isPremiumTier) {
+                        return null;
+                      }
+                      
+                      // If free tier and logged in, show "Pay" button that redirects to Stripe
+                      if (isFreeTier && user) {
+                        return (
+                          <Button 
+                            className="w-full h-12" 
+                            variant={plan.popular ? "default" : "outline"}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              try {
+                                const { url } = await apiClient.createCheckoutSession("PREMIUM");
+                                if (url) {
+                                  window.location.href = url;
+                                } else {
+                                  toast.showError("Failed to create checkout session");
+                                }
+                              } catch (err: any) {
+                                toast.showError(err?.message || "Failed to start payment");
+                              }
+                            }}
+                          >
+                            Pay
+                          </Button>
+                        );
+                      }
+                      
+                      // If not logged in, show "Get Started" button that links to signup
+                      if (!user) {
+                        return (
+                          <Link href="/portal/signup">
+                            <Button className="w-full h-12" variant={plan.popular ? "default" : "outline"}>
+                              Get Started
+                            </Button>
+                          </Link>
+                        );
+                      }
+                    }
+                    
+                    // Default behavior for other plans
+                    if (plan.ctaText === "Request Early Access") {
+                      return (
+                        <Link href="/portal/early-access">
+                          <Button className="w-full h-12" variant={plan.popular ? "default" : "outline"}>
+                            {plan.ctaText}
+                          </Button>
+                        </Link>
+                      );
+                    } else {
+                      return (
+                        <Link href="/portal/signup">
+                          <Button className="w-full h-12" variant={plan.popular ? "default" : "outline"}>
+                            Get Started
+                          </Button>
+                        </Link>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
             ))}
