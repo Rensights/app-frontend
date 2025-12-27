@@ -4,7 +4,6 @@ import { getRuntimeApiUrl } from "../lib/runtime-config";
 import { UserProvider } from "../context/UserContext";
 import { ToastProvider } from "../components/ui/Toast";
 import { LanguageProvider } from "../context/LanguageContext";
-import { validateApiUrl } from "../lib/env-validation";
 
 export const metadata: Metadata = {
   title: "Rensights",
@@ -40,30 +39,14 @@ export default function RootLayout({
       || getRuntimeApiUrl()
       || ''; // No hardcoded fallback - fail fast if not configured
     
-    // Validate API URL on server-side
-    if (!apiUrl && process.env.NODE_ENV === 'production') {
-      console.error('[Layout] ERROR: API URL is not configured. Set API_URL or NEXT_PUBLIC_API_URL environment variable.');
-    }
-    
     if (process.env.NODE_ENV === 'development') {
       console.log('[Layout] process.env.API_URL:', process.env.API_URL);
       console.log('[Layout] process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-      console.log('[Layout] ✅ Final API URL:', apiUrl || '(will be injected at runtime)');
+      console.log('[Layout] ✅ Final API URL:', apiUrl);
     }
   } else {
     // Client-side: should be injected via script tag below
     apiUrl = '';
-    
-    // Validate API URL on client-side after mount
-    // This will be checked after the script tag injects the URL
-    if (process.env.NODE_ENV === 'production') {
-      // Validate after a short delay to allow script injection
-      setTimeout(() => {
-        if (!validateApiUrl()) {
-          console.error('[Layout] ERROR: API URL is not configured. Check Kubernetes secret configuration.');
-        }
-      }, 100);
-    }
   }
   
   return (

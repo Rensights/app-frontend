@@ -146,8 +146,7 @@ class ApiClient {
       }
     }
     
-    // OPTIMIZATION: Deduplicate concurrent requests with same method and URL
-    // This prevents multiple identical requests from being sent simultaneously
+    // Deduplicate concurrent requests
     if (this.pendingRequests.has(cacheKey)) {
       return this.pendingRequests.get(cacheKey)!;
     }

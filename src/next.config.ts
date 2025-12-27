@@ -1,12 +1,5 @@
 import type { NextConfig } from "next";
 
-// Bundle analyzer - only load when ANALYZE env var is set
-const withBundleAnalyzer = process.env.ANALYZE === 'true'
-  ? require('@next/bundle-analyzer')({
-      enabled: true,
-    })
-  : (config: NextConfig) => config;
-
 const nextConfig: NextConfig = {
   reactCompiler: true,
   output: 'standalone',
@@ -120,4 +113,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withBundleAnalyzer(nextConfig);
+export default nextConfig;
