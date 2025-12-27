@@ -35,11 +35,8 @@ export default function LandingPricing() {
     try {
       const data = await apiClient.getLandingPageSection('pricing', language);
       setContent(data.content || {});
-    } catch (error: any) {
-      // Only log errors that aren't 404s (404 means section doesn't exist in DB, which is fine)
-      if (error?.status !== 404) {
-        console.error("Error loading pricing content:", error);
-      }
+    } catch (error) {
+      console.error("Error loading pricing content:", error);
       setContent({});
     } finally {
       setLoading(false);

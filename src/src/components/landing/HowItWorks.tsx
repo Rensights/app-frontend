@@ -25,11 +25,8 @@ export default function LandingHowItWorks() {
     try {
       const data = await apiClient.getLandingPageSection('how-it-works', language);
       setContent(data.content || {});
-    } catch (error: any) {
-      // Only log errors that aren't 404s (404 means section doesn't exist in DB, which is fine)
-      if (error?.status !== 404) {
-        console.error("Error loading how-it-works content:", error);
-      }
+    } catch (error) {
+      console.error("Error loading how-it-works content:", error);
       setContent({});
     } finally {
       setLoading(false);
