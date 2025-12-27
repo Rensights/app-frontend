@@ -282,20 +282,15 @@ function AccountPageContent() {
         </html>
       `;
 
-      // SECURITY: Use safer method instead of document.write
       // Open in new window for printing/downloading
       const printWindow = window.open('', '_blank');
       if (printWindow) {
-        // Use safer method: write to document after it's ready
-        printWindow.document.open();
         printWindow.document.write(invoiceHTML);
         printWindow.document.close();
         // Wait for content to load then trigger print
-        printWindow.onload = () => {
-          setTimeout(() => {
-            printWindow.print();
-          }, 250);
-        };
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
       }
     } catch (err: any) {
       setError("Failed to generate invoice: " + (err?.message || "Unknown error"));

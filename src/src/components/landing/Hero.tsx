@@ -43,28 +43,11 @@ export default function LandingHero() {
     return <div className="min-h-[70vh] flex items-center justify-center">Loading...</div>;
   }
 
-  // SECURITY: Sanitize HTML to prevent XSS attacks
-  const sanitizeHtml = (html: string): string => {
-    // Only allow safe HTML tags and attributes
-    // Remove script tags, event handlers, and dangerous attributes
-    return html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-      .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers
-      .replace(/on\w+='[^']*'/gi, '') // Remove event handlers (single quotes)
-      .replace(/javascript:/gi, '') // Remove javascript: protocol
-      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // Remove iframes
-      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '') // Remove objects
-      .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, ''); // Remove embeds
-  };
-
   const title = content?.title || "Discover <span class='text-primary'>Underpriced</span> Dubai Properties";
   const subtitle = content?.subtitle || "Data-driven insights for retail investors seeking exceptional real estate opportunities in Dubai's dynamic market";
   const imageUrl = content?.imageUrl || "/landing-assets/dubai-skyline.jpg";
   const ctaPrimary = content?.ctaPrimary || "Get Started";
   const ctaSecondary = content?.ctaSecondary || "Login";
-
-  // Sanitize title before rendering
-  const sanitizedTitle = sanitizeHtml(title);
 
   return (
     <section className="relative min-h-[70vh] flex items-center overflow-hidden py-16">
@@ -83,7 +66,7 @@ export default function LandingHero() {
         <div className="max-w-3xl">
           <h1 
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight"
-            dangerouslySetInnerHTML={{ __html: sanitizedTitle }}
+            dangerouslySetInnerHTML={{ __html: title }}
           />
           <p className="text-lg md:text-xl text-gray-600 mb-6 leading-relaxed">
             {subtitle}
