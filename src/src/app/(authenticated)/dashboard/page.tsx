@@ -183,7 +183,18 @@ export default function DashboardPage() {
                 className="btn btn-outline"
                 onClick={handleRequestNewReport}
                 disabled={isReportLimitReached}
-                style={isReportLimitReached ? { cursor: 'not-allowed' } : {}}
+                style={isReportLimitReached ? { 
+                  cursor: 'not-allowed',
+                  color: '#f39c12',
+                  borderColor: '#f39c12',
+                  borderWidth: '2px',
+                  borderStyle: 'solid'
+                } : {
+                  color: '#f39c12',
+                  borderColor: '#f39c12',
+                  borderWidth: '2px',
+                  borderStyle: 'solid'
+                }}
               >
                 Request New Report
               </button>
@@ -250,7 +261,18 @@ export default function DashboardPage() {
                 className="btn btn-outline"
                 onClick={handleRequestNewReport}
                 disabled={isReportLimitReached}
-                style={isReportLimitReached ? { cursor: 'not-allowed' } : {}}
+                style={isReportLimitReached ? { 
+                  cursor: 'not-allowed',
+                  color: '#f39c12',
+                  borderColor: '#f39c12',
+                  borderWidth: '2px',
+                  borderStyle: 'solid'
+                } : {
+                  color: '#f39c12',
+                  borderColor: '#f39c12',
+                  borderWidth: '2px',
+                  borderStyle: 'solid'
+                }}
               >
                 Request Your First Report
               </button>
