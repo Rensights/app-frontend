@@ -493,29 +493,7 @@ function AccountPageContent() {
 
         {/* Invoice History - Right */}
         <div className="account-card account-card-half">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2 className="card-title">Invoice History</h2>
-            <button 
-              className="btn btn-secondary" 
-              onClick={async () => {
-                try {
-                  setLoading(true);
-                  await apiClient.syncInvoices();
-                  const invoicesData = await apiClient.getInvoices();
-                  setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
-                  toast.showSuccess("Invoices synced successfully!");
-                } catch (err: any) {
-                  toast.showError(err?.message || "Failed to sync invoices");
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              disabled={loading}
-              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-            >
-              🔄 Sync
-            </button>
-          </div>
+          <h2 className="card-title">Invoice History</h2>
           {!invoices || invoices.length === 0 ? (
             <div className="empty-state">
               <p>No invoices found</p>
