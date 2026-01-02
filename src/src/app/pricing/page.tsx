@@ -69,7 +69,7 @@ export default function PricingPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-16 leading-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent pb-2">
             Pricing
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-4">
