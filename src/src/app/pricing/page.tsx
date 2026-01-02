@@ -5,8 +5,7 @@ import { Button } from "@/components/landing/ui/button";
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import Link from "next/link";
-import { useContext } from "react";
-import { UserContext } from "@/context/UserContext";
+import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 
@@ -15,9 +14,7 @@ export default function PricingPage() {
   const toast = useToast();
   
   // Get user info to check tier
-  const userContext = useContext(UserContext);
-  const user = userContext?.user || null;
-  const subscription = userContext?.subscription || null;
+  const { user, subscription } = useUser();
   
   const userTier = user?.userTier || subscription?.planType || null;
   const isPremiumTier = userTier === 'PREMIUM' || userTier === 'ENTERPRISE';
@@ -124,8 +121,12 @@ export default function PricingPage() {
 
                 <div className="pt-8 flex justify-center mt-auto">
                   {(() => {
-                    // For Free Registration plan, show "Get Started" button
+                    // For Free Registration plan, only show "Get Started" button if user is NOT logged in
                     if (plan.name === "Free Registration" || plan.name?.toLowerCase().includes("free")) {
+                      // Hide button if user is already logged in
+                      if (user) {
+                        return null;
+                      }
                       return (
                         <Link href="/portal/signup">
                           <Button className="w-full h-12" variant="outline">
