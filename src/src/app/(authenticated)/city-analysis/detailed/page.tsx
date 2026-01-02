@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import "../../dashboard/dashboard.css";
 import "../city-analysis.css";
@@ -416,13 +417,13 @@ export default function DetailedCityAnalysisPage() {
             <p style={{ marginBottom: '1.5rem', color: '#666' }}>
               Section 6 (Overall Analysis by Investor Budget) is available for Trusted Advisor subscribers.
             </p>
-            <button 
+            <Link 
+              href="/portal/early-access"
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
-                router.push('/portal/early-access');
               }}
               style={{
+                display: 'inline-block',
                 padding: '12px 24px',
                 background: 'linear-gradient(135deg, #9b59b6, #8e44ad)',
                 color: 'white',
@@ -430,10 +431,12 @@ export default function DetailedCityAnalysisPage() {
                 borderRadius: '8px',
                 fontSize: '1rem',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                textDecoration: 'none',
+                textAlign: 'center'
               }}>
               Request Early Access
-            </button>
+            </Link>
           </section>
         )}
 
