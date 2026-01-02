@@ -7,8 +7,7 @@ import { Button } from "./ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
-import { useContext } from "react";
-import { UserContext } from "@/context/UserContext";
+import { useUser } from "@/context/UserContext";
 
 export default function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,13 +21,32 @@ export default function LandingHeader() {
   const language = languageContext?.language || 'en';
   
   // Get user info to check if logged in
-  const userContext = useContext(UserContext);
-  const user = userContext?.user || null;
+  const { user, loading: userLoading } = useUser();
   const isLoggedIn = !!user;
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Listen for auth state changes to update header buttons across tabs
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleAuthChange = () => {
+        // The useUser hook will automatically update, this just ensures we're listening
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Auth state changed in header, user:', user);
+        }
+      };
+
+      window.addEventListener('auth-state-changed', handleAuthChange);
+      window.addEventListener('storage', handleAuthChange);
+
+      return () => {
+        window.removeEventListener('auth-state-changed', handleAuthChange);
+        window.removeEventListener('storage', handleAuthChange);
+      };
+    }
+  }, [user]);
 
   useEffect(() => {
     if (mounted) {

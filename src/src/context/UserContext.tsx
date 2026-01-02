@@ -208,8 +208,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
       
       return () => clearTimeout(timer);
     } else {
-      // Landing page - no auth check needed
-      setLoading(false);
+      // Landing page - do a lightweight auth check to show correct buttons
+      // This allows the header to show Dashboard button if user is logged in
+      const timer = setTimeout(async () => {
+        try {
+          // Quick auth check - will fail fast if not authenticated
+          const userData = await apiClient.getCurrentUser();
+          setUser(userData);
+          setLoading(false);
+        } catch (err: any) {
+          // Not authenticated - this is expected on landing page
+          setUser(null);
+          setLoading(false);
+        }
+      }, 50); // Fast check for landing page
+      
+      return () => clearTimeout(timer);
     }
 
     // Listen for storage events to sync auth state across tabs/windows
@@ -219,19 +233,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
         // Reload user to sync state across tabs
         const currentPath = window.location.pathname;
         const publicPaths = [
-          '/', '/about', '/contact', '/faq', '/pricing', '/privacy-terms', '/solutions',
+          '/about', '/contact', '/faq', '/pricing', '/privacy-terms', '/solutions',
           '/portal/login', '/portal/signup', '/portal/forgot-password', 
           '/portal/reset-password', '/portal/early-access'
         ];
         const isPublicPath = publicPaths.some(path => 
           currentPath === path || currentPath.startsWith(path + '/')
         );
+        const isLandingPage = currentPath === '/';
         
-        if (!isPublicPath) {
+        if (!isPublicPath && !isLandingPage) {
           // On authenticated routes, reload user
           loadUser();
-        } else if (currentPath.startsWith('/portal/')) {
-          // On portal pages, check auth status
+        } else if (isLandingPage || currentPath.startsWith('/portal/')) {
+          // On landing page and portal pages, check auth status
           apiClient.getCurrentUser()
             .then(userData => {
               setUser(userData);
@@ -251,17 +266,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const handleAuthChange = () => {
       const currentPath = window.location.pathname;
       const publicPaths = [
-        '/', '/about', '/contact', '/faq', '/pricing', '/privacy-terms', '/solutions',
+        '/about', '/contact', '/faq', '/pricing', '/privacy-terms', '/solutions',
         '/portal/login', '/portal/signup', '/portal/forgot-password', 
         '/portal/reset-password', '/portal/early-access'
       ];
       const isPublicPath = publicPaths.some(path => 
         currentPath === path || currentPath.startsWith(path + '/')
       );
+      const isLandingPage = currentPath === '/';
       
-      if (!isPublicPath) {
+      if (!isPublicPath && !isLandingPage) {
         loadUser();
-      } else if (currentPath.startsWith('/portal/')) {
+      } else if (isLandingPage || currentPath.startsWith('/portal/')) {
+        // On landing page and portal pages, check auth status
         apiClient.getCurrentUser()
           .then(userData => {
             setUser(userData);
