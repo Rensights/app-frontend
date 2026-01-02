@@ -17,6 +17,18 @@ html {
 /* Only apply these styles to the detailed page */
 .city-analysis-page.detailed-page {
   background: var(--bg-sand);
+  overflow-x: hidden;
+  /* Ensure proper scrolling on mobile */
+  min-height: 100vh;
+}
+
+@media (max-width: 1024px) {
+  .city-analysis-page.detailed-page {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
 }
 
 .city-analysis-page.detailed-page .main-content {
@@ -25,11 +37,13 @@ html {
   min-height: 100vh;
   padding: 0;
   background: var(--bg-sand);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 /* City Analysis Container - for preview page */
 .city-analysis-container {
-  max-width: 1400px;
   margin: 0 auto;
   background: white;
   border-radius: 20px;
@@ -194,6 +208,8 @@ html {
   top: 0;
   z-index: 50;
   margin-bottom: 0;
+  /* Ensure it doesn't block interactions */
+  pointer-events: auto;
 }
 
 @media (max-width: 1024px) {
@@ -203,7 +219,13 @@ html {
     padding-bottom: 16px;
     position: sticky;
     top: 0;
-    z-index: 999; /* Below hamburger menu (z-index: 1000) */
+    z-index: 50; /* Below hamburger menu (z-index: 1000) and sidebar (z-index: 100) */
+  }
+  
+  /* When sidebar is open, ensure top-bar doesn't interfere */
+  body:has(.sidebar.open) .top-bar {
+    z-index: 50;
+    pointer-events: auto;
   }
 }
 
@@ -610,6 +632,10 @@ html {
 
   .city-analysis-page.detailed-page .main-content {
     margin-left: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    height: 100vh;
   }
 
   .metrics-grid {
