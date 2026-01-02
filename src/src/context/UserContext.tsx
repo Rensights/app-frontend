@@ -161,11 +161,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
       currentPath === path || currentPath.startsWith(path + '/')
     );
     
+    // Function to load user with proper retry logic for new tabs
+    const attemptLoadUser = async (attempt = 0) => {
+      const maxAttempts = 2; // Additional retries on top of loadUser's internal retries
+      try {
+        // loadUser already has its own retry logic (2 retries), but we add an extra layer
+        // for new tab scenarios where cookies might need a moment to be available
+        await loadUser();
+      } catch (err: any) {
+        // If it's an auth error and we haven't exhausted retries, try again
+        // This handles cases where cookie might not be immediately available in new tabs
+        if ((err.status === 401 || err.status === 403) && attempt < maxAttempts) {
+          // Progressive delay: 300ms, 600ms
+          await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
+          return attemptLoadUser(attempt + 1);
+        }
+        // loadUser's finally block will set loading to false, so we don't need to do it here
+      }
+    };
+    
     if (!isPublicPath) {
-      // On authenticated routes, load user normally
+      // On authenticated routes, load user with retry logic for new tabs
+      // Give a delay to ensure cookies are available in new tab context
+      // HttpOnly cookies should be available immediately, but give time for context initialization
       const timer = setTimeout(() => {
-        loadUser();
-      }, 100);
+        attemptLoadUser();
+      }, 200); // Increased delay for new tab scenarios
       
       return () => clearTimeout(timer);
     } else if (currentPath.startsWith('/portal/')) {

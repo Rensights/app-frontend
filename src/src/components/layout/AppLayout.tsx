@@ -65,17 +65,18 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   // If user is null after loading, it means authentication failed (no cookie or invalid)
   useEffect(() => {
     // Only redirect if we're sure loading is complete and we're on an authenticated route
-    // Give a small delay to allow for cookie propagation after login redirect
+    // Give more time for cookie propagation, especially in new tabs/windows
     if (!loading && requireAuth && !user) {
       // No user means no valid authentication cookie
-      // Add small delay to prevent race condition with login redirect
+      // Add delay to prevent race condition, especially when opening new tabs
+      // New tabs might need more time for cookie to be available
       const timer = setTimeout(() => {
         // Double-check we're still on an authenticated route and still no user
         // This prevents redirect loops if user state changes during the delay
-        if (!user) {
+        if (!user && !loading) {
           router.push('/portal/login');
         }
-      }, 100);
+      }, 300); // Increased delay for new tab scenarios
       
       return () => clearTimeout(timer);
     }
