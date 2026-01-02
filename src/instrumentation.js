@@ -27,12 +27,17 @@ export async function register() {
   let NodeSDK, getNodeAutoInstrumentations, OTLPTraceExporter, Resource, SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_NAMESPACE, SEMRESATTRS_DEPLOYMENT_ENVIRONMENT;
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     ({ NodeSDK } = require('@opentelemetry/sdk-node'));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     ({ getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node'));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     ({ OTLPTraceExporter } = require('@opentelemetry/exporter-otlp-http'));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     ({ Resource } = require('@opentelemetry/resources'));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     ({ SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_NAMESPACE, SEMRESATTRS_DEPLOYMENT_ENVIRONMENT } = require('@opentelemetry/semantic-conventions'));
-  } catch (e) {
+  } catch {
     // OpenTelemetry dependencies not installed - skip instrumentation
     console.warn('OpenTelemetry dependencies not found, skipping instrumentation');
     return;
@@ -94,13 +99,13 @@ export async function register() {
               if (procExit && typeof procExit === 'object' && typeof procExit.exit === 'function') {
                 procExit.exit(0);
               }
-            } catch (e) {
+            } catch {
               // Ignore if process.exit is not available
             }
           });
       });
     }
-  } catch (e) {
+  } catch {
     // Signal handlers not available in this runtime
   }
 }
