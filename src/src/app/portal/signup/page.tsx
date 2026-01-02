@@ -437,6 +437,10 @@ function SignUpPageContent() {
       await apiClient.resendVerificationCode(verificationEmail);
       setResendTimer(60);
       setCodeError("");
+      // Clear the code input fields when resending
+      setCodeDigits(Array(CODE_LENGTH).fill(""));
+      // Focus the first input field
+      setTimeout(() => codeRefs.current[0]?.focus(), 100);
     } catch (error: any) {
       setCodeError("Failed to resend code: " + (error.message || "Unknown error"));
     } finally {

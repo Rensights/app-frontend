@@ -250,6 +250,10 @@ export default function LoginPage() {
       await apiClient.resendVerificationCode(email);
       setResendTimer(60);
       setErrors((prev) => ({ ...prev, code: "" }));
+      // Clear the code input fields when resending
+      setCodeDigits(Array(CODE_LENGTH).fill(""));
+      // Focus the first input field
+      setTimeout(() => codeRefs.current[0]?.focus(), 100);
     } catch (error: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Failed to resend code:", error);
@@ -258,7 +262,7 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [email]);
+  }, [email, resendTimer]);
 
   const handleBackToLogin = useCallback(() => {
     setStep("login");
