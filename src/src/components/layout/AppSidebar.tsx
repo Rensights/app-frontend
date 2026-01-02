@@ -71,7 +71,23 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
           {MENU_ITEMS.map((item) => {
             // Check if current path matches or starts with the item path
             // This handles sub-routes like /city-analysis/detailed
-            const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+            let isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+            
+            // Special handling for Property Reports - includes analysis-request, property-details, and deals
+            if (item.id === "reports") {
+              isActive = pathname === "/dashboard" || 
+                        pathname === "/analysis-request" || 
+                        pathname.startsWith("/analysis-request/") ||
+                        pathname === "/property-details" ||
+                        pathname.startsWith("/property-details/") ||
+                        pathname === "/deals" ||
+                        pathname.startsWith("/deals/");
+            }
+            
+            // Special handling for Weekly Deals - ensure it works for all sub-routes
+            if (item.id === "alerts") {
+              isActive = pathname === "/weekly-deals" || pathname.startsWith("/weekly-deals/");
+            }
             
             return (
               <LinkWithPrefetch
