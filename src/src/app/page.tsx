@@ -6,6 +6,7 @@ import WhyInvestInDubai from "@/components/landing/WhyInvestInDubai";
 import LandingSolutions from "@/components/landing/Solutions";
 import LandingHowItWorks from "@/components/landing/HowItWorks";
 import LandingPricing from "@/components/landing/Pricing";
+import LandingCTA from "@/components/landing/CTA";
 import LandingFooter from "@/components/landing/Footer";
 
 export default function LandingPage() {
@@ -17,6 +18,7 @@ export default function LandingPage() {
       <LandingSolutions />
       <LandingHowItWorks />
       <LandingPricing />
+      <LandingCTA />
       <LandingFooter />
     </div>
   );
