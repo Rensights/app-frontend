@@ -238,7 +238,6 @@
 .content-section.active {
   display: block;
   /* Ensure proper scrolling on mobile */
-  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   height: 100%;
@@ -524,7 +523,6 @@
 
 /* City Analysis Styles */
 .city-analysis-container {
-  max-width: 1400px;
   margin: 0 auto;
   background: white;
   border-radius: 20px;
@@ -680,7 +678,6 @@
   }
   
   .content-section.active {
-    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
   }
