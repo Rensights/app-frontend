@@ -1,6 +1,5 @@
 /* Property Details Page Styles */
 .property-page {
-  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
   /* Prevent layout shifts during content load */
@@ -261,6 +260,7 @@
 
 .comparison-row {
   display: flex;
+  flex-direction: row-reverse;
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
@@ -649,6 +649,7 @@
   justify-content: center;
   z-index: 20; /* Lower than sidebar (z-index: 40) so menu appears above blur */
   padding: 20px;
+  border-radius: 16px;
 }
 
 .upgrade-content {
