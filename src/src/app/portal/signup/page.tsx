@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import { useUser } from "@/context/UserContext";
 import "./signup.css";
 
 type Plan = "free" | "premium";
@@ -51,6 +52,7 @@ const CODE_LENGTH = 6;
 function SignUpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading } = useUser();
   const [step, setStep] = useState<Step>("form");
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -62,6 +64,13 @@ function SignUpPageContent() {
   const [resendTimer, setResendTimer] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
   const codeRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+
+  // Redirect to dashboard if user is already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [loading, user, router]);
 
   // Check if user canceled Stripe checkout
   useEffect(() => {
@@ -373,7 +382,11 @@ function SignUpPageContent() {
       // Force a refresh of the user context to pick up the new authentication state
       // This ensures the UserContext recognizes the user is authenticated
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('storage'));
+        // Trigger storage event for cross-tab sync
+        window.localStorage.setItem('rensights-auth-sync', Date.now().toString());
+        window.localStorage.removeItem('rensights-auth-sync');
+        // Also dispatch custom event for same-tab updates
+        window.dispatchEvent(new Event('auth-state-changed'));
       }
       
       // IMPORTANT: Check plan AFTER showing success
@@ -406,6 +419,7 @@ function SignUpPageContent() {
       }
 
       // Redirect to dashboard for free plan after success message
+      // Wait a bit longer to ensure UserContext has time to load the user
       setTimeout(() => {
         if (process.env.NODE_ENV === 'development') {
           console.log("Free plan selected, redirecting to dashboard");
@@ -414,9 +428,10 @@ function SignUpPageContent() {
         if (authResponse.token) {
           apiClient.setToken(authResponse.token);
         }
-        // Use window.location.href for a full page reload to ensure auth state is picked up
-        window.location.href = "/dashboard";
-      }, 2000);
+        // Use window.location.replace for a full page reload to ensure auth state is picked up
+        // This prevents back button issues and ensures clean state
+        window.location.replace("/dashboard");
+      }, 1500);
     } catch (error: any) {
       // Handle expired code or network errors
       const errorMessage = error?.message || error?.error || "Invalid verification code. Please try again.";
@@ -501,6 +516,34 @@ function SignUpPageContent() {
                    (username.length > 1 ? username.slice(-1) : "");
     return `${masked}@${domain}`;
   };
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="signup-page">
+        <div className="signup-container">
+          <div className="signup-card">
+            <div className="logo">Rensights</div>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render signup form if user is logged in (redirect will happen)
+  if (user) {
+    return (
+      <div className="signup-page">
+        <div className="signup-container">
+          <div className="signup-card">
+            <div className="logo">Rensights</div>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Redirecting to dashboard...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (step === "verification") {
     return (

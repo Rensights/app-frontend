@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useMemo, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import { useUser } from "@/context/UserContext";
 import "../../login.css";
 
 type Step = "login" | "verification" | "success";
@@ -14,6 +15,7 @@ const CODE_LENGTH = 6;
 export default function LoginPage() {
   const router = useRouter();
   const toast = useToast();
+  const { user, loading } = useUser();
   const [step, setStep] = useState<Step>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,13 +34,23 @@ export default function LoginPage() {
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [hasKnownDevice, setHasKnownDevice] = useState(false);
 
+  // Redirect to dashboard if user is already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [loading, user, router]);
+
   // Reset login form state when component mounts (e.g., after logout)
   useEffect(() => {
     if (typeof window === "undefined") return;
     
-    // Clear any cached authentication state and pending requests
-    // This is critical after logout to ensure clean state
-    apiClient.clearCache();
+    // Don't clear cache if user is logged in (prevents clearing on redirect)
+    if (!user) {
+      // Clear any cached authentication state and pending requests
+      // This is critical after logout to ensure clean state
+      apiClient.clearCache();
+    }
     
     // Reset form state completely
     setStep("login");
@@ -58,7 +70,7 @@ export default function LoginPage() {
       url.search = '';
       window.history.replaceState({}, '', url.toString());
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!resendTimer) return;
@@ -119,6 +131,16 @@ export default function LoginPage() {
         // Known device - cookie is set by backend, redirect to dashboard
         // SECURITY: Token is now in HttpOnly cookie, not in response
         rememberThisDevice();
+        
+        // Force a refresh of the user context to pick up the new authentication state
+        if (typeof window !== 'undefined') {
+          // Trigger storage event for cross-tab sync
+          window.localStorage.setItem('rensights-auth-sync', Date.now().toString());
+          window.localStorage.removeItem('rensights-auth-sync');
+          // Also dispatch custom event for same-tab updates
+          window.dispatchEvent(new Event('auth-state-changed'));
+        }
+        
         // Clear any cached auth state to force fresh load after redirect
         // Don't clear cache here - let UserContext fetch fresh data after redirect
         // Wait longer to ensure cookie is fully set and propagated in browser
@@ -227,11 +249,23 @@ export default function LoginPage() {
       
       rememberThisDevice();
       showSuccess();
+      
+      // Force a refresh of the user context to pick up the new authentication state
+      // This ensures the UserContext recognizes the user is authenticated across tabs
+      if (typeof window !== 'undefined') {
+        // Trigger storage event for cross-tab sync
+        window.localStorage.setItem('rensights-auth-sync', Date.now().toString());
+        window.localStorage.removeItem('rensights-auth-sync');
+        // Also dispatch custom event for same-tab updates
+        window.dispatchEvent(new Event('auth-state-changed'));
+      }
+      
       // SECURITY: Cookie is set by backend, wait a moment for it to be set before redirect
       // Redirect to dashboard after a short delay to ensure cookie is set
       setTimeout(() => {
-        // Use window.location.href for hard navigation to ensure cookie is sent
-        window.location.href = "/dashboard";
+        // Use window.location.replace for hard navigation to ensure cookie is sent
+        // This prevents back button issues
+        window.location.replace("/dashboard");
       }, 1000);
     } catch (error: any) {
       setErrors((prev) => ({
@@ -338,6 +372,34 @@ export default function LoginPage() {
   // Optimized: Memoize computed values
   const maskedEmailMemo = useMemo(() => maskEmail(email), [email]);
   const codeComplete = useMemo(() => codeDigits.join("").length === CODE_LENGTH, [codeDigits]);
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="login-page">
+        <div className="login-container">
+          <div className="login-card">
+            <div className="logo">Rensights</div>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render login form if user is logged in (redirect will happen)
+  if (user) {
+    return (
+      <div className="login-page">
+        <div className="login-container">
+          <div className="login-card">
+            <div className="logo">Rensights</div>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Redirecting to dashboard...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="login-page">

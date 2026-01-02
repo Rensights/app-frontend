@@ -211,6 +211,75 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // Landing page - no auth check needed
       setLoading(false);
     }
+
+    // Listen for storage events to sync auth state across tabs/windows
+    const handleStorageChange = (e: StorageEvent) => {
+      // When user logs in/out in another tab, reload user state
+      if (e.key === 'rensights-auth-sync' || !e.key) {
+        // Reload user to sync state across tabs
+        const currentPath = window.location.pathname;
+        const publicPaths = [
+          '/', '/about', '/contact', '/faq', '/pricing', '/privacy-terms', '/solutions',
+          '/portal/login', '/portal/signup', '/portal/forgot-password', 
+          '/portal/reset-password', '/portal/early-access'
+        ];
+        const isPublicPath = publicPaths.some(path => 
+          currentPath === path || currentPath.startsWith(path + '/')
+        );
+        
+        if (!isPublicPath) {
+          // On authenticated routes, reload user
+          loadUser();
+        } else if (currentPath.startsWith('/portal/')) {
+          // On portal pages, check auth status
+          apiClient.getCurrentUser()
+            .then(userData => {
+              setUser(userData);
+              setLoading(false);
+            })
+            .catch(() => {
+              setUser(null);
+              setLoading(false);
+            });
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events (for same-tab updates)
+    const handleAuthChange = () => {
+      const currentPath = window.location.pathname;
+      const publicPaths = [
+        '/', '/about', '/contact', '/faq', '/pricing', '/privacy-terms', '/solutions',
+        '/portal/login', '/portal/signup', '/portal/forgot-password', 
+        '/portal/reset-password', '/portal/early-access'
+      ];
+      const isPublicPath = publicPaths.some(path => 
+        currentPath === path || currentPath.startsWith(path + '/')
+      );
+      
+      if (!isPublicPath) {
+        loadUser();
+      } else if (currentPath.startsWith('/portal/')) {
+        apiClient.getCurrentUser()
+          .then(userData => {
+            setUser(userData);
+            setLoading(false);
+          })
+          .catch(() => {
+            setUser(null);
+            setLoading(false);
+          });
+      }
+    };
+
+    window.addEventListener('auth-state-changed', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-state-changed', handleAuthChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
