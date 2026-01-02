@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, buttonVariants } from "./ui/button";
-import { Map, TrendingUp, FileCheck, ArrowRight, Building2, Search, CheckCircle2, LineChart, Target, Shield } from "lucide-react";
+import { buttonVariants } from "./ui/button";
+import { Map, TrendingUp, FileCheck, ArrowRight, Building2, Search, CheckCircle2, Target, Shield } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -40,8 +40,6 @@ export default function LandingSolutions() {
 
   const title = content?.title || "Your Journey to Smart Property Investment";
   const subtitle = content?.subtitle || "A data-driven, step-by-step approach to finding and validating the best property deals in Dubai";
-  const bottomTitle = content?.bottomTitle || "Ready to Start Your Investment Journey?";
-  const bottomDescription = content?.bottomDescription || "Join thousands of smart investors who are using data-driven insights to find the best property deals in Dubai";
   const solutions = content?.solutions || (content?.solutionsJson ? JSON.parse(content.solutionsJson) : [
     {
       id: "explore-learn",
@@ -170,22 +168,6 @@ export default function LandingSolutions() {
               </article>
             );
           })}
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-16 text-center">
-          <div className="inline-flex flex-col items-center gap-4 p-8 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20">
-            <LineChart className="w-12 h-12 text-primary" />
-            <h3 className="text-2xl font-bold">{bottomTitle}</h3>
-            <p className="text-muted-foreground max-w-2xl">
-              {bottomDescription}
-            </p>
-            <Link href="/pricing">
-              <Button size="lg" className="mt-4">
-                {content?.bottomCtaText || "Get Started Today"} <ArrowRight className="ml-2" />
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
     </section>
