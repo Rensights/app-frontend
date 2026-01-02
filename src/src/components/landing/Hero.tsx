@@ -2,14 +2,20 @@
 
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import { UserContext } from "@/context/UserContext";
 
 export default function LandingHero() {
   const { language } = useLanguage();
   const [content, setContent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Get user info to check if logged in
+  const userContext = useContext(UserContext);
+  const user = userContext?.user || null;
+  const isLoggedIn = !!user;
 
   useEffect(() => {
     loadContent();
@@ -72,19 +78,30 @@ export default function LandingHero() {
             {subtitle}
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-4">
-            <Link
-              href="/pricing"
-              className="inline-flex items-center justify-center text-lg px-8 py-4 text-primary-foreground bg-primary rounded-lg shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all w-full sm:w-auto"
-            >
-              {ctaPrimary} <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-            <Link
-              href="/portal/login"
-              className="inline-flex items-center justify-center text-lg px-8 py-4 text-primary bg-white border-2 border-primary rounded-lg hover:bg-primary/10 hover:border-primary/80 transition-all shadow-md hover:shadow-lg font-semibold w-full sm:w-auto opacity-100"
-              style={{ opacity: 1 }}
-            >
-              {ctaSecondary}
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center text-lg px-8 py-4 text-primary-foreground bg-primary rounded-lg shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all w-full sm:w-auto"
+              >
+                Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center justify-center text-lg px-8 py-4 text-primary-foreground bg-primary rounded-lg shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all w-full sm:w-auto"
+                >
+                  {ctaPrimary} <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+                <Link
+                  href="/portal/login"
+                  className="inline-flex items-center justify-center text-lg px-8 py-4 text-primary bg-white border-2 border-primary rounded-lg hover:bg-primary/10 hover:border-primary/80 transition-all shadow-md hover:shadow-lg font-semibold w-full sm:w-auto opacity-100"
+                  style={{ opacity: 1 }}
+                >
+                  {ctaSecondary}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
