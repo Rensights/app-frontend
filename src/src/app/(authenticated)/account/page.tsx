@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { apiClient, InvoiceResponse } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -15,7 +15,7 @@ function AccountPageContent() {
   const toast = useToast();
   const searchParams = useSearchParams();
   const { user: contextUser, subscription: contextSubscription, refreshUser, refreshSubscription, loading: contextLoading } = useUser();
-  const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: "", lastName: "" });
@@ -41,13 +41,12 @@ function AccountPageContent() {
             router.replace('/account', { scroll: false });
             setProcessedSessionId(sessionId);
             
-            await apiClient.checkoutSuccess(sessionId);
+            const updatedSubscription = await apiClient.checkoutSuccess(sessionId);
             await refreshSubscription();
             await refreshUser();
             toast.showSuccess("Payment processed successfully! Your subscription has been updated.");
-          } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to process payment";
-            toast.showError(errorMessage);
+          } catch (err: any) {
+            toast.showError(err?.message || "Failed to process payment");
             setProcessedSessionId(null); // Reset on error so user can retry
           }
         }
@@ -56,13 +55,13 @@ function AccountPageContent() {
         try {
           const invoicesData = await apiClient.getInvoices();
           setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
-        } catch {
+        } catch (err: any) {
           // If endpoint doesn't exist, try to sync invoices first
           try {
             await apiClient.syncInvoices();
             const invoicesData = await apiClient.getInvoices();
             setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
-          } catch {
+          } catch (syncErr: any) {
             // If sync fails, use empty array
             setInvoices([]);
           }
@@ -74,9 +73,8 @@ function AccountPageContent() {
             lastName: contextUser.lastName || "",
           });
         }
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to load account data";
-        setError(errorMessage);
+      } catch (error: any) {
+        setError(error?.message || "Failed to load account data");
       } finally {
         setLoading(false);
       }
@@ -85,7 +83,7 @@ function AccountPageContent() {
     if (!contextLoading && contextUser) {
       loadData();
     }
-  }, [router, searchParams, contextUser, contextLoading, refreshUser, refreshSubscription, processedSessionId, toast]);
+  }, [router, searchParams, contextUser, contextLoading, refreshUser, refreshSubscription, processedSessionId]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -124,9 +122,8 @@ function AccountPageContent() {
       setIsEditing(false);
       setSuccess("Profile updated successfully!");
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update profile";
-      setError(errorMessage);
+    } catch (err: any) {
+      setError(err?.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -140,9 +137,27 @@ function AccountPageContent() {
       } else {
         toast.showError("Failed to create checkout session");
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create checkout session";
-      toast.showError(errorMessage);
+    } catch (err: any) {
+      toast.showError(err?.message || "Failed to create checkout session");
+    }
+  };
+
+  const handleRenew = async () => {
+    if (!contextSubscription?.planType) {
+      toast.showError("Unable to determine current plan");
+      return;
+    }
+    
+    try {
+      const planType = contextSubscription.planType === "PREMIUM" ? "PREMIUM" : "ENTERPRISE";
+      const { url } = await apiClient.createCheckoutSession(planType);
+      if (url) {
+        window.location.href = url;
+      } else {
+        toast.showError("Failed to create checkout session");
+      }
+    } catch (err: any) {
+      toast.showError(err?.message || "Failed to renew subscription");
     }
   };
 
@@ -157,13 +172,13 @@ function AccountPageContent() {
       await refreshSubscription();
       await refreshUser();
       toast.showSuccess("Subscription cancelled successfully. Your access will continue until the end of your billing period.");
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to cancel subscription. Please try again or contact support.";
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to cancel subscription. Please try again or contact support.";
       toast.showError(errorMessage);
     }
   };
 
-  const handleDownloadInvoice = async (invoice: InvoiceResponse) => {
+  const handleDownloadInvoice = async (invoice: any) => {
     try {
       // Use Stripe invoice PDF URL if available, otherwise open Stripe hosted invoice
       if (invoice.invoicePdf) {
@@ -181,7 +196,7 @@ function AccountPageContent() {
       // Fallback: Generate invoice HTML if Stripe URLs are not available
       const invoiceData = {
         invoiceNumber: invoice.invoiceNumber || invoice.id || `INV-${Date.now()}`,
-        date: invoice.invoiceDate || new Date().toISOString(),
+        date: invoice.invoiceDate || invoice.createdAt || new Date().toISOString(),
         amount: invoice.amount || 0,
         currency: invoice.currency || "USD",
         status: invoice.status || "paid",
@@ -277,9 +292,8 @@ function AccountPageContent() {
           printWindow.print();
         }, 250);
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      setError("Failed to generate invoice: " + errorMessage);
+    } catch (err: any) {
+      setError("Failed to generate invoice: " + (err?.message || "Unknown error"));
     }
   };
 
@@ -499,8 +513,8 @@ function AccountPageContent() {
                 {(() => {
                   // Sort invoices by date (most recent first)
                   const sortedInvoices = [...invoices].sort((a, b) => {
-                    const dateA = new Date(a.invoiceDate || 0).getTime();
-                    const dateB = new Date(b.invoiceDate || 0).getTime();
+                    const dateA = new Date(a.invoiceDate || a.createdAt || 0).getTime();
+                    const dateB = new Date(b.invoiceDate || b.createdAt || 0).getTime();
                     return dateB - dateA;
                   });
 
@@ -512,7 +526,7 @@ function AccountPageContent() {
 
                   return (
                     <>
-                      {currentInvoices.map((invoice: InvoiceResponse, index: number) => (
+                      {currentInvoices.map((invoice: any, index: number) => (
                         <div key={invoice.id || index} className="invoice-item">
                           <div className="invoice-header">
                             <div className="invoice-info">
@@ -520,7 +534,7 @@ function AccountPageContent() {
                                 Invoice #{invoice.invoiceNumber || invoice.id}
                               </div>
                               <div className="invoice-date">
-                                {formatDate(invoice.invoiceDate || new Date().toISOString())}
+                                {formatDate(invoice.invoiceDate || invoice.createdAt)}
                                 {invoice.amount && (
                                   <span className="invoice-amount">
                                     {invoice.currency || 'USD'} ${parseFloat(invoice.amount.toString()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
