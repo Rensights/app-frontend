@@ -237,6 +237,11 @@
 
 .content-section.active {
   display: block;
+  /* Ensure proper scrolling on mobile */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  height: 100%;
 }
 
 .section-card {
@@ -445,7 +450,16 @@
 .alert-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
+}
+
+.alert-row span:first-child {
+  text-align: left;
+}
+
+.alert-row span:last-child {
+  text-align: right;
 }
 
 .alert-number {
@@ -454,6 +468,7 @@
   padding: 4px 8px;
   border-radius: 12px;
   font-weight: 600;
+  text-align: right;
   font-size: 0.85rem;
 }
 
@@ -462,6 +477,14 @@
   justify-content: space-between;
   font-size: 0.85rem;
   align-items: center;
+}
+
+.alert-stats span:first-child {
+  text-align: left;
+}
+
+.alert-stats span:last-child {
+  text-align: right;
 }
 
 .highlights {
@@ -475,8 +498,17 @@
 .highlights div {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
+}
+
+.highlights div span:first-child {
+  text-align: left;
+}
+
+.highlights div span:last-child {
+  text-align: right;
 }
 
 .highlights div:last-child {
@@ -487,6 +519,7 @@
 .alert-performance {
   color: #28a745;
   font-weight: 500;
+  text-align: right;
 }
 
 /* City Analysis Styles */
@@ -640,6 +673,16 @@
     margin-left: 0;
     padding: 24px;
     padding-top: 70px; /* Add top padding to prevent content from overlapping with hamburger menu */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    height: 100vh;
+  }
+  
+  .content-section.active {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
   .sidebar {

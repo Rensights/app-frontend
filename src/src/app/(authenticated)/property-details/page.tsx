@@ -184,7 +184,6 @@ function PropertyDetailsPageContent() {
               ← Back to Deals
             </button>
           </div>
-          <div className="verified-badge">Verified Listing</div>
         </header>
 
         {error && (
