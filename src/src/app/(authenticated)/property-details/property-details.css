@@ -260,7 +260,6 @@
 
 .comparison-row {
   display: flex;
-  flex-direction: row-reverse;
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
@@ -274,11 +273,13 @@
 .comparison-label {
   font-weight: 500;
   color: #333;
+  text-align: left;
 }
 
 .comparison-value {
   font-weight: 600;
   color: #f39c12;
+  text-align: right;
 }
 
 .investment-insights {
