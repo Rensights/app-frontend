@@ -215,10 +215,12 @@ function ResetPasswordPageContent() {
     try {
       await apiClient.forgotPassword(email);
       setResendTimer(60);
-      setCodeDigits(Array(CODE_LENGTH).fill(""));
       setCodeError("");
+      // Clear the code input fields when resending
+      setCodeDigits(Array(CODE_LENGTH).fill(""));
       toast.showSuccess("Reset code sent to your email");
-      setTimeout(() => codeRefs.current[0]?.focus(), 200);
+      // Focus the first input field
+      setTimeout(() => codeRefs.current[0]?.focus(), 100);
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Resend code error:", err);
