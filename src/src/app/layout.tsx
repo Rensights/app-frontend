@@ -4,6 +4,7 @@ import { getRuntimeApiUrl } from "../lib/runtime-config";
 import { UserProvider } from "../context/UserContext";
 import { ToastProvider } from "../components/ui/Toast";
 import { LanguageProvider } from "../context/LanguageContext";
+import Clarity from "../components/analytics/Clarity";
 
 export const metadata: Metadata = {
   title: "Rensights",
@@ -67,6 +68,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://js.stripe.com" />
       </head>
       <body>
+        <Clarity />
         <LanguageProvider>
           <ToastProvider>
             <UserProvider>

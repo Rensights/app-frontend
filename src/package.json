@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@microsoft/clarity": "^1.0.2",
     "@opentelemetry/auto-instrumentations-node": "^0.67.1",
     "@opentelemetry/exporter-otlp-http": "^0.26.0",
     "@opentelemetry/resources": "^2.2.0",
