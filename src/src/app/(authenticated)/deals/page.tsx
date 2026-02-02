@@ -38,10 +38,21 @@ export default function DealsPage() {
     try {
       setLoading(true);
       setError(null);
-      const buildingStatus = debouncedFilters.status !== "all" ? debouncedFilters.status : undefined;
+
+      // Map frontend filter values to API values
+      let buildingStatus = undefined;
+      if (debouncedFilters.status !== "all") {
+        // Map "ready" to "completed" and "off-plan" to "under-construction"
+        buildingStatus = debouncedFilters.status === "ready"
+          ? "completed"
+          : debouncedFilters.status === "off-plan"
+          ? "under-construction"
+          : debouncedFilters.status;
+      }
+
       const area = debouncedFilters.area !== "all" ? debouncedFilters.area : undefined;
       const bedroomCount = debouncedFilters.bedroom !== "all" ? debouncedFilters.bedroom : undefined;
-      
+
       const response = await apiClient.getDeals(
         currentPage,
         20,
@@ -50,7 +61,7 @@ export default function DealsPage() {
         bedroomCount,
         buildingStatus
       );
-      
+
       setDeals(response.content);
       setTotalPages(response.totalPages);
       setTotalElements(response.totalElements);
@@ -72,7 +83,7 @@ export default function DealsPage() {
     return deals.filter((deal) => {
       // Price filter is handled client-side since API doesn't support it yet
       if (filters.price !== "all") {
-        const p = deal.priceValue;
+        const p = deal.priceValue || 0;
         if (filters.price === "under-1m" && p >= 1000000) return false;
         if (filters.price === "1m-2m" && (p < 1000000 || p > 2000000))
           return false;
@@ -88,41 +99,64 @@ export default function DealsPage() {
     if (!filteredDeals.length) {
       return {
         total: 0,
-        discount: "0%",
+        avgDiscount: "0%",
         sizeRange: "N/A",
-        yield: "0%",
+        avgYield: "0%",
       };
     }
-    const discountAvg =
-      filteredDeals.reduce(
-        (sum, deal) => sum + parseFloat((deal.discount || "0").replace("%", "")),
-        0
-      ) / filteredDeals.length;
-    const yieldAvg =
-      filteredDeals.reduce(
-        (sum, deal) => sum + parseFloat((deal.rentalYield || "0").replace("%", "")),
-        0
-      ) / filteredDeals.length;
-    const sizes = filteredDeals.map((deal) =>
-      parseInt(deal.size.replace(/[^0-9]/g, ""), 10)
-    );
-    const minSize = Math.min(...sizes);
-    const maxSize = Math.max(...sizes);
+
+    // Calculate average price vs market
+    const priceVsMarketValues = filteredDeals
+      .map(deal => {
+        const match = (deal.priceVsEstimations || "").match(/(\d+\.?\d*)%/);
+        return match ? parseFloat(match[1]) : 0;
+      })
+      .filter(val => val > 0);
+
+    const avgPriceVsMarket = priceVsMarketValues.length > 0
+      ? priceVsMarketValues.reduce((sum, val) => sum + val, 0) / priceVsMarketValues.length
+      : 0;
+
+    // Calculate average yield
+    const yieldValues = filteredDeals
+      .map(deal => {
+        const match = (deal.rentalYield || "").match(/(\d+\.?\d*)%/);
+        return match ? parseFloat(match[1]) : 0;
+      })
+      .filter(val => val > 0);
+
+    const avgYield = yieldValues.length > 0
+      ? yieldValues.reduce((sum, val) => sum + val, 0) / yieldValues.length
+      : 0;
+
+    // Calculate size range
+    const sizes = filteredDeals
+      .map(deal => typeof deal.size === 'number' ? deal.size : parseInt(String(deal.size).replace(/[^0-9]/g, ""), 10))
+      .filter(size => !isNaN(size) && size > 0);
+
+    const minSize = sizes.length > 0 ? Math.min(...sizes) : 0;
+    const maxSize = sizes.length > 0 ? Math.max(...sizes) : 0;
+
     return {
       total: filteredDeals.length,
-      avgDiscount: `${discountAvg.toFixed(1)}%`,
-      sizeRange: `${minSize}-${maxSize} sq ft`,
-      avgYield: `${yieldAvg.toFixed(1)}%`,
+      avgDiscount: avgPriceVsMarket > 0 ? `${avgPriceVsMarket.toFixed(1)}%` : "N/A",
+      sizeRange: minSize > 0 && maxSize > 0 ? `${minSize.toLocaleString()}-${maxSize.toLocaleString()} sq ft` : "N/A",
+      avgYield: avgYield > 0 ? `${avgYield.toFixed(1)}%` : "N/A",
     };
   }, [filteredDeals]);
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+    // Reset to first page when filters change
+    if (key !== 'price') {
+      setCurrentPage(0);
+    }
   };
 
   const handleCityChange = (nextCity: "dubai") => {
     setCity(nextCity);
     setFilters({ status: "all", area: "all", bedroom: "all", price: "all" });
+    setCurrentPage(0);
   };
 
   const handleViewDetails = (id: string) => {
@@ -143,6 +177,30 @@ export default function DealsPage() {
       toast.showError(err?.message || "Failed to start upgrade process. Please try again.");
       setIsUpgrading(false);
     }
+  };
+
+  // Helper function to format price
+  const formatPrice = (price: any): string => {
+    if (!price) return "N/A";
+    const numPrice = typeof price === 'number' ? price : parseFloat(String(price).replace(/[^0-9.]/g, ""));
+    if (isNaN(numPrice)) return "N/A";
+    return `AED ${numPrice.toLocaleString()}`;
+  };
+
+  // Helper function to format size
+  const formatSize = (size: any): string => {
+    if (!size) return "N/A";
+    const numSize = typeof size === 'number' ? size : parseInt(String(size).replace(/[^0-9]/g, ""), 10);
+    if (isNaN(numSize)) return "N/A";
+    return `${numSize.toLocaleString()} sq ft`;
+  };
+
+  // Helper function to format bedrooms
+  const formatBedrooms = (bedrooms: any): string => {
+    if (!bedrooms) return "Studio";
+    const bedroomStr = String(bedrooms);
+    if (bedroomStr === "0") return "Studio";
+    return bedroomStr === "1" ? "1 Bedroom" : `${bedroomStr} Bedrooms`;
   };
 
   if (loading && deals.length === 0) {
@@ -168,8 +226,8 @@ export default function DealsPage() {
               <li>✓ Potentially underpriced deals</li>
               <li>✓ Full access to property analytics</li>
             </ul>
-            <button 
-              className="upgrade-button" 
+            <button
+              className="upgrade-button"
               onClick={handleUpgrade}
               disabled={isUpgrading}
             >
@@ -233,10 +291,15 @@ export default function DealsPage() {
               value={filters.area}
               options={[
                 { value: "all", label: "All Areas" },
-                { value: "downtown", label: "Downtown" },
-                { value: "marina", label: "Marina" },
-                { value: "business-bay", label: "Business Bay" },
-                { value: "jumeirah", label: "Jumeirah" },
+                { value: "Dubai Investment Park (DIP)", label: "Dubai Investment Park" },
+                { value: "DAMAC Islands 2", label: "DAMAC Islands 2" },
+                { value: "The World Islands", label: "The World Islands" },
+                { value: "Mohammed Bin Rashid City", label: "Mohammed Bin Rashid City" },
+                { value: "Al Barsha", label: "Al Barsha" },
+                { value: "Majan", label: "Majan" },
+                { value: "Dubai Sports City", label: "Dubai Sports City" },
+                { value: "Al Warsan", label: "Al Warsan" },
+                { value: "Al Ruwayyah", label: "Al Ruwayyah" },
               ]}
               onChange={(value) => handleFilterChange("area", value)}
             />
@@ -245,10 +308,12 @@ export default function DealsPage() {
               value={filters.bedroom}
               options={[
                 { value: "all", label: "All Types" },
-                { value: "studio", label: "Studio" },
+                { value: "0", label: "Studio" },
                 { value: "1", label: "1 Bedroom" },
                 { value: "2", label: "2 Bedrooms" },
-                { value: "3", label: "3+ Bedrooms" },
+                { value: "3", label: "3 Bedrooms" },
+                { value: "4", label: "4 Bedrooms" },
+                { value: "5", label: "5+ Bedrooms" },
               ]}
               onChange={(value) => handleFilterChange("bedroom", value)}
             />
@@ -303,26 +368,26 @@ export default function DealsPage() {
               filteredDeals.map((deal) => (
               <tr key={deal.id} onClick={() => handleViewDetails(deal.id)}>
                 <td data-label="Property">
-                  <div className="property-name">{deal.name}</div>
-                  <div className="property-location">{deal.location}</div>
+                  <div className="property-name">{deal.name || "Unnamed Property"}</div>
+                  <div className="property-location">{deal.location || deal.area || "N/A"}</div>
                 </td>
                 <td data-label="Bedrooms">
-                  <span className="bedroom-badge">{deal.bedrooms}</span>
+                  <span className="bedroom-badge">{formatBedrooms(deal.bedrooms || deal.bedroomCount)}</span>
                 </td>
                 <td data-label="Size">
-                  <span className="size-info">{deal.size}</span>
+                  <span className="size-info">{formatSize(deal.size)}</span>
                 </td>
                 <td data-label="Listed Price">
-                  <div className="price-current">{deal.listedPrice}</div>
+                  <div className="price-current">{formatPrice(deal.listedPrice || deal.priceValue)}</div>
                 </td>
                 <td data-label="Estimate">
                     <div className="price-estimate">{deal.estimateRange || "N/A"}</div>
                 </td>
-                <td data-label="Discount">
-                    <span className="delta-positive">-{deal.discount || "N/A"}</span>
+                <td data-label="Price vs. Market">
+                    <span className="delta-positive">{deal.priceVsEstimations || "N/A"}</span>
                 </td>
                 <td data-label="Yield">
-                    <span className="yield-info">{deal.rentalYield || "N/A"}</span>
+                    <span className="yield-info">{deal.rentalYield || deal.grossRentalYield || "N/A"}</span>
                 </td>
                 <td data-label="">
                   <button
@@ -342,17 +407,17 @@ export default function DealsPage() {
         </table>
 
         <div className="pagination">
-          <button 
-            disabled={currentPage === 0}
+          <button
+            disabled={currentPage === 0 || loading}
             onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
           >
             Previous
           </button>
           <span>
-            Page {currentPage + 1} of {totalPages} ({totalElements} total)
+            Page {currentPage + 1} of {totalPages || 1} ({totalElements} total)
           </span>
-          <button 
-            disabled={currentPage >= totalPages - 1}
+          <button
+            disabled={currentPage >= totalPages - 1 || loading}
             onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
           >
             Next
