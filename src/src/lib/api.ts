@@ -632,15 +632,35 @@ export interface Deal {
   area: string;
   bedrooms: string;
   bedroomCount?: string;
-  size: string;
-  listedPrice: string;
+  size: number;
+  listedPrice: number;
   priceValue: number;
   estimateMin?: number;
   estimateMax?: number;
   estimateRange?: string;
   discount?: string;
   rentalYield?: string;
+  grossRentalYield?: string;
   buildingStatus: string;
+  propertyType?: string;
+  priceVsEstimations?: string;
+  pricePerSqft?: number;
+  pricePerSqftVsMarket?: string;
+  propertyDescription?: string;
+  buildingFeatures?: string;
+  serviceCharge?: string;
+  developer?: string;
+  propertyLink?: string;
+  propertyId?: string;
+  // Additional fields from third-party API
+  view?: string;
+  furnishing?: string;
+  rensightsScore?: string;
+  investmentAppeal?: string;
+  marketPosition?: string;
+  nearestLandmark?: string;
+  listedDeals?: any[];
+  recentSales?: any[];
 }
 
 export interface PaginatedDealResponse {
