@@ -136,7 +136,7 @@ function PropertyDetailsPageContent() {
   }
 
   // Calculate derived values from deal data with error handling
-  const sizeNum = deal.size ? (typeof deal.size === 'number' ? deal.size : parseFloat(String(deal.size).replace(/[^0-9.]/g, ""))) : 0;
+  const sizeNum = deal.size ? parseFloat(deal.size.replace(/[^0-9.]/g, "")) : 0;
   const pricePerSqft = sizeNum > 0 && deal.priceValue && deal.priceValue > 0 
     ? deal.priceValue / sizeNum 
     : 0;
@@ -358,7 +358,7 @@ function PropertyDetailsPageContent() {
                   </div>
                 ) : (
                   comparableDeals.map((item) => {
-                    const itemSizeNum = item.size ? (typeof item.size === 'number' ? item.size : parseFloat(String(item.size).replace(/[^0-9.]/g, ""))) : 0;
+                    const itemSizeNum = item.size ? parseFloat(item.size.replace(/[^0-9.]/g, "")) : 0;
                     const psf = itemSizeNum > 0 && item.priceValue > 0 
                       ? item.priceValue / itemSizeNum 
                       : 0;
@@ -490,12 +490,12 @@ const DescriptionStat = ({
   value,
 }: {
   label: string;
-  value: string | number;
+  value: string;
 }) => (
   <div>
     <strong>{label}</strong>
     <br />
-    <span>{typeof value === 'number' ? value.toLocaleString() : value}</span>
+    <span>{value}</span>
   </div>
 );
 
@@ -509,7 +509,7 @@ const ComparableCard = ({
 }: {
   title: string;
   details: string;
-  price: string | number;
+  price: string;
   psf: string;
   status: string;
   sold?: boolean;
@@ -518,7 +518,7 @@ const ComparableCard = ({
     <div className="similar-title">{title}</div>
     <div className="similar-details">{details}</div>
     <div className="similar-price-row">
-      <div className="similar-price">{typeof price === 'number' ? price.toLocaleString() : price}</div>
+      <div className="similar-price">{price}</div>
       <div className="similar-psf">{psf}</div>
     </div>
     <div
