@@ -20,6 +20,7 @@ function PropertyDetailsPageContent() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comparableDeals, setComparableDeals] = useState<Deal[]>([]);
+  const [recentSales, setRecentSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingComparables, setLoadingComparables] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +42,7 @@ function PropertyDetailsPageContent() {
         throw new Error("Invalid property data received");
       }
       setDeal(dealData);
-      
+
           // Load comparable deals (similar area and bedrooms, excluding current deal)
           if (dealData) {
             setLoadingComparables(true);
@@ -67,6 +68,11 @@ function PropertyDetailsPageContent() {
               setComparableDeals([]);
             } finally {
               setLoadingComparables(false);
+            }
+
+            // Load recent sales from API response
+            if (dealData.recentSales && Array.isArray(dealData.recentSales)) {
+              setRecentSales(dealData.recentSales);
             }
           }
     } catch (error: any) {
@@ -341,6 +347,12 @@ function PropertyDetailsPageContent() {
                 >
                   Similar Deals ({comparableDeals.length})
                 </button>
+                <button
+                  className={`tab-button ${tab === "transactions" ? "active" : ""}`}
+                  onClick={() => setTab("transactions")}
+                >
+                  Recent Sales ({recentSales.length})
+                </button>
               </div>
 
               <div
@@ -370,6 +382,40 @@ function PropertyDetailsPageContent() {
                         price={item.listedPrice || "N/A"}
                         psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
                         status="Available"
+                      />
+                    );
+                  })
+                )}
+              </div>
+
+              <div
+                className={`tab-content comparable-section ${
+                  tab === "transactions" ? "active" : ""
+                }`}
+              >
+                {loadingComparables ? (
+                  <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
+                    Loading recent sales...
+                  </div>
+                ) : recentSales.length === 0 ? (
+                  <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
+                    No recent sales found.
+                  </div>
+                ) : (
+                  recentSales.map((sale, index) => {
+                    const saleSize = sale.size_sqft || sale.size || 0;
+                    const salePrice = sale.transaction_price_aed || sale.price || 0;
+                    const psf = saleSize > 0 && salePrice > 0 ? salePrice / saleSize : 0;
+                    const saleDate = sale.transaction_date || sale.date || "N/A";
+
+                    return (
+                      <ComparableCard
+                        key={`sale-${index}`}
+                        title={sale.building_name || sale.name || "Property"}
+                        details={`${sale.bedrooms || "N/A"} • ${saleSize ? `${saleSize} sqft` : "N/A"} • ${sale.area || sale.location || "N/A"}`}
+                        price={salePrice > 0 ? `AED ${salePrice.toLocaleString()}` : "N/A"}
+                        psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
+                        status={`Sold ${saleDate}`}
                       />
                     );
                   })
