@@ -73,20 +73,21 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
             // This handles sub-routes like /city-analysis/detailed
             let isActive = pathname === item.path || pathname.startsWith(item.path + '/');
             
-            // Special handling for Property Reports - includes analysis-request, property-details, and deals
+            // Special handling for Property Reports - includes analysis-request only
             if (item.id === "reports") {
-              isActive = pathname === "/dashboard" || 
-                        pathname === "/analysis-request" || 
-                        pathname.startsWith("/analysis-request/") ||
-                        pathname === "/property-details" ||
-                        pathname.startsWith("/property-details/") ||
-                        pathname === "/deals" ||
-                        pathname.startsWith("/deals/");
+              isActive = pathname === "/dashboard" ||
+                        pathname === "/analysis-request" ||
+                        pathname.startsWith("/analysis-request/");
             }
-            
-            // Special handling for Weekly Deals - ensure it works for all sub-routes
+
+            // Special handling for Weekly Deals - includes /deals and property-details
             if (item.id === "alerts") {
-              isActive = pathname === "/weekly-deals" || pathname.startsWith("/weekly-deals/");
+              isActive = pathname === "/weekly-deals" ||
+                        pathname.startsWith("/weekly-deals/") ||
+                        pathname === "/deals" ||
+                        pathname.startsWith("/deals/") ||
+                        pathname === "/property-details" ||
+                        pathname.startsWith("/property-details/");
             }
             
             return (

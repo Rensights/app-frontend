@@ -82,6 +82,7 @@ export interface SubscriptionResponse {
   status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
   startDate: string;
   endDate?: string;
+  cancelAtPeriodEnd?: boolean;
   createdAt: string;
 }
 

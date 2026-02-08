@@ -65,10 +65,10 @@ function SignUpPageContent() {
   const [showSuccess, setShowSuccess] = useState(false);
   const codeRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
-  // Redirect to dashboard if user is already logged in
+  // Redirect to city analysis if user is already logged in
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+      router.push("/city-analysis");
     }
   }, [loading, user, router]);
 
@@ -317,8 +317,8 @@ function SignUpPageContent() {
           }
         }
         
-        // Redirect to dashboard for free plan
-        router.push("/dashboard");
+        // Redirect to city analysis for free plan
+        router.push("/city-analysis");
         return;
       }
 
@@ -430,7 +430,7 @@ function SignUpPageContent() {
         }
         // Use window.location.replace for a full page reload to ensure auth state is picked up
         // This prevents back button issues and ensures clean state
-        window.location.replace("/dashboard");
+        window.location.replace("/city-analysis");
       }, 1500);
     } catch (error: any) {
       // Handle expired code or network errors

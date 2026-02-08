@@ -472,6 +472,22 @@ function AccountPageContent() {
             )}
           </div>
 
+          {subscription?.cancelAtPeriodEnd && subscription.status === "ACTIVE" && (
+            <div className="warning-banner" style={{
+              background: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: "8px",
+              padding: "1rem",
+              marginBottom: "1rem",
+              color: "#856404"
+            }}>
+              <strong>⚠️ Subscription Cancelled</strong>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.9rem" }}>
+                Your subscription will remain active until {subscription.endDate ? formatDate(subscription.endDate) : "the end of your billing period"}. You will continue to have access to all features until then.
+              </p>
+            </div>
+          )}
+
           <div className="subscription-actions">
             {!subscription || subscription?.planType === "FREE" ? (
               <div className="upgrade-options">
@@ -481,10 +497,15 @@ function AccountPageContent() {
               </div>
             ) : (
               <div className="subscription-management">
-                {subscription?.status === "ACTIVE" && (
+                {subscription?.status === "ACTIVE" && !subscription?.cancelAtPeriodEnd && (
                   <button className="btn btn-danger" onClick={handleCancelSubscription}>
                     Cancel Subscription
                   </button>
+                )}
+                {subscription?.cancelAtPeriodEnd && (
+                  <p style={{ color: "#666", fontSize: "0.9rem" }}>
+                    Cancellation scheduled for end of billing period
+                  </p>
                 )}
               </div>
             )}

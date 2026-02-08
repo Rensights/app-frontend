@@ -34,10 +34,10 @@ export default function LoginPage() {
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [hasKnownDevice, setHasKnownDevice] = useState(false);
 
-  // Redirect to dashboard if user is already logged in
+  // Redirect to city analysis if user is already logged in
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+      router.push("/city-analysis");
     }
   }, [loading, user, router]);
 
@@ -148,9 +148,9 @@ export default function LoginPage() {
           if (typeof window !== 'undefined') {
             // Use location.replace to ensure clean navigation (no back button to login)
             // This forces a full page reload, ensuring UserContext remounts with fresh state
-            window.location.replace("/dashboard");
+            window.location.replace("/city-analysis");
           } else {
-            router.push("/dashboard");
+            router.push("/city-analysis");
           }
         }, 300); // Reduced delay - cookie should be available quickly
       }
@@ -261,11 +261,11 @@ export default function LoginPage() {
       }
       
       // SECURITY: Cookie is set by backend, wait a moment for it to be set before redirect
-      // Redirect to dashboard after a short delay to ensure cookie is set
+      // Redirect to city analysis after a short delay to ensure cookie is set
       setTimeout(() => {
         // Use window.location.replace for hard navigation to ensure cookie is sent
         // This prevents back button issues
-        window.location.replace("/dashboard");
+        window.location.replace("/city-analysis");
       }, 1000);
     } catch (error: any) {
       setErrors((prev) => ({
