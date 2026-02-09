@@ -270,14 +270,34 @@ export default function EarlyAccessPage() {
     }
     
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setShowSuccessModal(true);
-      setFormState(initialFormState);
-      setGoals([]);
-      setPropertyTypes([]);
-      setFieldErrors({});
-    }, 1500);
+    apiClient.submitEarlyAccessRequest({
+      fullName: formState.fullName,
+      email: formState.email,
+      phone: formState.phone,
+      location: formState.location,
+      experience: formState.experience,
+      budget: formState.budget,
+      portfolio: formState.portfolio,
+      timeline: formState.timeline,
+      goals,
+      propertyTypes,
+      targetRegions: formState.targetRegions,
+      challenges: formState.challenges,
+      valuableServices: formState.valuableServices,
+    })
+      .then(() => {
+        setIsSubmitting(false);
+        setShowSuccessModal(true);
+        setFormState(initialFormState);
+        setGoals([]);
+        setPropertyTypes([]);
+        setFieldErrors({});
+      })
+      .catch((err: any) => {
+        setIsSubmitting(false);
+        setFieldErrors({});
+        alert(err?.message || "Failed to submit early access request.");
+      });
   };
 
   return (

@@ -629,6 +629,27 @@ class ApiClient {
   async getLandingPageSection(section: string, language: string = 'en'): Promise<any> {
     return this.request<any>(`/api/landing-page/section/${section}?language=${language}`, {}, false);
   }
+
+  async submitEarlyAccessRequest(payload: {
+    fullName: string;
+    email: string;
+    phone: string;
+    location: string;
+    experience: string;
+    budget: string;
+    portfolio: string;
+    timeline: string;
+    goals: string[];
+    propertyTypes: string[];
+    targetRegions: string;
+    challenges: string;
+    valuableServices: string;
+  }): Promise<any> {
+    return this.request<any>('/api/early-access', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }, false);
+  }
 }
 
 export interface Deal {
