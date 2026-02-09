@@ -149,7 +149,7 @@
   grid-column: 1 / -1;
 }
 
-label {
+.early-access-page label {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
@@ -162,11 +162,11 @@ label {
   color: #ef4444;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="tel"],
-select,
-textarea {
+.early-access-page input[type="text"],
+.early-access-page input[type="email"],
+.early-access-page input[type="tel"],
+.early-access-page select,
+.early-access-page textarea {
   width: 100%;
   padding: 10px 14px;
   border: 1px solid #d1d5db;
@@ -177,26 +177,26 @@ textarea {
   background-color: #ffffff;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
+.early-access-page input:focus,
+.early-access-page select:focus,
+.early-access-page textarea:focus {
   outline: none;
   border-color: #f59e0b;
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
   background-color: #fffbeb;
 }
 
-input.error,
-select.error,
-textarea.error {
+.early-access-page input.error,
+.early-access-page select.error,
+.early-access-page textarea.error {
   border: none !important;
   background-color: #fef2f2 !important;
   box-shadow: none !important;
 }
 
-input.error:focus,
-select.error:focus,
-textarea.error:focus {
+.early-access-page input.error:focus,
+.early-access-page select.error:focus,
+.early-access-page textarea.error:focus {
   border: none !important;
   background-color: #fee2e2 !important;
   box-shadow: none !important;
