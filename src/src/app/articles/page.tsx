@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import { apiClient } from "@/lib/api";
@@ -16,6 +17,7 @@ type Article = {
 };
 
 export default function ArticlesPage() {
+  const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [disabled, setDisabled] = useState(false);
@@ -36,17 +38,14 @@ export default function ArticlesPage() {
     load();
   }, []);
 
-  if (disabled) {
-    return (
-      <div className="min-h-screen bg-background">
-        <LandingHeader />
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <h1 className="text-3xl font-bold text-gray-900">Articles</h1>
-          <p className="mt-4 text-gray-600">Articles are currently unavailable.</p>
-        </main>
-        <LandingFooter />
-      </div>
-    );
+  useEffect(() => {
+    if (!loading && (disabled || articles.length === 0)) {
+      router.replace("/");
+    }
+  }, [loading, disabled, articles.length, router]);
+
+  if (!loading && (disabled || articles.length === 0)) {
+    return null;
   }
 
   return (
