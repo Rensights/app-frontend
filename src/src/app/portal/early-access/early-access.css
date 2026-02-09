@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-* {
+.early-access-page * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -65,7 +65,7 @@
   }
 }
 
-.container {
+.early-access-page .container {
   width: 100%;
   padding: 30px 5%;
   position: relative;
@@ -481,4 +481,3 @@ textarea {
     font-size: 24px;
   }
 }
-
