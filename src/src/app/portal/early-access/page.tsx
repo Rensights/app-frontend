@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import "./early-access.css";
 import { useTranslations } from "@/hooks/useTranslations";
+import { apiClient } from "@/lib/api";
 
 type FormState = {
   fullName: string;
