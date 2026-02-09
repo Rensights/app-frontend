@@ -65,14 +65,14 @@
   }
 }
 
-.early-access-page .container {
+.early-access-page .early-access-container {
   width: 100%;
   padding: 30px 5%;
   position: relative;
   z-index: 10;
 }
 
-.early-access-page .page-header {
+.early-access-page .early-access-header {
   text-align: center;
   margin-bottom: 30px;
   max-width: 800px;
@@ -80,7 +80,7 @@
   margin-right: auto;
 }
 
-.early-access-page .page-header h1 {
+.early-access-page .early-access-header h1 {
   font-size: 42px;
   font-weight: 700;
   margin-bottom: 12px;
@@ -90,7 +90,7 @@
   background-clip: text;
 }
 
-.early-access-page .page-header p {
+.early-access-page .early-access-header p {
   font-size: 18px;
   font-weight: 400;
   color: #6b7280;
@@ -426,15 +426,15 @@
 }
 
 @media (max-width: 768px) {
-  .early-access-page .container {
+  .early-access-page .early-access-container {
     padding: 20px 15px;
   }
 
-  .early-access-page .page-header h1 {
+  .early-access-page .early-access-header h1 {
     font-size: 32px;
   }
 
-  .early-access-page .page-header p {
+  .early-access-page .early-access-header p {
     font-size: 16px;
   }
 
@@ -455,10 +455,10 @@
     grid-template-columns: 1fr;
   }
 
-  input[type="text"],
-  input[type="email"],
-  input[type="tel"],
-  select,
+  .early-access-page input[type="text"],
+  .early-access-page input[type="email"],
+  .early-access-page input[type="tel"],
+  .early-access-page select,
   .early-access-page textarea {
     font-size: 16px;
   }
