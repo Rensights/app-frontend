@@ -123,11 +123,35 @@ export default function WeeklyDealsPage() {
             significantly below market value in prime locations.
           </p>
         </div>
+
+        <div className="section-card report-disclaimer">
+          <div className="section-title">Disclaimer</div>
+          <p>
+            This report is generated for informational and educational purposes only. Rensights.com is a data analytics
+            provider, not a licensed real estate brokerage, financial advisor, or legal consultant. The &quot;Estimated
+            Price&quot; and &quot;Scores&quot; provided are based on automated algorithms and third-party data; they do not
+            constitute a formal appraisal or a guarantee of profit. All investments carry risk. We strongly recommend
+            consulting with a licensed professional before making any financial commitments.
+          </p>
+          <h4>Verification Note</h4>
+          <p>
+            We scan external websites for pricing anomalies. We do not verify the physical condition, legal title, or
+            the authenticity of the listing. Users must perform their own due diligence (physical viewing and title deed
+            verification) before transferring funds to any third party.
+          </p>
+          <h4>No Formal Appraisal</h4>
+          <p>
+            The property estimates and scores provided by this platform are generated via automated machine learning
+            algorithms and do not constitute a formal, legal, or professional real estate appraisal. This platform does
+            not account for the physical condition, interior upgrades, or latent defects of a property.
+          </p>
+          <h4>Data Sources</h4>
+          <p>Dubai Land Department (DLD), Bayut, and various public records.</p>
+        </div>
       </div>
     </section>
   );
 }
-
 
 
 
