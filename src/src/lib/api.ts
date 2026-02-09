@@ -630,6 +630,14 @@ class ApiClient {
     return this.request<any>(`/api/landing-page/section/${section}?language=${language}`, {}, false);
   }
 
+  async getArticles(): Promise<any[]> {
+    return this.request<any[]>('/api/articles', {}, false);
+  }
+
+  async getArticleBySlug(slug: string): Promise<any> {
+    return this.request<any>(`/api/articles/${slug}`, {}, false);
+  }
+
   async submitEarlyAccessRequest(payload: {
     fullName: string;
     email: string;
