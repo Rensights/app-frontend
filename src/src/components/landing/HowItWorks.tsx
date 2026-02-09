@@ -38,7 +38,7 @@ export default function LandingHowItWorks() {
   }
 
   const title = content?.title || "How it works?";
-  const description = content?.description || "Through advanced valuation algorithms, we filter and score each property based on variables like price trends, rental yields, and neighborhood growth potential. Then, you receive a list of undervalued properties with data-backed insights. It saves you countless hours of manually scanning listings, giving you a comprehensive snapshot of true market opportunities.";
+  const description = content?.description || "Through advanced pricing algorithms, we filter and score each property based on variables like price trends, rental yields, and neighborhood growth potential. Then, you receive a list of properties with data-backed insights. It saves you countless hours of manually scanning listings, giving you a comprehensive snapshot of true market opportunities.";
   const steps = content?.steps || (content?.stepsJson ? JSON.parse(content.stepsJson) : [
     {
       icon: "Database",
@@ -49,7 +49,7 @@ export default function LandingHowItWorks() {
     {
       icon: "Brain",
       number: "2",
-      title: "AI Valuation & Expert Review",
+      title: "AI Pricing & Expert Review",
       description: "Our proprietary algorithms score each listing based on potential return and risk factors, after which industry experts review final list",
     },
     {
