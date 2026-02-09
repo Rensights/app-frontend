@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import "./signup.css";
+import { useTranslations } from "@/hooks/useTranslations";
 
 type Plan = "free" | "premium";
 
@@ -39,10 +40,10 @@ const initialFormState: FormState = {
 };
 
 const goalOptions = [
-  { value: "rental-income", label: "Rental Income" },
-  { value: "capital-appreciation", label: "Capital Appreciation" },
-  { value: "portfolio-diversification", label: "Portfolio Diversification" },
-  { value: "lifestyle-residence", label: "Lifestyle/Residence Investment" },
+  { value: "rental-income", labelKey: "authSignup.goals.rentalIncome" },
+  { value: "capital-appreciation", labelKey: "authSignup.goals.capitalAppreciation" },
+  { value: "portfolio-diversification", labelKey: "authSignup.goals.portfolioDiversification" },
+  { value: "lifestyle-residence", labelKey: "authSignup.goals.lifestyleResidence" },
 ];
 
 type Step = "form" | "verification" | "payment";
@@ -53,6 +54,70 @@ function SignUpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading } = useUser();
+  const { t } = useTranslations("authSignup", {
+    "authSignup.loading": "Loading...",
+    "authSignup.redirecting": "Redirecting to dashboard...",
+    "authSignup.tagline": "Property Intelligence Platform",
+    "authSignup.verifyTitle": "Verify Your Email",
+    "authSignup.verifySubtitle": "We've sent a verification code to your email address",
+    "authSignup.verifyInfoTitle": "📧 Email Verification",
+    "authSignup.verifyInfoText": "Please check your email and enter the 6-digit code sent to",
+    "authSignup.codeLabel": "Verification Code",
+    "authSignup.verifyButton": "Verify & Continue",
+    "authSignup.verifying": "Verifying...",
+    "authSignup.resendPrompt": "Didn't receive the code?",
+    "authSignup.resendButton": "Resend Code",
+    "authSignup.resendCountdown": "Resend available in",
+    "authSignup.backToRegistration": "Back to Registration",
+    "authSignup.successTitle": "Email Verified Successfully!",
+    "authSignup.successSubtitle": "Your account has been created. Redirecting to the platform...",
+    "authSignup.accountInfo": "Account Information",
+    "authSignup.firstName": "First Name",
+    "authSignup.lastName": "Last Name",
+    "authSignup.email": "Email",
+    "authSignup.emailPlaceholder": "your.email@example.com",
+    "authSignup.phone": "Phone (Optional)",
+    "authSignup.password": "Password",
+    "authSignup.confirmPassword": "Confirm Password",
+    "authSignup.passwordPlaceholder": "Create a strong password",
+    "authSignup.confirmPlaceholder": "Re-enter password",
+    "authSignup.passwordHintsTitle": "Password must include:",
+    "authSignup.passwordHintLength": "At least 8 characters",
+    "authSignup.passwordHintUpper": "One uppercase letter (A-Z)",
+    "authSignup.passwordHintLower": "One lowercase letter (a-z)",
+    "authSignup.passwordHintNumber": "One number (0-9)",
+    "authSignup.passwordHintSpecial": "One special character (@$!%*?&)",
+    "authSignup.passwordHintAllowed": "Only allowed characters (A-Z, a-z, 0-9, @$!%*?&)",
+    "authSignup.passwordInvalid": "Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @$!%*?&",
+    "authSignup.profileTitle": "Your Profile",
+    "authSignup.budget": "Investment Budget Range",
+    "authSignup.budgetSelect": "Select budget range",
+    "authSignup.goalsTitle": "Primary Investment Goals",
+    "authSignup.portfolio": "Current Investment Portfolio",
+    "authSignup.portfolioSelect": "Select portfolio size",
+    "authSignup.planTitle": "Choose Your Plan",
+    "authSignup.planFree": "Free Registration",
+    "authSignup.planFreeDesc": "Get started with basic insights",
+    "authSignup.planStandard": "Standard Package",
+    "authSignup.planStandardDesc": "Perfect for active property seekers",
+    "authSignup.planFeature1": "1 tailored pricing analysis of properties selected by you",
+    "authSignup.planFeature2": "City analysis",
+    "authSignup.planFeature3": "5 tailored pricing analysis of properties selected by you",
+    "authSignup.planFeature4": "Advanced city analysis",
+    "authSignup.planFeature5": "Potentially underpriced deals",
+    "authSignup.termsText": "I have read and agree to the",
+    "authSignup.and": "and",
+    "authSignup.termsLink": "Terms of Services",
+    "authSignup.privacyLink": "Privacy Policy",
+    "authSignup.submitRegister": "Register",
+    "authSignup.submitPay": "Pay",
+    "authSignup.submitting": "Creating Account...",
+    "authSignup.haveAccount": "Already have an account? Sign In",
+    "authSignup.goals.rentalIncome": "Rental Income",
+    "authSignup.goals.capitalAppreciation": "Capital Appreciation",
+    "authSignup.goals.portfolioDiversification": "Portfolio Diversification",
+    "authSignup.goals.lifestyleResidence": "Lifestyle/Residence Investment",
+  });
   const [step, setStep] = useState<Step>("form");
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -527,7 +592,7 @@ function SignUpPageContent() {
         <div className="signup-container">
           <div className="signup-card">
             <div className="logo">Rensights</div>
-            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>{t("authSignup.loading")}</div>
           </div>
         </div>
       </div>
@@ -541,7 +606,7 @@ function SignUpPageContent() {
         <div className="signup-container">
           <div className="signup-card">
             <div className="logo">Rensights</div>
-            <div style={{ textAlign: 'center', padding: '2rem' }}>Redirecting to dashboard...</div>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>{t("authSignup.redirecting")}</div>
           </div>
         </div>
       </div>
@@ -557,9 +622,9 @@ function SignUpPageContent() {
             <div className="tagline">Property Intelligence Platform</div>
 
             <div className="form-step active">
-              <div className="step-title">Verify Your Email</div>
+              <div className="step-title">{t("authSignup.verifyTitle")}</div>
               <div className="step-description">
-                We&apos;ve sent a verification code to your email address
+                {t("authSignup.verifySubtitle")}
               </div>
 
               {showSuccess ? (
@@ -580,26 +645,26 @@ function SignUpPageContent() {
                     fontWeight: '700',
                     color: '#16a34a',
                     marginBottom: '0.5rem'
-                  }}>Email Verified Successfully!</h2>
+                  }}>{t("authSignup.successTitle")}</h2>
                   <p style={{
                     fontSize: '1rem',
                     color: '#166534',
                     marginBottom: '1rem'
                   }}>
-                    Your account has been created. Redirecting to the platform...
+                    {t("authSignup.successSubtitle")}
                   </p>
                 </div>
               ) : (
                 <>
                   <div className="device-info">
-                    <div className="device-info-title">📧 Email Verification</div>
+                    <div className="device-info-title">{t("authSignup.verifyInfoTitle")}</div>
                     <div className="device-info-text">
-                      Please check your email and enter the 6-digit code sent to <strong>{maskEmail(verificationEmail)}</strong>
+                      {t("authSignup.verifyInfoText")} <strong>{maskEmail(verificationEmail)}</strong>
                     </div>
                   </div>
 
                   <div className="form-group">
-                <label className="form-label">Verification Code</label>
+                <label className="form-label">{t("authSignup.codeLabel")}</label>
                 <div className="verification-code">
                   {codeDigits.map((digit, index) => (
                     <input
@@ -635,26 +700,26 @@ function SignUpPageContent() {
                 {isSubmitting ? (
                   <>
                     <span className="loading" />
-                    Verifying...
+                    {t("authSignup.verifying")}
                   </>
                 ) : (
-                  "Verify & Continue"
+                  t("authSignup.verifyButton")
                 )}
               </button>
 
               <div className="resend-section">
-                <div className="resend-text">Didn&apos;t receive the code?</div>
+                <div className="resend-text">{t("authSignup.resendPrompt")}</div>
                 <button
                   type="button"
                   className={`resend-link ${resendTimer ? "disabled" : ""}`}
                   onClick={handleResendCode}
                   disabled={!!resendTimer || isSubmitting}
                 >
-                  Resend Code
+                  {t("authSignup.resendButton")}
                 </button>
                 {resendTimer > 0 && (
                   <div className="countdown">
-                    Resend available in <span>{resendTimer}</span>s
+                    {t("authSignup.resendCountdown")} <span>{resendTimer}</span>s
                   </div>
                 )}
               </div>
@@ -670,7 +735,7 @@ function SignUpPageContent() {
                     className="btn btn-secondary"
                     style={{ width: '100%', marginTop: '1rem' }}
                   >
-                    ← Back to Registration
+                    ← {t("authSignup.backToRegistration")}
                   </button>
                 </>
               )}
@@ -687,16 +752,16 @@ function SignUpPageContent() {
       <div className="signup-container">
         <div className="signup-card">
           <div className="logo">Rensights</div>
-          <div className="tagline">Property Intelligence Platform</div>
+          <div className="tagline">{t("authSignup.tagline")}</div>
 
           <form className="signup-form" onSubmit={handleSubmit} noValidate>
-            <SectionTitle>Account Information</SectionTitle>
+            <SectionTitle>{t("authSignup.accountInfo")}</SectionTitle>
 
             <div className="form-row">
               <div data-field="firstName">
                 <Field
                   id="firstName"
-                  label="First Name"
+                  label={t("authSignup.firstName")}
                   placeholder="John"
                   value={formState.firstName}
                   onChange={(value) => handleChange("firstName", value)}
@@ -706,7 +771,7 @@ function SignUpPageContent() {
               <div data-field="lastName">
                 <Field
                   id="lastName"
-                  label="Last Name"
+                  label={t("authSignup.lastName")}
                   placeholder="Doe"
                   value={formState.lastName}
                   onChange={(value) => handleChange("lastName", value)}
@@ -719,9 +784,9 @@ function SignUpPageContent() {
               <div data-field="email">
                 <Field
                   id="email"
-                  label="Email"
+                  label={t("authSignup.email")}
                   type="email"
-                  placeholder="your.email@example.com"
+                  placeholder={t("authSignup.emailPlaceholder") || "your.email@example.com"}
                   value={formState.email}
                   onChange={(value) => handleChange("email", value)}
                   error={errors.email}
@@ -730,7 +795,7 @@ function SignUpPageContent() {
               <div data-field="phone">
                 <Field
                   id="phone"
-                  label="Phone (Optional)"
+                  label={t("authSignup.phone")}
                   type="tel"
                   placeholder="+1 (555) 000-0000"
                   value={formState.phone}
@@ -744,13 +809,13 @@ function SignUpPageContent() {
             <div className="form-row">
               <div className={`form-group ${errors.password ? 'has-error' : ''}`} data-field="password" style={{ flex: 1 }}>
                 <label className="form-label required-label" htmlFor="password">
-                  Password
+                  {t("authSignup.password")}
                 </label>
                 <input
                   id="password"
                   type="password"
                   className={`form-input ${errors.password ? "error" : ""}`}
-                  placeholder="Create a strong password"
+                  placeholder={t("authSignup.passwordPlaceholder")}
                   value={formState.password}
                   onChange={(event) => handleChange("password", event.target.value)}
                   required
@@ -763,30 +828,30 @@ function SignUpPageContent() {
                 )}
                 {formState.password && (
                   <div className="password-hints" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-                    <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Password must include:</div>
+                    <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>{t("authSignup.passwordHintsTitle")}</div>
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', listStyle: 'disc' }}>
                       <li style={{ color: formState.password.length >= 8 ? '#22c55e' : '#666' }}>
-                        At least 8 characters {formState.password.length >= 8 ? '✓' : ''}
+                        {t("authSignup.passwordHintLength")} {formState.password.length >= 8 ? '✓' : ''}
                       </li>
                       <li style={{ color: /[A-Z]/.test(formState.password) ? '#22c55e' : '#666' }}>
-                        One uppercase letter (A-Z) {/[A-Z]/.test(formState.password) ? '✓' : ''}
+                        {t("authSignup.passwordHintUpper")} {/[A-Z]/.test(formState.password) ? '✓' : ''}
                       </li>
                       <li style={{ color: /[a-z]/.test(formState.password) ? '#22c55e' : '#666' }}>
-                        One lowercase letter (a-z) {/[a-z]/.test(formState.password) ? '✓' : ''}
+                        {t("authSignup.passwordHintLower")} {/[a-z]/.test(formState.password) ? '✓' : ''}
                       </li>
                       <li style={{ color: /\d/.test(formState.password) ? '#22c55e' : '#666' }}>
-                        One number (0-9) {/\d/.test(formState.password) ? '✓' : ''}
+                        {t("authSignup.passwordHintNumber")} {/\d/.test(formState.password) ? '✓' : ''}
                       </li>
                       <li style={{ color: /[@$!%*?&]/.test(formState.password) ? '#22c55e' : '#666' }}>
-                        One special character (@$!%*?&) {/[@$!%*?&]/.test(formState.password) ? '✓' : ''}
+                        {t("authSignup.passwordHintSpecial")} {/[@$!%*?&]/.test(formState.password) ? '✓' : ''}
                       </li>
                       <li style={{ color: /^[A-Za-z\d@$!%*?&]+$/.test(formState.password) ? '#22c55e' : '#ef4444' }}>
-                        Only allowed characters (A-Z, a-z, 0-9, @$!%*?&) {/^[A-Za-z\d@$!%*?&]+$/.test(formState.password) ? '✓' : '✗'}
+                        {t("authSignup.passwordHintAllowed")} {/^[A-Za-z\d@$!%*?&]+$/.test(formState.password) ? '✓' : '✗'}
                       </li>
                     </ul>
                     {!/^[A-Za-z\d@$!%*?&]+$/.test(formState.password) && (
                       <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', color: '#991b1b', fontSize: '0.8125rem' }}>
-                        ⚠️ Password contains invalid characters. Only letters, numbers, and these special characters are allowed: @$!%*?&
+                        ⚠️ {t("authSignup.passwordInvalid")}
                       </div>
                     )}
                   </div>
@@ -795,9 +860,9 @@ function SignUpPageContent() {
               <div data-field="confirmPassword">
                 <Field
                   id="confirmPassword"
-                  label="Confirm Password"
+                  label={t("authSignup.confirmPassword")}
                   type="password"
-                  placeholder="Re-enter password"
+                  placeholder={t("authSignup.confirmPlaceholder")}
                   value={formState.confirmPassword}
                   onChange={(value) => handleChange("confirmPassword", value)}
                   error={errors.confirmPassword}
@@ -805,19 +870,19 @@ function SignUpPageContent() {
               </div>
             </div>
 
-            <SectionTitle>Your Profile</SectionTitle>
+            <SectionTitle>{t("authSignup.profileTitle")}</SectionTitle>
 
             <div data-field="budget">
-              <SelectField
-                id="budget"
-                label="Investment Budget Range"
-                value={formState.budget}
-                onChange={(value) => handleChange("budget", value)}
-                options={[
-                  { value: "", label: "Select budget range" },
-                  { value: "under-100k", label: "Under $100,000" },
-                  { value: "100k-250k", label: "$100,000 - $250,000" },
-                  { value: "250k-500k", label: "$250,000 - $500,000" },
+                <SelectField
+                  id="budget"
+                  label={t("authSignup.budget")}
+                  value={formState.budget}
+                  onChange={(value) => handleChange("budget", value)}
+                  options={[
+                    { value: "", label: t("authSignup.budgetSelect") },
+                    { value: "under-100k", label: "Under $100,000" },
+                    { value: "100k-250k", label: "$100,000 - $250,000" },
+                    { value: "250k-500k", label: "$250,000 - $500,000" },
                   { value: "500k-1m", label: "$500,000 - $1M" },
                   { value: "1m-5m", label: "$1M - $5M" },
                   { value: "above-5m", label: "Above $5M" },
@@ -827,7 +892,7 @@ function SignUpPageContent() {
             </div>
 
             <div className={`form-group ${errors.goals ? 'has-error' : ''}`} data-field="goals">
-              <label className="form-label required-label">Primary Investment Goals</label>
+              <label className="form-label required-label">{t("authSignup.goalsTitle")}</label>
               <div className={`goals-grid ${errors.goals ? 'has-error' : ''}`}>
                 {goalOptions.map((goal) => (
                   <label key={goal.value} className="goal-option">
@@ -836,7 +901,7 @@ function SignUpPageContent() {
                       checked={formState.goals.includes(goal.value)}
                       onChange={() => toggleGoal(goal.value)}
                     />
-                    <span>{goal.label}</span>
+                    <span>{t(goal.labelKey)}</span>
                   </label>
                 ))}
               </div>
@@ -849,45 +914,45 @@ function SignUpPageContent() {
             </div>
 
             <div data-field="portfolio">
-              <SelectField
-                id="portfolio"
-                label="Current Investment Portfolio"
-                value={formState.portfolio}
-                onChange={(value) => handleChange("portfolio", value)}
-                options={[
-                  { value: "", label: "Select portfolio size" },
-                  { value: "below-5", label: "Below 5 properties" },
-                  { value: "5-10", label: "5-10 properties" },
-                  { value: "above-10", label: "Above 10 properties" },
+                <SelectField
+                  id="portfolio"
+                  label={t("authSignup.portfolio")}
+                  value={formState.portfolio}
+                  onChange={(value) => handleChange("portfolio", value)}
+                  options={[
+                    { value: "", label: t("authSignup.portfolioSelect") },
+                    { value: "below-5", label: "Below 5 properties" },
+                    { value: "5-10", label: "5-10 properties" },
+                    { value: "above-10", label: "Above 10 properties" },
                 ]}
                 error={errors.portfolio}
               />
             </div>
 
-            <SectionTitle>Choose Your Plan</SectionTitle>
+            <SectionTitle>{t("authSignup.planTitle")}</SectionTitle>
 
             <div className="plans-grid two-cols" data-field="plan">
               <PlanCard
-                title="Free Registration"
+                title={t("authSignup.planFree")}
                 price="$0"
                 cadence="/mo"
-                description="Get started with basic insights"
+                description={t("authSignup.planFreeDesc")}
                 features={[
-                  "1 tailored pricing analysis of properties selected by you",
-                  "City analysis",
+                  t("authSignup.planFeature1"),
+                  t("authSignup.planFeature2"),
                 ]}
                 selected={formState.plan === "free"}
                 onSelect={() => handlePlanSelect("free")}
               />
               <PlanCard
-                title="Standard Package"
+                title={t("authSignup.planStandard")}
                 price="$20"
                 cadence="/mo"
-                description="Perfect for active property seekers"
+                description={t("authSignup.planStandardDesc")}
                 features={[
-                  "5 tailored pricing analysis of properties selected by you",
-                  "Advanced city analysis",
-                  "Potentially underpriced deals",
+                  t("authSignup.planFeature3"),
+                  t("authSignup.planFeature4"),
+                  t("authSignup.planFeature5"),
                 ]}
                 selected={formState.plan === "premium"}
                 onSelect={() => handlePlanSelect("premium")}
@@ -918,23 +983,23 @@ function SignUpPageContent() {
                   }}
                 />
                 <span>
-                  I have read and agree to the{" "}
+                  {t("authSignup.termsText")}{" "}
                   <a
                     className="terms-link"
                     href="/privacy-terms"
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Terms of Services
+                    {t("authSignup.termsLink")}
                   </a>{" "}
-                  and{" "}
+                  {t("authSignup.and") || "and"}{" "}
                   <a
                     className="terms-link"
                     href="/privacy-terms"
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Privacy Policy
+                    {t("authSignup.privacyLink")}
                   </a>
                   .
                 </span>
@@ -949,13 +1014,13 @@ function SignUpPageContent() {
 
             <button type="submit" className="btn" disabled={isSubmitting || !agreeTerms}>
               {isSubmitting ? (
-                <>
-                  <span className="loading" />
-                  Creating Account...
-                </>
-              ) : (
-                formState.plan === "premium" ? "Pay" : "Register"
-              )}
+                  <>
+                    <span className="loading" />
+                    {t("authSignup.submitting")}
+                  </>
+                ) : (
+                  formState.plan === "premium" ? t("authSignup.submitPay") : t("authSignup.submitRegister")
+                )}
             </button>
           </form>
 
@@ -967,7 +1032,7 @@ function SignUpPageContent() {
                 window.location.href = "/portal/login";
               }}
             >
-              Already have an account? Sign In
+              {t("authSignup.haveAccount")}
             </a>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import { useUser } from "@/context/UserContext";
+import { useTranslations } from "@/hooks/useTranslations";
 import "../../login.css";
 
 type Step = "login" | "verification" | "success";
@@ -16,6 +17,41 @@ export default function LoginPage() {
   const router = useRouter();
   const toast = useToast();
   const { user, loading } = useUser();
+  const { t } = useTranslations("authLogin", {
+    "authLogin.loading": "Loading...",
+    "authLogin.redirecting": "Redirecting to dashboard...",
+    "authLogin.tagline": "Property Intelligence Platform",
+    "authLogin.welcomeTitle": "Welcome Back",
+    "authLogin.welcomeSubtitle": "Sign in to access your property insights",
+    "authLogin.emailLabel": "Email Address",
+    "authLogin.passwordLabel": "Password",
+    "authLogin.emailPlaceholder": "your@email.com",
+    "authLogin.passwordPlaceholder": "Enter your password",
+    "authLogin.loginButton": "Login",
+    "authLogin.loggingIn": "Logging in...",
+    "authLogin.or": "OR",
+    "authLogin.google": "Continue with Google",
+    "authLogin.forgotPassword": "Forgot password?",
+    "authLogin.createAccount": "Create an account",
+    "authLogin.verifyTitle": "Verify New Device",
+    "authLogin.verifySubtitle": "We noticed a login from a new device. Please enter the verification code sent to your email.",
+    "authLogin.deviceTitle": "🔒 New Device Detected",
+    "authLogin.deviceText": "We sent a 6-digit code to",
+    "authLogin.codeLabel": "Verification Code",
+    "authLogin.verifyButton": "Verify & Continue",
+    "authLogin.verifying": "Verifying...",
+    "authLogin.resendPrompt": "Didn't receive the code?",
+    "authLogin.resendButton": "Resend Code",
+    "authLogin.resendCountdown": "Resend available in",
+    "authLogin.backToLogin": "Back to Login",
+    "authLogin.successTitle": "Welcome to Rensights!",
+    "authLogin.successSubtitle": "You're all set. Redirecting to your dashboard...",
+    "authLogin.errorEmail": "Please enter a valid email address",
+    "authLogin.errorPassword": "Password is required",
+    "authLogin.errorCode": "Please enter the complete verification code",
+    "authLogin.errorLogin": "Login failed. Please check your credentials.",
+    "authLogin.errorDevice": "Device fingerprint not available",
+  });
   const [step, setStep] = useState<Step>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -93,10 +129,10 @@ export default function LoginPage() {
     setLoginError("");
 
     if (!isValidEmail(email)) {
-      nextErrors.email = "Please enter a valid email address";
+      nextErrors.email = t("authLogin.errorEmail");
     }
     if (!password) {
-      nextErrors.password = "Password is required";
+      nextErrors.password = t("authLogin.errorPassword");
     }
 
     setErrors(nextErrors);
@@ -170,7 +206,7 @@ export default function LoginPage() {
         return;
       }
       
-      setLoginError(error.message || "Login failed. Please check your credentials.");
+      setLoginError(error.message || t("authLogin.errorLogin"));
       setIsSubmitting(false);
     }
   }, [email, password, router]);
@@ -204,7 +240,7 @@ export default function LoginPage() {
     if (!allFilled) {
       setErrors((prev) => ({
         ...prev,
-        code: "Please enter the complete verification code",
+        code: t("authLogin.errorCode"),
       }));
       if (process.env.NODE_ENV === 'development') {
         console.log('Validation failed:', { 
@@ -227,7 +263,7 @@ export default function LoginPage() {
         : apiClient.getDeviceFingerprint();
       
       if (!deviceFingerprint) {
-        throw new Error("Device fingerprint not available");
+        throw new Error(t("authLogin.errorDevice"));
       }
       
       // For login verification, try verifyEmail first (for unverified email)
@@ -380,7 +416,7 @@ export default function LoginPage() {
         <div className="login-container">
           <div className="login-card">
             <div className="logo">Rensights</div>
-            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>{t("authLogin.loading")}</div>
           </div>
         </div>
       </div>
@@ -394,7 +430,7 @@ export default function LoginPage() {
         <div className="login-container">
           <div className="login-card">
             <div className="logo">Rensights</div>
-            <div style={{ textAlign: 'center', padding: '2rem' }}>Redirecting to dashboard...</div>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>{t("authLogin.redirecting")}</div>
           </div>
         </div>
       </div>
@@ -406,24 +442,24 @@ export default function LoginPage() {
       <div className="login-container">
         <div className="login-card">
           <div className="logo">Rensights</div>
-          <div className="tagline">Property Intelligence Platform</div>
+          <div className="tagline">{t("authLogin.tagline")}</div>
 
           <div className={`form-step ${step === "login" ? "active" : ""}`}>
-            <div className="step-title">Welcome Back</div>
+            <div className="step-title">{t("authLogin.welcomeTitle")}</div>
             <div className="step-description">
-              Sign in to access your property intelligence dashboard
+              {t("authLogin.welcomeSubtitle")}
             </div>
 
             <form id="loginForm" onSubmit={handleLoginSubmit}>
               <div className="form-group">
                 <label className="form-label" htmlFor="email">
-                  Email Address
+                  {t("authLogin.emailLabel")}
                 </label>
                 <input
                   type="email"
                   id="email"
                   className={`form-input ${errors.email ? "error" : ""}`}
-                  placeholder="your.email@example.com"
+                  placeholder={t("authLogin.emailPlaceholder")}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   required
@@ -437,13 +473,13 @@ export default function LoginPage() {
 
               <div className="form-group">
                 <label className="form-label" htmlFor="password">
-                  Password
+                  {t("authLogin.passwordLabel")}
                 </label>
                 <input
                   type="password"
                   id="password"
                   className={`form-input ${errors.password ? "error" : ""}`}
-                  placeholder="Enter your password"
+                  placeholder={t("authLogin.passwordPlaceholder")}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
@@ -470,16 +506,16 @@ export default function LoginPage() {
                 {isSubmitting ? (
                   <>
                     <span className="loading" />
-                    Signing In...
+                    {t("authLogin.loggingIn")}
                   </>
                 ) : (
-                  "Sign In"
+                  t("authLogin.loginButton")
                 )}
               </button>
             </form>
 
             <div className="divider">
-              <span>OR</span>
+              <span>{t("authLogin.or")}</span>
             </div>
 
             <div className="social-login-section">
@@ -490,7 +526,7 @@ export default function LoginPage() {
                   onClick={() => handleSocialLogin("Google")}
                 >
                   <GoogleIcon />
-                  Continue with Google
+                  {t("authLogin.google")}
                 </button>
               </div>
         </div>
@@ -501,35 +537,33 @@ export default function LoginPage() {
                   href="/portal/forgot-password"
                   style={{ color: "#f39c12", textDecoration: "none" }}
                 >
-                  Forgot your password?
+                  {t("authLogin.forgotPassword")}
           </a>
                 <a
                   href="/portal/signup"
                   style={{ color: "#f39c12", textDecoration: "none" }}
                 >
-                  Sign Up
+                  {t("authLogin.createAccount")}
                 </a>
               </div>
             </div>
           </div>
 
           <div className={`form-step ${step === "verification" ? "active" : ""}`}>
-            <div className="step-title">Verify New Device</div>
+            <div className="step-title">{t("authLogin.verifyTitle")}</div>
             <div className="step-description">
-              We&apos;ve sent a verification code to your email address for
-              security
+              {t("authLogin.verifySubtitle")}
             </div>
 
             <div className="device-info">
-              <div className="device-info-title">🔒 New Device Detected</div>
+              <div className="device-info-title">{t("authLogin.deviceTitle")}</div>
               <div className="device-info-text">
-                For your security, we need to verify this device. We&apos;ve sent
-                a 6-digit code to <strong>{maskedEmail}</strong>
+                {t("authLogin.deviceText")} <strong>{maskedEmail}</strong>
               </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Verification Code</label>
+              <label className="form-label">{t("authLogin.codeLabel")}</label>
               <div className="verification-code">
                 {codeDigits.map((digit, index) => (
                   <input
@@ -566,40 +600,40 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <>
                   <span className="loading" />
-                  Verifying...
+                  {t("authLogin.verifying")}
                 </>
               ) : (
-                "Verify & Continue"
+                t("authLogin.verifyButton")
               )}
             </button>
 
             <div className="resend-section">
-              <div className="resend-text">Didn't receive the code?</div>
+              <div className="resend-text">{t("authLogin.resendPrompt")}</div>
               <button
                 type="button"
                 className={`resend-link ${resendTimer ? "disabled" : ""}`}
                 onClick={handleResendCode}
                 disabled={!!resendTimer}
               >
-                Resend Code
+                {t("authLogin.resendButton")}
               </button>
               {resendTimer > 0 && (
                 <div className="countdown">
-                  Resend available in <span>{resendTimer}</span>s
+                  {t("authLogin.resendCountdown")} <span>{resendTimer}</span>s
                 </div>
               )}
             </div>
 
             <button className="btn btn-secondary" onClick={handleBackToLogin}>
-              ← Back to Login
+              ← {t("authLogin.backToLogin")}
             </button>
           </div>
 
           <div className={`form-step ${step === "success" ? "active" : ""}`}>
             <div className="success-icon">✓</div>
-            <div className="step-title">Welcome to Rensights!</div>
+            <div className="step-title">{t("authLogin.successTitle")}</div>
             <div className="step-description">
-              Device verified successfully. Redirecting to your dashboard...
+              {t("authLogin.successSubtitle")}
             </div>
           </div>
         </div>
@@ -647,4 +681,3 @@ const GoogleIcon = memo(() => (
   </svg>
 ));
 GoogleIcon.displayName = 'GoogleIcon';
-

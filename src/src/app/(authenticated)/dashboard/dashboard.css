@@ -132,6 +132,10 @@
   margin-top: auto;
 }
 
+.sidebar-language {
+  padding: 0 20px 20px;
+}
+
 .logout-btn {
   width: 100%;
   padding: 12px;

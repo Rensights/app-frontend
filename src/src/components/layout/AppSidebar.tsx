@@ -3,12 +3,14 @@
 import { useCallback, memo, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { LinkWithPrefetch } from "./LinkWithPrefetch";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export const MENU_ITEMS = [
-  { id: "analysis", label: "City Analysis", icon: "📊", path: "/city-analysis" },
-  { id: "reports", label: "Property Reports", icon: "📋", path: "/dashboard" },
-  { id: "alerts", label: "Weekly Deals", icon: "🚨", path: "/weekly-deals" },
-  { id: "account", label: "Account", icon: "⚙️", path: "/account" },
+  { id: "analysis", label: "navigation.cityAnalysis", icon: "📊", path: "/city-analysis" },
+  { id: "reports", label: "navigation.propertyReports", icon: "📋", path: "/dashboard" },
+  { id: "alerts", label: "navigation.weeklyDeals", icon: "🚨", path: "/weekly-deals" },
+  { id: "account", label: "navigation.account", icon: "⚙️", path: "/account" },
 ] as const;
 
 interface AppSidebarProps {
@@ -21,6 +23,13 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
   const router = useRouter();
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
+  const { t } = useTranslations("navigation", {
+    "navigation.cityAnalysis": "City Analysis",
+    "navigation.propertyReports": "Property Reports",
+    "navigation.weeklyDeals": "Weekly Deals",
+    "navigation.account": "Account",
+    "navigation.logout": "Logout",
+  });
 
   useEffect(() => {
     const checkMobile = () => {
@@ -102,15 +111,19 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
                 <span className="menu-icon" aria-hidden>
                   {item.icon}
                 </span>
-                <span className="menu-text">{item.label}</span>
+                <span className="menu-text">{t(item.label)}</span>
               </LinkWithPrefetch>
             );
           })}
         </nav>
 
+        <div className="sidebar-language">
+          <LanguageSwitcher />
+        </div>
+
         <div className="logout-section">
           <button className="logout-btn" onClick={onLogout}>
-            Logout
+            {t("navigation.logout")}
           </button>
         </div>
       </aside>
@@ -125,4 +138,3 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
     </>
   );
 });
-

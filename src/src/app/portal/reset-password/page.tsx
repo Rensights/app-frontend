@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import { useTranslations } from "@/hooks/useTranslations";
 import "../../login.css";
 
 const CODE_LENGTH = 6;
@@ -12,6 +13,43 @@ function ResetPasswordPageContent() {
   const router = useRouter();
   const toast = useToast();
   const searchParams = useSearchParams();
+  const { t } = useTranslations("authReset", {
+    "authReset.emailRequired": "Email is required",
+    "authReset.codeRequired": "Please enter the complete 6-digit code",
+    "authReset.codeVerified": "Code verified successfully",
+    "authReset.invalidCode": "Invalid or expired code. Please try again.",
+    "authReset.passwordRequired": "Password is required",
+    "authReset.passwordLength": "Password must be at least 8 characters long",
+    "authReset.passwordMissing": "Password must include: {missing}",
+    "authReset.passwordComplex": "Password must contain: uppercase letter, lowercase letter, number, and special character (@$!%*?&)",
+    "authReset.passwordMismatch": "Passwords do not match",
+    "authReset.resetSuccess": "Password reset successfully!",
+    "authReset.rateLimit": "Too many password reset requests. Please wait a minute and try again.",
+    "authReset.resetFailed": "Failed to reset password. Please try again.",
+    "authReset.resendSuccess": "Reset code sent to your email",
+    "authReset.resendFailed": "Failed to resend code. Please try again.",
+    "authReset.successTitle": "Password Reset Successful",
+    "authReset.successSubtitle": "Your password has been updated. You can now log in with your new password.",
+    "authReset.backToLogin": "Back to Login",
+    "authReset.title": "Reset Your Password",
+    "authReset.subtitle": "Enter the 6-digit code sent to your email",
+    "authReset.passwordSubtitle": "Enter your new password",
+    "authReset.emailLabel": "Email Address",
+    "authReset.emailPlaceholder": "Enter your email",
+    "authReset.codeLabel": "Verification Code",
+    "authReset.verifyButton": "Verify Code",
+    "authReset.verifying": "Verifying...",
+    "authReset.newPassword": "New Password",
+    "authReset.confirmPassword": "Confirm New Password",
+    "authReset.passwordPlaceholder": "Create a strong password",
+    "authReset.confirmPlaceholder": "Re-enter new password",
+    "authReset.resetButton": "Reset Password",
+    "authReset.resetting": "Resetting...",
+    "authReset.resendPrompt": "Didn't receive the code?",
+    "authReset.resendButton": "Resend Code",
+    "authReset.resendCountdown": "Resend available in",
+    "authReset.loading": "Loading...",
+  });
   const [email, setEmail] = useState("");
   const [codeDigits, setCodeDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [newPassword, setNewPassword] = useState("");
@@ -90,13 +128,13 @@ function ResetPasswordPageContent() {
     setCodeError("");
     
     if (!email) {
-      toast.showError("Email is required");
+      toast.showError(t("authReset.emailRequired"));
       return;
     }
 
     const code = codeDigits.join("");
     if (code.length !== CODE_LENGTH) {
-      toast.showError("Please enter the complete 6-digit code");
+      toast.showError(t("authReset.codeRequired"));
       return;
     }
 
@@ -104,12 +142,12 @@ function ResetPasswordPageContent() {
     try {
       await apiClient.verifyResetCode(email, code);
       setStep("password");
-      toast.showSuccess("Code verified successfully");
+      toast.showSuccess(t("authReset.codeVerified"));
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Verify reset code error:", err);
       }
-      const errorMessage = err?.message || err?.error || "Invalid or expired code. Please try again.";
+      const errorMessage = err?.message || err?.error || t("authReset.invalidCode");
       toast.showError(errorMessage);
       setCodeError(errorMessage);
     } finally {
@@ -122,7 +160,7 @@ function ResetPasswordPageContent() {
     setError("");
 
     if (!newPassword) {
-      toast.showError("Password is required");
+      toast.showError(t("authReset.passwordRequired"));
       return;
     }
 
@@ -130,7 +168,7 @@ function ResetPasswordPageContent() {
     const backendPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     
     if (newPassword.length < 8) {
-      toast.showError("Password must be at least 8 characters long");
+      toast.showError(t("authReset.passwordLength"));
       return;
     }
     
@@ -142,21 +180,21 @@ function ResetPasswordPageContent() {
       if (!/[@$!%*?&]/.test(newPassword)) missing.push("special character (@$!%*?&)");
       
       if (missing.length > 0) {
-        toast.showError(`Password must include: ${missing.join(", ")}`);
+        toast.showError(t("authReset.passwordMissing").replace("{missing}", missing.join(", ")));
         return;
       }
-      toast.showError("Password must contain: uppercase letter, lowercase letter, number, and special character (@$!%*?&)");
+      toast.showError(t("authReset.passwordComplex"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.showError("Passwords do not match");
+      toast.showError(t("authReset.passwordMismatch"));
       return;
     }
 
     const code = codeDigits.join("");
     if (code.length !== CODE_LENGTH) {
-      toast.showError("Please enter the complete 6-digit code");
+      toast.showError(t("authReset.codeRequired"));
       return;
     }
 
@@ -164,20 +202,20 @@ function ResetPasswordPageContent() {
     try {
       await apiClient.resetPassword(email, code, newPassword);
       setStep("success");
-      toast.showSuccess("Password reset successfully!");
+      toast.showSuccess(t("authReset.resetSuccess"));
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Reset password error:", err);
       }
       // Handle rate limiting errors (429)
       if (err?.status === 429 || err?.response?.status === 429) {
-        const rateLimitMessage = err?.message || err?.error || "Too many password reset requests. Please wait a minute and try again.";
+        const rateLimitMessage = err?.message || err?.error || t("authReset.rateLimit");
         toast.showError(rateLimitMessage, 8000); // Show longer for rate limit errors
         setError(rateLimitMessage);
         return;
       }
       // Handle validation errors from backend
-      let errorMessage = "Failed to reset password. Please try again.";
+      let errorMessage = t("authReset.resetFailed");
       if (err?.fieldErrors) {
         // Extract field-specific errors (e.g., newPassword validation)
         const fieldErrors = err.fieldErrors;
@@ -208,7 +246,7 @@ function ResetPasswordPageContent() {
     setCodeError("");
     
     if (!email) {
-      toast.showError("Email is required");
+      toast.showError(t("authReset.emailRequired"));
       return;
     }
 
@@ -218,14 +256,14 @@ function ResetPasswordPageContent() {
       setCodeError("");
       // Clear the code input fields when resending
       setCodeDigits(Array(CODE_LENGTH).fill(""));
-      toast.showSuccess("Reset code sent to your email");
+      toast.showSuccess(t("authReset.resendSuccess"));
       // Focus the first input field
       setTimeout(() => codeRefs.current[0]?.focus(), 100);
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Resend code error:", err);
       }
-      const errorMessage = err?.message || err?.error || "Failed to resend code. Please try again.";
+      const errorMessage = err?.message || err?.error || t("authReset.resendFailed");
       toast.showError(errorMessage);
       setError(errorMessage);
     }
@@ -237,18 +275,18 @@ function ResetPasswordPageContent() {
         <div className="login-container">
           <div className="login-box">
             <div className="login-header">
-              <h1>Password Reset Successful</h1>
-              <p>Your password has been reset successfully</p>
+              <h1>{t("authReset.successTitle")}</h1>
+              <p>{t("authReset.resetSuccess")}</p>
             </div>
             <div className="success-message">
-              <p>You can now log in with your new password.</p>
+              <p>{t("authReset.successSubtitle")}</p>
               <button
                 type="button"
                 onClick={() => router.push("/portal/login")}
                 className="btn"
                 style={{ marginTop: "20px" }}
               >
-                Go to Login
+                {t("authReset.backToLogin")}
               </button>
             </div>
           </div>
@@ -263,14 +301,14 @@ function ResetPasswordPageContent() {
         <div className="login-container">
           <div className="login-box">
             <div className="login-header">
-              <h1>Reset Password</h1>
-              <p>Enter your new password</p>
+              <h1>{t("authReset.title")}</h1>
+              <p>{t("authReset.passwordSubtitle")}</p>
             </div>
 
             <form onSubmit={handleResetPassword}>
               <div className="form-group">
                 <label className="form-label" htmlFor="newPassword">
-                  New Password
+                  {t("authReset.newPassword")}
                 </label>
                 <input
                   type="password"
@@ -278,7 +316,7 @@ function ResetPasswordPageContent() {
                   className={`form-input ${error && !newPassword ? "error" : ""}`}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password (min 6 characters)"
+                  placeholder={t("authReset.passwordPlaceholder")}
                   disabled={isSubmitting}
                   required
                   minLength={6}
@@ -287,7 +325,7 @@ function ResetPasswordPageContent() {
 
               <div className="form-group">
                 <label className="form-label" htmlFor="confirmPassword">
-                  Confirm Password
+                  {t("authReset.confirmPassword")}
                 </label>
                 <input
                   type="password"
@@ -295,7 +333,7 @@ function ResetPasswordPageContent() {
                   className={`form-input ${error && newPassword !== confirmPassword ? "error" : ""}`}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
+                  placeholder={t("authReset.confirmPlaceholder")}
                   disabled={isSubmitting}
                   required
                   minLength={6}
@@ -313,7 +351,7 @@ function ResetPasswordPageContent() {
                 className="btn"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Resetting..." : "Reset Password"}
+                {isSubmitting ? t("authReset.resetting") : t("authReset.resetButton")}
               </button>
             </form>
 
@@ -323,7 +361,7 @@ function ResetPasswordPageContent() {
                   href="/portal/login"
                   style={{ color: "#f39c12", textDecoration: "none" }}
                 >
-                  Back to Login
+                  {t("authReset.backToLogin")}
                 </a>
               </div>
             </div>
@@ -338,14 +376,14 @@ function ResetPasswordPageContent() {
       <div className="login-container">
         <div className="login-box">
         <div className="login-header">
-          <h1>Reset Password</h1>
-          <p>Enter the 6-digit code sent to your email</p>
+          <h1>{t("authReset.title")}</h1>
+          <p>{t("authReset.subtitle")}</p>
         </div>
 
         <form onSubmit={(e) => { e.preventDefault(); handleVerifyCode(); }}>
           <div className="form-group">
             <label className="form-label" htmlFor="email">
-              Email Address
+              {t("authReset.emailLabel")}
             </label>
             <input
               type="email"
@@ -353,7 +391,7 @@ function ResetPasswordPageContent() {
               className={`form-input ${error && !email ? "error" : ""}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              placeholder={t("authReset.emailPlaceholder") || "Enter your email"}
               disabled={isSubmitting || !!searchParams?.get("email")}
               required
             />
@@ -365,7 +403,7 @@ function ResetPasswordPageContent() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Verification Code</label>
+            <label className="form-label">{t("authReset.codeLabel")}</label>
             <div className="code-input-container">
               {codeDigits.map((digit, index) => (
                 <input
@@ -395,13 +433,13 @@ function ResetPasswordPageContent() {
             className="btn"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Verifying..." : "Verify Code"}
+            {isSubmitting ? t("authReset.verifying") : t("authReset.verifyButton")}
           </button>
         </form>
 
         <div className="resend-code">
           {resendTimer > 0 ? (
-            <p>Resend code in {resendTimer}s</p>
+            <p>{t("authReset.resendCountdown")} {resendTimer}s</p>
           ) : (
             <button
               type="button"
@@ -409,7 +447,7 @@ function ResetPasswordPageContent() {
               className="resend-btn"
               disabled={isSubmitting}
             >
-              Resend Code
+              {t("authReset.resendButton")}
             </button>
           )}
         </div>
@@ -420,13 +458,13 @@ function ResetPasswordPageContent() {
               href="/portal/forgot-password"
               style={{ color: "#f39c12", textDecoration: "none" }}
             >
-              Request New Code
+              {t("authReset.resendButton")}
             </a>
             <a
               href="/portal/login"
               style={{ color: "#f39c12", textDecoration: "none" }}
             >
-              Back to Login
+              {t("authReset.backToLogin")}
             </a>
           </div>
         </div>
@@ -443,7 +481,7 @@ export default function ResetPasswordPage() {
         <div className="login-container">
           <div className="login-box">
             <div className="login-header">
-              <h1>Loading...</h1>
+              <h1>{t("authReset.loading") || "Loading..."}</h1>
             </div>
           </div>
         </div>
@@ -453,4 +491,3 @@ export default function ResetPasswordPage() {
     </Suspense>
   );
 }
-

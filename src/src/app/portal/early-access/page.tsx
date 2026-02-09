@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import "./early-access.css";
+import { useTranslations } from "@/hooks/useTranslations";
 
 type FormState = {
   fullName: string;
@@ -48,6 +49,35 @@ const propertyTypeOptions = [
 
 export default function EarlyAccessPage() {
   const router = useRouter();
+  const { t } = useTranslations("earlyAccess", {
+    "earlyAccess.title": "Get Early Access to Premium Package \"Trusted Advisor\"",
+    "earlyAccess.subtitle": "We will support you in identifying attractive investment opportunities, coordinating with owners and agents so you don't have to, helping in determining and negotiating offers, and guiding you through every step of your international real estate investment journey. Request access now and be a pioneer!",
+    "earlyAccess.section.contact": "Contact Information",
+    "earlyAccess.section.investment": "Investment Profile",
+    "earlyAccess.section.preferences": "Investment Preferences",
+    "earlyAccess.section.additional": "Additional Details",
+    "earlyAccess.submit": "Submit Request",
+    "earlyAccess.submitting": "Submitting...",
+    "earlyAccess.successTitle": "Thanks for your interest!",
+    "earlyAccess.successBody": "Your early access request has been received. We'll reach out soon.",
+    "earlyAccess.backHome": "Back to Home",
+    "earlyAccess.fullName": "Full Name",
+    "earlyAccess.email": "Email Address",
+    "earlyAccess.phone": "Phone Number",
+    "earlyAccess.location": "Current Location/Country",
+    "earlyAccess.experience": "Investment Experience Level",
+    "earlyAccess.budget": "Investment Budget Range",
+    "earlyAccess.portfolio": "Current Portfolio Size",
+    "earlyAccess.timeline": "Investment Timeline",
+    "earlyAccess.goals": "Primary Investment Goals",
+    "earlyAccess.propertyTypes": "Property Types of Interest",
+    "earlyAccess.targetRegions": "Target Countries/Regions",
+    "earlyAccess.targetRegionsPlaceholder": "e.g., Spain, Portugal, Dubai, Thailand",
+    "earlyAccess.challenges": "Biggest Investment Challenges",
+    "earlyAccess.challengesPlaceholder": "Tell us about any challenges you've faced or concerns you have...",
+    "earlyAccess.valuableServices": "Most Valuable Services",
+    "earlyAccess.valuableServicesPlaceholder": "What features or services would be most valuable to you?",
+  });
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [goals, setGoals] = useState<string[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
@@ -258,24 +288,20 @@ export default function EarlyAccessPage() {
 
       <div className="container">
         <header className="page-header">
-          <h1>Get Early Access to Premium Package &quot;Trusted Advisor&quot;</h1>
+          <h1>{t("earlyAccess.title")}</h1>
           <p>
-            We will support you in identifying attractive investment
-            opportunities, coordinating with owners and agents so you don&apos;t
-            have to, helping in determining and negotiating offers, and guiding
-            you through every step of your international real estate investment
-            journey. Request access now and be a pioneer!
+            {t("earlyAccess.subtitle")}
           </p>
         </header>
 
         <div className="form-container">
           <form onSubmit={handleSubmit} noValidate>
             <section className="form-section">
-              <h2 className="section-title">Contact Information</h2>
+              <h2 className="section-title">{t("earlyAccess.section.contact")}</h2>
               <div className="form-grid">
                 <div data-field="fullName">
                 <FormInput
-                  label="Full Name"
+                  label={t("earlyAccess.fullName")}
                   required
                   value={formState.fullName}
                     onChange={(value) => {
@@ -293,7 +319,7 @@ export default function EarlyAccessPage() {
                 </div>
                 <div data-field="email">
                 <FormInput
-                  label="Email Address"
+                  label={t("earlyAccess.email")}
                   type="email"
                   required
                   value={formState.email}
@@ -312,7 +338,7 @@ export default function EarlyAccessPage() {
                 </div>
                 <div data-field="phone">
                 <FormInput
-                  label="Phone Number"
+                  label={t("earlyAccess.phone")}
                   type="tel"
                   value={formState.phone}
                   onChange={(value) => handleInputChange("phone", value)}
@@ -320,7 +346,7 @@ export default function EarlyAccessPage() {
                 </div>
                 <div data-field="location">
                 <FormInput
-                  label="Current Location/Country"
+                  label={t("earlyAccess.location")}
                   required
                   value={formState.location}
                     onChange={(value) => {
@@ -340,11 +366,11 @@ export default function EarlyAccessPage() {
             </section>
 
             <section className="form-section">
-              <h2 className="section-title">Investment Profile</h2>
+              <h2 className="section-title">{t("earlyAccess.section.investment")}</h2>
               <div className="form-grid">
                 <div data-field="experience">
                 <FormSelect
-                  label="Investment Experience Level"
+                  label={t("earlyAccess.experience")}
                   required
                   value={formState.experience}
                   options={[
@@ -368,7 +394,7 @@ export default function EarlyAccessPage() {
                 </div>
                 <div data-field="budget">
                 <FormSelect
-                  label="Investment Budget Range"
+                  label={t("earlyAccess.budget")}
                   required
                   value={formState.budget}
                   options={[
@@ -394,7 +420,7 @@ export default function EarlyAccessPage() {
                 </div>
                 <div data-field="portfolio">
                 <FormSelect
-                  label="Current Portfolio Size"
+                  label={t("earlyAccess.portfolio")}
                   value={formState.portfolio}
                   options={[
                     "",
@@ -409,7 +435,7 @@ export default function EarlyAccessPage() {
                 </div>
                 <div data-field="timeline">
                 <FormSelect
-                  label="Investment Timeline"
+                  label={t("earlyAccess.timeline")}
                   required
                   value={formState.timeline}
                   options={[
@@ -434,7 +460,7 @@ export default function EarlyAccessPage() {
                 </div>
                 <div className={`form-group full-width ${fieldErrors.goals ? 'has-error' : ''}`} data-field="goals">
                   <label className="required-label">
-                    Primary Investment Goals
+                    {t("earlyAccess.goals")}
                   </label>
                   <div className={`checkbox-group ${fieldErrors.goals ? 'has-error' : ''}`}>
                     {goalOptions.map((goal) => (
@@ -483,14 +509,14 @@ export default function EarlyAccessPage() {
             </section>
 
             <section className="form-section">
-              <h2 className="section-title">Investment Preferences</h2>
+              <h2 className="section-title">{t("earlyAccess.section.preferences")}</h2>
               <div className={`form-group ${fieldErrors.targetRegions ? 'has-error' : ''}`} data-field="targetRegions">
                 <label className="required-label">
-                  Target Countries/Regions
+                  {t("earlyAccess.targetRegions")}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., Spain, Portugal, Dubai, Thailand"
+                  placeholder={t("earlyAccess.targetRegionsPlaceholder") || "e.g., Spain, Portugal, Dubai, Thailand"}
                   value={formState.targetRegions}
                   onChange={(event) => {
                     handleInputChange("targetRegions", event.target.value);
@@ -520,7 +546,7 @@ export default function EarlyAccessPage() {
                 )}
               </div>
               <div className={`form-group ${fieldErrors.propertyTypes ? 'has-error' : ''}`} data-field="propertyTypes">
-                <label className="required-label">Property Types of Interest</label>
+                <label className="required-label">{t("earlyAccess.propertyTypes")}</label>
                 <div className={`checkbox-group ${fieldErrors.propertyTypes ? 'has-error' : ''}`}>
                   {propertyTypeOptions.map((type) => (
                     <button
@@ -567,11 +593,11 @@ export default function EarlyAccessPage() {
             </section>
 
             <section className="form-section">
-              <h2 className="section-title">Additional Information</h2>
+              <h2 className="section-title">{t("earlyAccess.section.additional")}</h2>
               <div className="form-group">
-                <label>Biggest Challenges in International Real Estate</label>
+                <label>{t("earlyAccess.challenges")}</label>
                 <textarea
-                  placeholder="Tell us about any challenges you've faced or concerns you have..."
+                  placeholder={t("earlyAccess.challengesPlaceholder") || "Tell us about any challenges you've faced or concerns you have..."}
                   value={formState.challenges}
                   onChange={(event) =>
                     handleInputChange("challenges", event.target.value)
@@ -579,9 +605,9 @@ export default function EarlyAccessPage() {
                 />
               </div>
               <div className="form-group">
-                <label>What are you looking for in this product?</label>
+                <label>{t("earlyAccess.valuableServices")}</label>
                 <textarea
-                  placeholder="What features or services would be most valuable to you?"
+                  placeholder={t("earlyAccess.valuableServicesPlaceholder") || "What features or services would be most valuable to you?"}
                   value={formState.valuableServices}
                   onChange={(event) =>
                     handleInputChange("valuableServices", event.target.value)
@@ -596,7 +622,7 @@ export default function EarlyAccessPage() {
                 className="submit-button"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Join Early Access"}
+                {isSubmitting ? t("earlyAccess.submitting") : t("earlyAccess.submit")}
               </button>
             </div>
           </form>
@@ -614,14 +640,12 @@ export default function EarlyAccessPage() {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2>You&apos;re on the list!</h2>
+            <h2>{t("earlyAccess.successTitle")}</h2>
             <p>
-              Thank you for joining our early access program. We&apos;ll send you
-              an email soon with exclusive updates and your priority access
-              details.
+              {t("earlyAccess.successBody")}
             </p>
             <button type="button" onClick={() => setShowSuccessModal(false)}>
-              Got it!
+              {t("earlyAccess.backHome")}
             </button>
           </div>
         </div>
@@ -729,4 +753,3 @@ const FormSelect = ({
     )}
   </div>
 );
-

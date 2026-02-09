@@ -6,11 +6,52 @@ import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import "./dashboard.css";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { subscription, user } = useUser();
   const toast = useToast();
+  const { t } = useTranslations("dashboard", {
+    "dashboard.title": "Property Reports",
+    "dashboard.loadingReports": "Loading reports...",
+    "dashboard.reportLimit": "You have reached your monthly report limit ({maxReports} report{plural}). Please upgrade your account to get more reports.",
+    "dashboard.recentReport": "Recent Report",
+    "dashboard.reportNumber": "Report #{number}",
+    "dashboard.status.ready": "Ready",
+    "dashboard.status.processing": "Processing",
+    "dashboard.locationScore": "Location Score",
+    "dashboard.fairValue": "Fair Value",
+    "dashboard.rentalYield": "Rental Yield Potential",
+    "dashboard.viewReport": "View Report",
+    "dashboard.requestNew": "Request New Report",
+    "dashboard.upgradePrompt": "Upgrade to Standard Package to request more analysis",
+    "dashboard.viewPricing": "View Pricing",
+    "dashboard.totalReports": "{count} report{plural} total",
+    "dashboard.emptyTitle": "You haven't submitted any property analysis requests yet.",
+    "dashboard.requestFirst": "Request Your First Report",
+    "dashboard.includedTitle": "What's Included",
+    "dashboard.includedSubtitle": "Our detailed property reports provide comprehensive analysis including:",
+    "dashboard.included1": "Location score and neighborhood analysis",
+    "dashboard.included2": "Fair market value estimation in AED",
+    "dashboard.included3": "Rental yield potential calculation",
+    "dashboard.included4": "Comparable properties analysis",
+    "dashboard.included5": "Price trend history",
+    "dashboard.included6": "Investment recommendations",
+    "dashboard.marketTitle": "Dubai Market Insights",
+    "dashboard.market1": "🚀 Dubai real estate up 12% YoY",
+    "dashboard.market2": "🗝️ New projects: Business Bay & Bluewaters",
+    "dashboard.market3": "💎 Luxury market: Strong investor demand",
+    "dashboard.market4": "🏙️ Dubai avg: AED 1,450/sq ft",
+    "dashboard.disclaimer.title": "Disclaimer",
+    "dashboard.disclaimer.body": "This report is generated for informational and educational purposes only. Rensights.com is a data analytics provider, not a licensed real estate brokerage, financial advisor, or legal consultant. The \"Estimated Price\" and \"Scores\" provided are based on automated algorithms and third-party data; they do not constitute a formal appraisal or a guarantee of profit. All investments carry risk. We strongly recommend consulting with a licensed professional before making any financial commitments.",
+    "dashboard.disclaimer.verificationTitle": "Verification Note",
+    "dashboard.disclaimer.verificationBody": "We scan external websites for pricing anomalies. We do not verify the physical condition, legal title, or the authenticity of the listing. Users must perform their own due diligence (physical viewing and title deed verification) before transferring funds to any third party.",
+    "dashboard.disclaimer.appraisalTitle": "No Formal Appraisal",
+    "dashboard.disclaimer.appraisalBody": "The property estimates and scores provided by this platform are generated via automated machine learning algorithms and do not constitute a formal, legal, or professional real estate appraisal. This platform does not account for the physical condition, interior upgrades, or latent defects of a property.",
+    "dashboard.disclaimer.sourcesTitle": "Data Sources",
+    "dashboard.disclaimer.sourcesBody": "Dubai Land Department (DLD), Bayut, and various public records.",
+  });
   const [analysisRequests, setAnalysisRequests] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
   const [reportCount, setReportCount] = useState<{ used: number; remaining: number; max: number } | null>(null);
@@ -105,7 +146,9 @@ export default function DashboardPage() {
         ? 'unlimited' 
         : reportCount.max;
       toast.showError(
-        `You have reached your monthly report limit (${maxReports} report${reportCount.max !== 1 ? 's' : ''}). Please upgrade your account to get more reports.`
+        t("dashboard.reportLimit")
+          .replace("{maxReports}", String(maxReports))
+          .replace("{plural}", reportCount.max !== 1 ? "s" : "")
       );
       return;
     }
@@ -120,7 +163,7 @@ export default function DashboardPage() {
     <section className="content-section active">
       <div className="section-card">
         <div className="section-title">
-          Property Reports
+          {t("dashboard.title")}
           {reportCount && (
             <span className="report-count-badge">
               {reportCount.max === Number.MAX_SAFE_INTEGER || reportCount.max === 2147483647 
@@ -132,7 +175,7 @@ export default function DashboardPage() {
 
         {loadingReports ? (
           <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
-            Loading reports...
+            {t("dashboard.loadingReports")}
           </div>
         ) : sortedReports.length > 0 ? (
           <>
@@ -141,12 +184,12 @@ export default function DashboardPage() {
                 <div key={report.id || index} className="report-item" style={{ marginBottom: index < sortedReports.length - 1 ? '20px' : '0' }}>
                   <div className="report-header">
                     <div className="report-title">
-                      {index === 0 ? 'Recent Report' : `Report #${sortedReports.length - index}`}
+                      {index === 0 ? t("dashboard.recentReport") : t("dashboard.reportNumber").replace("{number}", String(sortedReports.length - index))}
                     </div>
                     <div className="report-status">
-                      {report.status === 'COMPLETED' ? 'Ready' : 
-                       report.status === 'PENDING' ? 'Processing' : 
-                       report.status || 'Processing'}
+                      {report.status === 'COMPLETED' ? t("dashboard.status.ready") : 
+                       report.status === 'PENDING' ? t("dashboard.status.processing") : 
+                       report.status || t("dashboard.status.processing")}
                     </div>
                   </div>
                   <div className="report-desc">
@@ -155,13 +198,13 @@ export default function DashboardPage() {
                   {report.status === 'COMPLETED' && (
                     <div className="report-stats">
                       {report.locationScore && (
-                        <div>📍 Location Score: {report.locationScore}/10</div>
+                        <div>📍 {t("dashboard.locationScore")}: {report.locationScore}/10</div>
                       )}
                       {report.fairValue && (
-                        <div>💰 Fair Value: AED {parseFloat(report.fairValue).toLocaleString()}</div>
+                        <div>💰 {t("dashboard.fairValue")}: AED {parseFloat(report.fairValue).toLocaleString()}</div>
                       )}
                       {report.rentalYield && (
-                        <div>📊 Rental Yield Potential: {report.rentalYield}%</div>
+                        <div>📊 {t("dashboard.rentalYield")}: {report.rentalYield}%</div>
                       )}
                     </div>
                   )}
@@ -171,7 +214,7 @@ export default function DashboardPage() {
                       style={{ marginTop: '12px' }}
                       onClick={() => router.push(`/analysis-request?id=${report.id}`)}
                     >
-                      View Report
+                      {t("dashboard.viewReport")}
                     </button>
                   )}
                 </div>
@@ -196,7 +239,7 @@ export default function DashboardPage() {
                   borderStyle: 'solid'
                 }}
               >
-                Request New Report
+                {t("dashboard.requestNew")}
               </button>
               {isReportLimitReached && (
                 <div style={{
@@ -206,7 +249,7 @@ export default function DashboardPage() {
                   border: '2px solid rgba(245, 158, 11, 0.3)',
                   borderRadius: '8px',
                   textAlign: 'center'
-                }}>
+                  }}>
                   <p style={{ 
                     margin: 0, 
                     color: '#d97706', 
@@ -214,7 +257,7 @@ export default function DashboardPage() {
                     fontWeight: '500',
                     marginBottom: '8px'
                   }}>
-                    Upgrade to Standard Package to request more analysis
+                    {t("dashboard.upgradePrompt")}
                   </p>
                   <button
                     onClick={() => router.push('/pricing')}
@@ -238,13 +281,15 @@ export default function DashboardPage() {
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
-                    View Pricing
+                    {t("dashboard.viewPricing")}
                   </button>
                 </div>
               )}
               {sortedReports.length > 1 && !isReportLimitReached && (
                 <div className="report-note">
-                  {sortedReports.length} {sortedReports.length === 1 ? 'report' : 'reports'} total
+                  {t("dashboard.totalReports")
+                    .replace("{count}", String(sortedReports.length))
+                    .replace("{plural}", sortedReports.length === 1 ? "" : "s")}
                 </div>
               )}
             </div>
@@ -253,7 +298,7 @@ export default function DashboardPage() {
           <>
             <div style={{ padding: '40px', textAlign: 'center' }}>
               <p style={{ color: '#666', marginBottom: '20px' }}>
-                You haven't submitted any property analysis requests yet.
+                {t("dashboard.emptyTitle")}
               </p>
             </div>
             <div className="report-actions">
@@ -274,7 +319,7 @@ export default function DashboardPage() {
                   borderStyle: 'solid'
                 }}
               >
-                Request Your First Report
+                {t("dashboard.requestFirst")}
               </button>
               {isReportLimitReached && (
                 <div style={{
@@ -292,7 +337,7 @@ export default function DashboardPage() {
                     fontWeight: '500',
                     marginBottom: '8px'
                   }}>
-                    Upgrade to Standard Package to request more analysis
+                    {t("dashboard.upgradePrompt")}
                   </p>
                   <button
                     onClick={() => router.push('/pricing')}
@@ -316,7 +361,7 @@ export default function DashboardPage() {
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
-                    View Pricing
+                    {t("dashboard.viewPricing")}
                   </button>
                 </div>
               )}
@@ -326,54 +371,45 @@ export default function DashboardPage() {
       </div>
 
       <div className="section-card">
-        <div className="section-title">What's Included</div>
+        <div className="section-title">{t("dashboard.includedTitle")}</div>
         <p className="info-text">
-          Our detailed property reports provide comprehensive analysis
-          including:
+          {t("dashboard.includedSubtitle")}
         </p>
         <div className="report-includes">
-          <div>✓ Location score and neighborhood analysis</div>
-          <div>✓ Fair market value estimation in AED</div>
-          <div>✓ Rental yield potential calculation</div>
-          <div>✓ Comparable properties analysis</div>
-          <div>✓ Price trend history</div>
-          <div>✓ Investment recommendations</div>
+          <div>✓ {t("dashboard.included1")}</div>
+          <div>✓ {t("dashboard.included2")}</div>
+          <div>✓ {t("dashboard.included3")}</div>
+          <div>✓ {t("dashboard.included4")}</div>
+          <div>✓ {t("dashboard.included5")}</div>
+          <div>✓ {t("dashboard.included6")}</div>
         </div>
       </div>
 
       <div className="section-card">
-        <div className="section-title">Dubai Market Insights</div>
+        <div className="section-title">{t("dashboard.marketTitle")}</div>
         <div className="market-insights">
-          <div>🚀 Dubai real estate up 12% YoY</div>
-          <div>🗝️ New projects: Business Bay & Bluewaters</div>
-          <div>💎 Luxury market: Strong investor demand</div>
-          <div>🏙️ Dubai avg: AED 1,450/sq ft</div>
+          <div>{t("dashboard.market1")}</div>
+          <div>{t("dashboard.market2")}</div>
+          <div>{t("dashboard.market3")}</div>
+          <div>{t("dashboard.market4")}</div>
         </div>
       </div>
 
       <div className="section-card report-disclaimer">
-        <div className="section-title">Disclaimer</div>
+        <div className="section-title">{t("dashboard.disclaimer.title")}</div>
         <p>
-          This report is generated for informational and educational purposes only. Rensights.com is a data analytics
-          provider, not a licensed real estate brokerage, financial advisor, or legal consultant. The &quot;Estimated
-          Price&quot; and &quot;Scores&quot; provided are based on automated algorithms and third-party data; they do not
-          constitute a formal appraisal or a guarantee of profit. All investments carry risk. We strongly recommend
-          consulting with a licensed professional before making any financial commitments.
+          {t("dashboard.disclaimer.body")}
         </p>
-        <h4>Verification Note</h4>
+        <h4>{t("dashboard.disclaimer.verificationTitle")}</h4>
         <p>
-          We scan external websites for pricing anomalies. We do not verify the physical condition, legal title, or
-          the authenticity of the listing. Users must perform their own due diligence (physical viewing and title deed
-          verification) before transferring funds to any third party.
+          {t("dashboard.disclaimer.verificationBody")}
         </p>
-        <h4>No Formal Appraisal</h4>
+        <h4>{t("dashboard.disclaimer.appraisalTitle")}</h4>
         <p>
-          The property estimates and scores provided by this platform are generated via automated machine learning
-          algorithms and do not constitute a formal, legal, or professional real estate appraisal. This platform does
-          not account for the physical condition, interior upgrades, or latent defects of a property.
+          {t("dashboard.disclaimer.appraisalBody")}
         </p>
-        <h4>Data Sources</h4>
-        <p>Dubai Land Department (DLD), Bayut, and various public records.</p>
+        <h4>{t("dashboard.disclaimer.sourcesTitle")}</h4>
+        <p>{t("dashboard.disclaimer.sourcesBody")}</p>
       </div>
     </section>
   );

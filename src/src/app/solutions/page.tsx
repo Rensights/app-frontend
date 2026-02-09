@@ -7,8 +7,38 @@ import { Button } from "@/components/landing/ui/button";
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import Link from "next/link";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function SolutionsPage() {
+  const { t } = useTranslations("solutions", {
+    "solutions.title": "Solutions",
+    "solutions.subtitle": "Data-driven tools to find potentially underpriced properties before everyone else",
+    "solutions.step1.badge": "Step 1",
+    "solutions.step1.title": "Explore & Learn",
+    "solutions.step1.subtitle": "Don't know where to start?",
+    "solutions.step1.description": "Get comprehensive city insights with interactive dashboards and detailed guides.",
+    "solutions.step1.feature1": "City dashboards with prices, yields, and growth areas",
+    "solutions.step1.feature2": "Step-by-step guide on buying process and ownership",
+    "solutions.step2.badge": "Step 2",
+    "solutions.step2.title": "Find Deals",
+    "solutions.step2.subtitle": "Looking for the best deals?",
+    "solutions.step2.description": "Discover potentially underpriced properties through AI-powered analysis and expert filtering.",
+    "solutions.step2.feature1": "AI-powered deal scores based on yield signals",
+    "solutions.step2.feature2": "Expert-filtered shortlists matching your criteria",
+    "solutions.step2.metric": "10K+ properties and transactions analyzed weekly",
+    "solutions.step3.badge": "Step 3",
+    "solutions.step3.title": "Validate & Invest",
+    "solutions.step3.subtitle": "Already found a property?",
+    "solutions.step3.description": "Get expert validation with data-backed price analysis and comprehensive risk assessment.",
+    "solutions.step3.feature1": "Price check using live market comparables",
+    "solutions.step3.feature2": "Risk, liquidity, and appreciation insights",
+    "solutions.cta.title": "Ready to Start Your Investment Journey?",
+    "solutions.cta.subtitle": "Join thousands of investors using data-driven insights to find the best property deals in Dubai",
+    "solutions.cta.button": "Start Free Trial",
+    "solutions.disclaimer.title": "Disclaimer",
+    "solutions.disclaimer.body": "Rensights provides property market data and analysis for informational purposes only. We are not licensed property valuers, and our estimates do not constitute formal valuations under any regulatory framework. Nothing on this platform should be considered investment, financial, legal, or tax advice. All data is sourced from public records and third-party listing sources, and may contain inaccuracies or delays. Users should conduct their own due diligence and consult qualified professionals before making any property decisions. Past performance and historical trends do not guarantee future results.",
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />
@@ -17,10 +47,10 @@ export default function SolutionsPage() {
       <section className="pt-32 pb-8 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Solutions
+            {t("solutions.title")}
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-            Data-driven tools to find potentially underpriced properties before everyone else
+            {t("solutions.subtitle")}
           </p>
         </div>
       </section>
@@ -28,14 +58,14 @@ export default function SolutionsPage() {
       {/* Solution 1: Explore & Learn */}
       <SolutionSection
         id="explore-learn"
-        badge="Step 1"
+        badge={t("solutions.step1.badge")}
         icon={Map}
-        title="Explore & Learn"
-        subtitle="Don't know where to start?"
-        description="Get comprehensive city insights with interactive dashboards and detailed guides."
+        title={t("solutions.step1.title")}
+        subtitle={t("solutions.step1.subtitle")}
+        description={t("solutions.step1.description")}
         features={[
-          { icon: Building2, text: "City dashboards with prices, yields, and growth areas" },
-          { icon: FileCheck, text: "Step-by-step guide on buying process and ownership" }
+          { icon: Building2, text: t("solutions.step1.feature1") },
+          { icon: FileCheck, text: t("solutions.step1.feature2") }
         ]}
         youtubeId="dQw4w9WgXcQ"
       />
@@ -43,16 +73,16 @@ export default function SolutionsPage() {
       {/* Solution 2: Find Deals */}
       <SolutionSection
         id="find-deals"
-        badge="Step 2"
+        badge={t("solutions.step2.badge")}
         icon={Search}
-        title="Find Deals"
-        subtitle="Looking for the best deals?"
-        description="Discover potentially underpriced properties through AI-powered analysis and expert filtering."
+        title={t("solutions.step2.title")}
+        subtitle={t("solutions.step2.subtitle")}
+        description={t("solutions.step2.description")}
         features={[
-          { icon: Target, text: "AI-powered deal scores based on yield signals" },
-          { icon: TrendingUp, text: "Expert-filtered shortlists matching your criteria" }
+          { icon: Target, text: t("solutions.step2.feature1") },
+          { icon: TrendingUp, text: t("solutions.step2.feature2") }
         ]}
-        metric="10K+ properties and transactions analyzed weekly"
+        metric={t("solutions.step2.metric")}
         showButton={false}
         youtubeId="dQw4w9WgXcQ"
         reverse
@@ -61,14 +91,14 @@ export default function SolutionsPage() {
       {/* Solution 3: Validate & Invest */}
       <SolutionSection
         id="validate-invest"
-        badge="Step 3"
+        badge={t("solutions.step3.badge")}
         icon={FileCheck}
-        title="Validate & Invest"
-        subtitle="Already found a property?"
-        description="Get expert validation with data-backed price analysis and comprehensive risk assessment."
+        title={t("solutions.step3.title")}
+        subtitle={t("solutions.step3.subtitle")}
+        description={t("solutions.step3.description")}
         features={[
-          { icon: CheckCircle2, text: "Price check using live market comparables" },
-          { icon: Shield, text: "Risk, liquidity, and appreciation insights" }
+          { icon: CheckCircle2, text: t("solutions.step3.feature1") },
+          { icon: Shield, text: t("solutions.step3.feature2") }
         ]}
         youtubeId="dQw4w9WgXcQ"
       />
@@ -84,16 +114,16 @@ export default function SolutionsPage() {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Ready to Start Your Investment Journey?
+              {t("solutions.cta.title")}
             </h2>
             <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Join thousands of investors using data-driven insights to find the best property deals in Dubai
+              {t("solutions.cta.subtitle")}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/portal/signup">
                 <Button size="lg" className="text-lg px-10 py-7 h-auto shadow-lg">
-                  Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+                  {t("solutions.cta.button")} <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             </div>
@@ -104,14 +134,9 @@ export default function SolutionsPage() {
       <section className="py-10 bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto rounded-2xl border border-amber-200/80 bg-amber-50/80 px-6 py-6 text-amber-900 shadow-sm">
-            <h3 className="text-xl font-semibold mb-3">Disclaimer</h3>
+            <h3 className="text-xl font-semibold mb-3">{t("solutions.disclaimer.title")}</h3>
             <p className="text-sm leading-relaxed text-amber-900/90">
-              Rensights provides property market data and analysis for informational purposes only. We are not licensed
-              property valuers, and our estimates do not constitute formal valuations under any regulatory framework.
-              Nothing on this platform should be considered investment, financial, legal, or tax advice. All data is
-              sourced from public records and third-party listing sources, and may contain inaccuracies or delays. Users
-              should conduct their own due diligence and consult qualified professionals before making any property
-              decisions. Past performance and historical trends do not guarantee future results.
+              {t("solutions.disclaimer.body")}
             </p>
           </div>
         </div>

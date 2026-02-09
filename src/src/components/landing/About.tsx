@@ -1,28 +1,42 @@
 "use client";
 
 import { Target, Users, TrendingUp, Shield } from "lucide-react";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function LandingAbout() {
+  const { t } = useTranslations("about", {
+    "about.title": "About Rensights",
+    "about.subtitle": "We're on a mission to make real estate investing in Dubai accessible, transparent, and data-driven for foreign investors worldwide.",
+    "about.value1.title": "Data-Driven Insights",
+    "about.value1.desc": "We analyze thousands of listings using AI to surface the best opportunities.",
+    "about.value2.title": "Expert Curation",
+    "about.value2.desc": "Our team of local experts verifies every insight to ensure quality.",
+    "about.value3.title": "Market Intelligence",
+    "about.value3.desc": "Real-time market trends and analytics to help you invest smarter.",
+    "about.value4.title": "Investor-First",
+    "about.value4.desc": "Built for foreign investors, by people who understand the challenges.",
+  });
+
   const values = [
     {
       icon: Target,
-      title: "Data-Driven Insights",
-      description: "We analyze thousands of listings using AI to surface the best opportunities.",
+      title: t("about.value1.title"),
+      description: t("about.value1.desc"),
     },
     {
       icon: Users,
-      title: "Expert Curation",
-      description: "Our team of local experts verifies every insight to ensure quality.",
+      title: t("about.value2.title"),
+      description: t("about.value2.desc"),
     },
     {
       icon: TrendingUp,
-      title: "Market Intelligence",
-      description: "Real-time market trends and analytics to help you invest smarter.",
+      title: t("about.value3.title"),
+      description: t("about.value3.desc"),
     },
     {
       icon: Shield,
-      title: "Investor-First",
-      description: "Built for foreign investors, by people who understand the challenges.",
+      title: t("about.value4.title"),
+      description: t("about.value4.desc"),
     },
   ];
 
@@ -30,10 +44,9 @@ export default function LandingAbout() {
     <section id="about" className="py-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center mb-12">
-          <h2 className="text-3xl font-bold sm:text-4xl">About Rensights</h2>
+          <h2 className="text-3xl font-bold sm:text-4xl">{t("about.title")}</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            We're on a mission to make real estate investing in Dubai accessible, 
-            transparent, and data-driven for foreign investors worldwide.
+            {t("about.subtitle")}
           </p>
         </div>
 
@@ -52,4 +65,3 @@ export default function LandingAbout() {
     </section>
   );
 }
-

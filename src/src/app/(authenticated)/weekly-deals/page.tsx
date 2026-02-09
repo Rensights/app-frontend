@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import "../dashboard/dashboard.css";
 import "../deals/deals.css";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function WeeklyDealsPage() {
   const router = useRouter();
@@ -14,6 +15,45 @@ export default function WeeklyDealsPage() {
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const { t } = useTranslations("weeklyDeals", {
+    "weeklyDeals.upgrade.title": "Upgrade to Standard Package",
+    "weeklyDeals.upgrade.price": "$20",
+    "weeklyDeals.upgrade.perMonth": "/month",
+    "weeklyDeals.upgrade.subtitle": "Access exclusive deals and premium features with Standard Package.",
+    "weeklyDeals.upgrade.feature1": "5 tailored pricing analysis of properties selected by you",
+    "weeklyDeals.upgrade.feature2": "Advanced city analysis",
+    "weeklyDeals.upgrade.feature3": "Potentially underpriced deals",
+    "weeklyDeals.upgrade.feature4": "Full access to property analytics",
+    "weeklyDeals.upgrade.button": "Upgrade to Standard Package",
+    "weeklyDeals.section.title": "Weekly Property Deals",
+    "weeklyDeals.alert.title": "Latest Alert",
+    "weeklyDeals.alert.subtitle": "Hot deals discovered across Dubai areas this week!",
+    "weeklyDeals.alert.area1": "🏙️ Downtown Dubai:",
+    "weeklyDeals.alert.area2": "⚓ Dubai Marina:",
+    "weeklyDeals.alert.area3": "🏢 Business Bay:",
+    "weeklyDeals.alert.area4": "🌴 Jumeirah Beach:",
+    "weeklyDeals.alert.deals": "deals",
+    "weeklyDeals.alert.total": "Total active alerts:",
+    "weeklyDeals.alert.view": "View This Week's Alerts",
+    "weeklyDeals.highlights.title": "This Week's Highlights",
+    "weeklyDeals.highlights.market": "🔥 Hottest market:",
+    "weeklyDeals.highlights.marketValue": "Dubai Marina (4 deals)",
+    "weeklyDeals.highlights.discount": "💎 Best discount found:",
+    "weeklyDeals.highlights.discountValue": "22% below market",
+    "weeklyDeals.highlights.performing": "🏆 Best performing area:",
+    "weeklyDeals.highlights.performingValue": "Downtown Dubai",
+    "weeklyDeals.about.title": "About Deal Alerts",
+    "weeklyDeals.about.p1": "Our AI-powered system analyzes thousands of properties daily to identify underpriced opportunities across Dubai.",
+    "weeklyDeals.about.p2": "Each deal is verified by expert analysts to ensure accuracy and potential value. Get notified weekly about properties priced significantly below market value in prime locations.",
+    "weeklyDeals.disclaimer.title": "Disclaimer",
+    "weeklyDeals.disclaimer.body": "This report is generated for informational and educational purposes only. Rensights.com is a data analytics provider, not a licensed real estate brokerage, financial advisor, or legal consultant. The \"Estimated Price\" and \"Scores\" provided are based on automated algorithms and third-party data; they do not constitute a formal appraisal or a guarantee of profit. All investments carry risk. We strongly recommend consulting with a licensed professional before making any financial commitments.",
+    "weeklyDeals.disclaimer.verificationTitle": "Verification Note",
+    "weeklyDeals.disclaimer.verificationBody": "We scan external websites for pricing anomalies. We do not verify the physical condition, legal title, or the authenticity of the listing. Users must perform their own due diligence (physical viewing and title deed verification) before transferring funds to any third party.",
+    "weeklyDeals.disclaimer.appraisalTitle": "No Formal Appraisal",
+    "weeklyDeals.disclaimer.appraisalBody": "The property estimates and scores provided by this platform are generated via automated machine learning algorithms and do not constitute a formal, legal, or professional real estate appraisal. This platform does not account for the physical condition, interior upgrades, or latent defects of a property.",
+    "weeklyDeals.disclaimer.sourcesTitle": "Data Sources",
+    "weeklyDeals.disclaimer.sourcesBody": "Dubai Land Department (DLD), Bayut, and various public records.",
+  });
 
   const handleUpgrade = async () => {
     try {
@@ -37,122 +77,110 @@ export default function WeeklyDealsPage() {
         <div className="upgrade-overlay">
           <div className="upgrade-content">
             <div className="upgrade-icon">🔒</div>
-            <h2>Upgrade to Standard Package</h2>
+            <h2>{t("weeklyDeals.upgrade.title")}</h2>
             <div className="upgrade-pricing">
-              <div className="pricing-amount">$20<span className="pricing-period">/month</span></div>
+              <div className="pricing-amount">{t("weeklyDeals.upgrade.price")}<span className="pricing-period">{t("weeklyDeals.upgrade.perMonth")}</span></div>
             </div>
-            <p>Access exclusive deals and premium features with Standard Package.</p>
+            <p>{t("weeklyDeals.upgrade.subtitle")}</p>
             <ul className="upgrade-features">
-              <li>✓ 5 tailored pricing analysis of properties selected by you</li>
-              <li>✓ Advanced city analysis</li>
-              <li>✓ Potentially underpriced deals</li>
-              <li>✓ Full access to property analytics</li>
+              <li>✓ {t("weeklyDeals.upgrade.feature1")}</li>
+              <li>✓ {t("weeklyDeals.upgrade.feature2")}</li>
+              <li>✓ {t("weeklyDeals.upgrade.feature3")}</li>
+              <li>✓ {t("weeklyDeals.upgrade.feature4")}</li>
             </ul>
             <button 
               className="upgrade-button" 
               onClick={handleUpgrade}
               disabled={isUpgrading}
             >
-              {isUpgrading ? "Processing..." : "Upgrade to Standard Package"}
+              {isUpgrading ? "Processing..." : t("weeklyDeals.upgrade.button")}
             </button>
           </div>
         </div>
       )}
       <div style={{ opacity: isFreeUser ? 0.4 : 1, pointerEvents: isFreeUser ? 'none' : 'auto' }}>
         <div className="section-card">
-          <div className="section-title">Weekly Property Deals</div>
+          <div className="section-title">{t("weeklyDeals.section.title")}</div>
 
           <div className="alert-item">
-            <div className="alert-title">Latest Alert</div>
+            <div className="alert-title">{t("weeklyDeals.alert.title")}</div>
             <div className="alert-desc">
-              Hot deals discovered across Dubai areas this week!
+              {t("weeklyDeals.alert.subtitle")}
             </div>
 
             <div className="alert-list">
               {[
-                { label: "🏙️ Downtown Dubai:", count: 3 },
-                { label: "⚓ Dubai Marina:", count: 4 },
-                { label: "🏢 Business Bay:", count: 3 },
-                { label: "🌴 Jumeirah Beach:", count: 3 },
+                { label: t("weeklyDeals.alert.area1"), count: 3 },
+                { label: t("weeklyDeals.alert.area2"), count: 4 },
+                { label: t("weeklyDeals.alert.area3"), count: 3 },
+                { label: t("weeklyDeals.alert.area4"), count: 3 },
               ].map((alert) => (
                 <div key={alert.label} className="alert-row">
                   <span>{alert.label}</span>
-                  <span className="alert-number">{alert.count} deals</span>
+                  <span className="alert-number">{alert.count} {t("weeklyDeals.alert.deals")}</span>
                 </div>
               ))}
             </div>
 
             <div className="alert-stats">
-              <span>Total active alerts:</span>
+              <span>{t("weeklyDeals.alert.total")}</span>
               <span className="alert-number">13</span>
             </div>
           </div>
 
-          <button className="btn" onClick={() => router.push('/deals')}>View This Week&apos;s Alerts</button>
+          <button className="btn" onClick={() => router.push('/deals')}>{t("weeklyDeals.alert.view")}</button>
         </div>
 
         <div className="section-card">
-          <div className="section-title">This Week&apos;s Highlights</div>
+          <div className="section-title">{t("weeklyDeals.highlights.title")}</div>
           <div className="highlights">
             <div>
-              <span>🔥 Hottest market:</span>
+              <span>{t("weeklyDeals.highlights.market")}</span>
               <span className="alert-performance">
-                Dubai Marina (4 deals)
+                {t("weeklyDeals.highlights.marketValue")}
               </span>
             </div>
             <div>
-              <span>💎 Best discount found:</span>
-              <span className="alert-performance">22% below market</span>
+              <span>{t("weeklyDeals.highlights.discount")}</span>
+              <span className="alert-performance">{t("weeklyDeals.highlights.discountValue")}</span>
             </div>
             <div>
-              <span>🏆 Best performing area:</span>
-              <span className="alert-performance">Downtown Dubai</span>
+              <span>{t("weeklyDeals.highlights.performing")}</span>
+              <span className="alert-performance">{t("weeklyDeals.highlights.performingValue")}</span>
             </div>
           </div>
         </div>
 
         <div className="section-card">
-          <div className="section-title">About Deal Alerts</div>
+          <div className="section-title">{t("weeklyDeals.about.title")}</div>
           <p className="info-text">
-            Our AI-powered system analyzes thousands of properties daily to
-            identify underpriced opportunities across Dubai.
+            {t("weeklyDeals.about.p1")}
           </p>
           <p className="info-text">
-            Each deal is verified by expert analysts to ensure accuracy and
-            potential value. Get notified weekly about properties priced
-            significantly below market value in prime locations.
+            {t("weeklyDeals.about.p2")}
           </p>
         </div>
 
         <div className="section-card report-disclaimer">
-          <div className="section-title">Disclaimer</div>
+          <div className="section-title">{t("weeklyDeals.disclaimer.title")}</div>
           <p>
-            This report is generated for informational and educational purposes only. Rensights.com is a data analytics
-            provider, not a licensed real estate brokerage, financial advisor, or legal consultant. The &quot;Estimated
-            Price&quot; and &quot;Scores&quot; provided are based on automated algorithms and third-party data; they do not
-            constitute a formal appraisal or a guarantee of profit. All investments carry risk. We strongly recommend
-            consulting with a licensed professional before making any financial commitments.
+            {t("weeklyDeals.disclaimer.body")}
           </p>
-          <h4>Verification Note</h4>
+          <h4>{t("weeklyDeals.disclaimer.verificationTitle")}</h4>
           <p>
-            We scan external websites for pricing anomalies. We do not verify the physical condition, legal title, or
-            the authenticity of the listing. Users must perform their own due diligence (physical viewing and title deed
-            verification) before transferring funds to any third party.
+            {t("weeklyDeals.disclaimer.verificationBody")}
           </p>
-          <h4>No Formal Appraisal</h4>
+          <h4>{t("weeklyDeals.disclaimer.appraisalTitle")}</h4>
           <p>
-            The property estimates and scores provided by this platform are generated via automated machine learning
-            algorithms and do not constitute a formal, legal, or professional real estate appraisal. This platform does
-            not account for the physical condition, interior upgrades, or latent defects of a property.
+            {t("weeklyDeals.disclaimer.appraisalBody")}
           </p>
-          <h4>Data Sources</h4>
-          <p>Dubai Land Department (DLD), Bayut, and various public records.</p>
+          <h4>{t("weeklyDeals.disclaimer.sourcesTitle")}</h4>
+          <p>{t("weeklyDeals.disclaimer.sourcesBody")}</p>
         </div>
       </div>
     </section>
   );
 }
-
 
 
 

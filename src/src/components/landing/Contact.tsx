@@ -4,15 +4,30 @@ import { Mail } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function LandingContact() {
+  const { t } = useTranslations("contact", {
+    "contact.title": "Get in Touch",
+    "contact.subtitle": "Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
+    "contact.emailTitle": "Email Us",
+    "contact.emailResponse": "We'll respond within 24 hours",
+    "contact.form.name": "Name",
+    "contact.form.namePlaceholder": "Your name",
+    "contact.form.email": "Email",
+    "contact.form.emailPlaceholder": "your@email.com",
+    "contact.form.message": "Message",
+    "contact.form.messagePlaceholder": "Tell us how we can help...",
+    "contact.form.submit": "Send Message",
+  });
+
   return (
     <section id="contact" className="py-16 bg-muted/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center mb-12">
-          <h2 className="text-3xl font-bold sm:text-4xl">Get in Touch</h2>
+          <h2 className="text-3xl font-bold sm:text-4xl">{t("contact.title")}</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            {t("contact.subtitle")}
           </p>
         </div>
 
@@ -23,9 +38,9 @@ export default function LandingContact() {
                 <Mail className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Email Us</h3>
+                <h3 className="font-semibold mb-1">{t("contact.emailTitle")}</h3>
                 <p className="text-sm text-muted-foreground">info@rensights.com</p>
-                <p className="text-sm text-muted-foreground">We'll respond within 24 hours</p>
+                <p className="text-sm text-muted-foreground">{t("contact.emailResponse")}</p>
               </div>
             </div>
           </div>
@@ -33,18 +48,18 @@ export default function LandingContact() {
           <div className="bg-card rounded-2xl p-6 shadow-lg">
             <form className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Name</label>
-                <Input placeholder="Your name" />
+                <label className="text-sm font-medium mb-2 block">{t("contact.form.name")}</label>
+                <Input placeholder={t("contact.form.namePlaceholder")} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Email</label>
-                <Input type="email" placeholder="your@email.com" />
+                <label className="text-sm font-medium mb-2 block">{t("contact.form.email")}</label>
+                <Input type="email" placeholder={t("contact.form.emailPlaceholder")} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Message</label>
-                <Textarea placeholder="Tell us how we can help..." rows={4} />
+                <label className="text-sm font-medium mb-2 block">{t("contact.form.message")}</label>
+                <Textarea placeholder={t("contact.form.messagePlaceholder")} rows={4} />
               </div>
-              <Button className="w-full">Send Message</Button>
+              <Button className="w-full">{t("contact.form.submit")}</Button>
             </form>
           </div>
         </div>
@@ -52,4 +67,3 @@ export default function LandingContact() {
     </section>
   );
 }
-

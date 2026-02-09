@@ -4,42 +4,63 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
+import { useTranslations } from "@/hooks/useTranslations";
 
 export default function FAQPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { t } = useTranslations("faq", {
+    "faq.title": "Frequently Asked Questions",
+    "faq.subtitle": "Find answers to common questions about Rensights",
+    "faq.q1": "Will we have flexibility to manage it later?",
+    "faq.a1": "Yes, you'll have full flexibility to manage your account, subscription, and preferences at any time through your account dashboard.",
+    "faq.q2": "What payment methods do you accept?",
+    "faq.a2": "We accept all major credit cards and debit cards through our secure payment processor.",
+    "faq.q3": "Can I cancel my subscription anytime?",
+    "faq.a3": "Yes, you can cancel your subscription at any time. Your access will continue until the end of your current billing period.",
+    "faq.q4": "What happens if I exceed my report limit?",
+    "faq.a4": "If you exceed your monthly report limit, you can upgrade to a higher tier or wait until the next billing cycle for your limit to reset.",
+    "faq.q5": "How accurate are the property valuations?",
+    "faq.a5": "Our AI-powered valuation models analyze thousands of data points including recent sales, market trends, and property characteristics to provide highly accurate estimates.",
+    "faq.q6": "Do you provide support for international investors?",
+    "faq.a6": "Yes, Rensights is specifically designed for foreign investors looking to invest in Dubai real estate. We provide guidance on the buying process, ownership requirements, and market insights.",
+    "faq.q7": "How often is the data updated?",
+    "faq.a7": "Our property data is updated weekly, and market trends are refreshed daily to ensure you have the most current information.",
+    "faq.q8": "What cities are currently covered?",
+    "faq.a8": "Currently, we focus on Dubai. We're continuously expanding our coverage and will notify users when new cities become available.",
+  });
 
   const faqs = [
     {
-      question: "Will we have flexibility to manage it later?",
-      answer: "Yes, you'll have full flexibility to manage your account, subscription, and preferences at any time through your account dashboard."
+      question: t("faq.q1"),
+      answer: t("faq.a1"),
     },
     {
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards and debit cards through our secure payment processor."
+      question: t("faq.q2"),
+      answer: t("faq.a2"),
     },
     {
-      question: "Can I cancel my subscription anytime?",
-      answer: "Yes, you can cancel your subscription at any time. Your access will continue until the end of your current billing period."
+      question: t("faq.q3"),
+      answer: t("faq.a3"),
     },
     {
-      question: "What happens if I exceed my report limit?",
-      answer: "If you exceed your monthly report limit, you can upgrade to a higher tier or wait until the next billing cycle for your limit to reset."
+      question: t("faq.q4"),
+      answer: t("faq.a4"),
     },
     {
-      question: "How accurate are the property valuations?",
-      answer: "Our AI-powered valuation models analyze thousands of data points including recent sales, market trends, and property characteristics to provide highly accurate estimates."
+      question: t("faq.q5"),
+      answer: t("faq.a5"),
     },
     {
-      question: "Do you provide support for international investors?",
-      answer: "Yes, Rensights is specifically designed for foreign investors looking to invest in Dubai real estate. We provide guidance on the buying process, ownership requirements, and market insights."
+      question: t("faq.q6"),
+      answer: t("faq.a6"),
     },
     {
-      question: "How often is the data updated?",
-      answer: "Our property data is updated weekly, and market trends are refreshed daily to ensure you have the most current information."
+      question: t("faq.q7"),
+      answer: t("faq.a7"),
     },
     {
-      question: "What cities are currently covered?",
-      answer: "Currently, we focus on Dubai. We're continuously expanding our coverage and will notify users when new cities become available."
+      question: t("faq.q8"),
+      answer: t("faq.a8"),
     }
   ];
 
@@ -51,10 +72,10 @@ export default function FAQPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Frequently Asked Questions
+              {t("faq.title")}
             </h1>
             <p className="text-lg text-muted-foreground text-center mb-12">
-              Find answers to common questions about Rensights
+              {t("faq.subtitle")}
             </p>
 
             <div className="space-y-4">
@@ -90,7 +111,6 @@ export default function FAQPage() {
     </div>
   );
 }
-
 
 
 
