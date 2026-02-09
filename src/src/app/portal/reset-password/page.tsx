@@ -481,7 +481,7 @@ export default function ResetPasswordPage() {
         <div className="login-container">
           <div className="login-box">
             <div className="login-header">
-              <h1>{t("authReset.loading") || "Loading..."}</h1>
+              <h1>Loading...</h1>
             </div>
           </div>
         </div>
