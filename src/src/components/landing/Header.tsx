@@ -14,6 +14,7 @@ export default function LandingHeader() {
   const [mounted, setMounted] = useState(false);
   const [content, setContent] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [hasArticles, setHasArticles] = useState(false);
   
   // Get language from context - must be called unconditionally
   // If context throws, React will handle it (component won't render)
@@ -55,6 +56,12 @@ export default function LandingHeader() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, mounted]);
 
+  useEffect(() => {
+    if (mounted) {
+      loadArticlesStatus();
+    }
+  }, [mounted]);
+
   const loadContent = async () => {
     // Don't load if not mounted (prevents SSR/client mismatch)
     if (!mounted || typeof window === 'undefined') return;
@@ -80,7 +87,23 @@ export default function LandingHeader() {
     }
   };
 
+  const loadArticlesStatus = async () => {
+    if (!mounted || typeof window === 'undefined') return;
+    if (!apiClient || typeof apiClient.getArticles !== 'function') {
+      setHasArticles(false);
+      return;
+    }
+
+    try {
+      const list = await apiClient.getArticles();
+      setHasArticles(Array.isArray(list) && list.length > 0);
+    } catch (error) {
+      setHasArticles(false);
+    }
+  };
+
   const navSolutions = content?.navSolutions || "Solutions";
+  const navArticles = content?.navArticles || "Articles";
   const navPricing = content?.navPricing || "Pricing";
   const navWhatsNew = content?.navWhatsNew || "What's New";
   const navLogin = content?.navLogin || "Login";
@@ -122,6 +145,20 @@ export default function LandingHeader() {
             >
               {navSolutions}
             </Link>
+            {hasArticles && (
+              <Link 
+                href="/articles" 
+                className="text-base font-medium transition-colors"
+                style={{
+                  color: '#1f2937',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#f6b042'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#1f2937'}
+              >
+                {navArticles}
+              </Link>
+            )}
             <Link 
               href="/pricing" 
               className="text-base font-medium transition-colors"
@@ -181,6 +218,11 @@ export default function LandingHeader() {
             <Link href="/solutions" className="block text-sm">
               {navSolutions}
             </Link>
+            {hasArticles && (
+              <Link href="/articles" className="block text-sm">
+                {navArticles}
+              </Link>
+            )}
             <Link href="/pricing" className="block text-sm">
               {navPricing}
             </Link>
