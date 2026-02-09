@@ -9,6 +9,7 @@
     Ubuntu, Cantarell, sans-serif;
   background: linear-gradient(135deg, #f6b042 0%, #f39c12 100%);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   position: relative;
 }
@@ -22,7 +23,9 @@
   flex-direction: column;
   position: fixed;
   height: 100vh;
+  height: 100dvh;
   max-height: 100vh;
+  max-height: 100dvh;
   left: 0;
   top: 0;
   z-index: 100;
@@ -178,6 +181,8 @@
   flex: 1;
   padding: 30px;
   overflow-y: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .header {
@@ -702,6 +707,7 @@
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
     height: 100vh;
+    height: 100dvh;
   }
   
   .content-section.active {

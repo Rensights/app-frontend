@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, ReactNode } from "react";
+import { useState, useEffect, useCallback, ReactNode, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { AppSidebar } from "./AppSidebar";
@@ -17,17 +17,21 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   // Initialize sidebar as open (desktop default) - will be adjusted on mount
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const lastIsDesktop = useRef<boolean | null>(null);
 
   // Set sidebar state based on screen size after mount to avoid hydration issues
   useEffect(() => {
     setIsMounted(true);
     const checkScreenSize = () => {
       const isDesktop = window.innerWidth > 1024;
-      // On desktop (>1024px), always keep sidebar open
-      // On mobile, maintain current state (don't force close to avoid flickering)
+      // On desktop (>1024px), always keep sidebar open.
+      // On mobile, default to closed on first load or when crossing from desktop.
       if (isDesktop) {
-        setIsSidebarOpen(true); // Force open on desktop
+        setIsSidebarOpen(true);
+      } else if (lastIsDesktop.current === null || lastIsDesktop.current) {
+        setIsSidebarOpen(false);
       }
+      lastIsDesktop.current = isDesktop;
     };
 
     // Check immediately on mount
@@ -125,4 +129,3 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
     </div>
   );
 }
-
