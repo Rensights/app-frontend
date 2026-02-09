@@ -231,9 +231,12 @@
 }
 
 .btn:disabled {
-  opacity: 0.6;
+  background: #d1d5db;
+  color: #fff;
+  opacity: 1;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .back-to-login {
@@ -292,6 +295,36 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
+}
+
+.terms-consent {
+  margin-top: 16px;
+}
+
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.terms-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.terms-link {
+  color: #f39c12;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.terms-link:hover {
+  color: #d97706;
 }
 
 @keyframes spin {
@@ -489,4 +522,3 @@
   border-color: #f39c12;
   box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
 }
-

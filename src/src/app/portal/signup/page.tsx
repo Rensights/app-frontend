@@ -63,6 +63,8 @@ function SignUpPageContent() {
   const [codeError, setCodeError] = useState<string>("");
   const [resendTimer, setResendTimer] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [termsError, setTermsError] = useState("");
   const codeRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
   // Redirect to city analysis if user is already logged in
@@ -165,6 +167,7 @@ function SignUpPageContent() {
       nextErrors.goals = "Select at least one goal";
     if (!formState.portfolio) nextErrors.portfolio = "Required";
     if (!formState.plan) nextErrors.plan = "Please select a plan";
+    if (!agreeTerms) setTermsError("Please accept the Terms of Services and Privacy Policy.");
 
     setErrors(nextErrors);
     
@@ -270,7 +273,7 @@ function SignUpPageContent() {
       }, 300);
     }
     
-    return Object.keys(nextErrors).length === 0;
+    return Object.keys(nextErrors).length === 0 && agreeTerms;
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -904,7 +907,47 @@ function SignUpPageContent() {
               </div>
             )}
 
-            <button type="submit" className="btn" disabled={isSubmitting}>
+            <div className="terms-consent">
+              <label className="terms-checkbox">
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(event) => {
+                    setAgreeTerms(event.target.checked);
+                    setTermsError("");
+                  }}
+                />
+                <span>
+                  I have read and agree to the{" "}
+                  <a
+                    className="terms-link"
+                    href="/privacy-terms"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Terms of Services
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    className="terms-link"
+                    href="/privacy-terms"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Privacy Policy
+                  </a>
+                  .
+                </span>
+              </label>
+              {termsError && (
+                <div className="error-message show" style={{ marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                  <span>⚠</span>
+                  <span>{termsError}</span>
+                </div>
+              )}
+            </div>
+
+            <button type="submit" className="btn" disabled={isSubmitting || !agreeTerms}>
               {isSubmitting ? (
                 <>
                   <span className="loading" />
@@ -1090,4 +1133,3 @@ const PlanCard = ({
 
 const isValidEmail = (value: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-
