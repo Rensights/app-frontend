@@ -528,6 +528,12 @@ class ApiClient {
     });
   }
 
+  async createPortalSession(): Promise<{ url: string }> {
+    return this.request<{ url: string }>('/api/subscriptions/portal-session', {
+      method: 'POST',
+    });
+  }
+
   // Analysis request endpoints
   async getReportCount(): Promise<{ used: number; remaining: number; max: number }> {
     return this.request<{ used: number; remaining: number; max: number }>('/api/analysis-requests/report-count', {

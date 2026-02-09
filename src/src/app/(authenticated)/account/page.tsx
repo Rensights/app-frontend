@@ -26,6 +26,7 @@ function AccountPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [invoicesPerPage] = useState(2);
   const [processedSessionId, setProcessedSessionId] = useState<string | null>(null);
+  const [openingPortal, setOpeningPortal] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -163,6 +164,22 @@ function AccountPageContent() {
 
   const handleCancelSubscription = () => {
     setShowCancelConfirm(true);
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      setOpeningPortal(true);
+      const { url } = await apiClient.createPortalSession();
+      if (url) {
+        window.location.href = url;
+      } else {
+        toast.showError("Failed to open Stripe portal");
+      }
+    } catch (err: any) {
+      toast.showError(err?.message || "Failed to open Stripe portal");
+    } finally {
+      setOpeningPortal(false);
+    }
   };
 
   const confirmCancelSubscription = async () => {
@@ -500,6 +517,15 @@ function AccountPageContent() {
                 {subscription?.status === "ACTIVE" && !subscription?.cancelAtPeriodEnd && (
                   <button className="btn btn-danger" onClick={handleCancelSubscription}>
                     Cancel Subscription
+                  </button>
+                )}
+                {subscription?.planType && subscription.planType !== "FREE" && (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={handleManageSubscription}
+                    disabled={openingPortal}
+                  >
+                    {openingPortal ? "Opening Stripe..." : "Manage in Stripe"}
                   </button>
                 )}
                 {subscription?.cancelAtPeriodEnd && (
