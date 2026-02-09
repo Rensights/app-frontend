@@ -307,8 +307,8 @@ export default function EarlyAccessPage() {
       <div className="circle circle2" />
       <div className="circle circle3" />
 
-      <div className="container">
-        <header className="page-header">
+      <div className="early-access-container">
+        <header className="early-access-header">
           <h1>{t("earlyAccess.title")}</h1>
           <p>
             {t("earlyAccess.subtitle")}
