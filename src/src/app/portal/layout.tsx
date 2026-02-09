@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import LandingHeader from "@/components/landing/Header";
@@ -18,8 +18,10 @@ export default function PortalLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading } = useUser();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const allowWhenAuthenticated = pathname === "/portal/early-access";
 
   useEffect(() => {
     // Wait for auth state to load
@@ -27,12 +29,12 @@ export default function PortalLayout({
 
     // If user is authenticated, redirect to dashboard
     // Portal pages (login, signup, forgot-password, etc.) are only for unauthenticated users
-    if (user) {
+    if (user && !allowWhenAuthenticated) {
       setIsRedirecting(true);
       // Use replace to prevent back button navigation to portal pages
       router.replace("/dashboard");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, allowWhenAuthenticated]);
 
   // Show loading spinner while checking auth state
   if (loading || isRedirecting) {
@@ -53,7 +55,7 @@ export default function PortalLayout({
   }
 
   // If user is authenticated, show loading (redirect is in progress)
-  if (user) {
+  if (user && !allowWhenAuthenticated) {
     return (
       <>
         <LandingHeader />
@@ -78,4 +80,3 @@ export default function PortalLayout({
     </>
   );
 }
-
