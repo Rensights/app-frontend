@@ -101,6 +101,22 @@ export default function SolutionsPage() {
         </div>
       </section>
 
+      <section className="py-10 bg-gradient-to-b from-background to-muted/20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto rounded-2xl border border-amber-200/80 bg-amber-50/80 px-6 py-6 text-amber-900 shadow-sm">
+            <h3 className="text-xl font-semibold mb-3">Disclaimer</h3>
+            <p className="text-sm leading-relaxed text-amber-900/90">
+              Rensights provides property market data and analysis for informational purposes only. We are not licensed
+              property valuers, and our estimates do not constitute formal valuations under any regulatory framework.
+              Nothing on this platform should be considered investment, financial, legal, or tax advice. All data is
+              sourced from public records and third-party listing sources, and may contain inaccuracies or delays. Users
+              should conduct their own due diligence and consult qualified professionals before making any property
+              decisions. Past performance and historical trends do not guarantee future results.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <LandingFooter />
     </div>
   );
@@ -251,4 +267,3 @@ function SolutionSection({
     </section>
   );
 }
-
