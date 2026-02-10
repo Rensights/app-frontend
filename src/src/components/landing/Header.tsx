@@ -215,6 +215,9 @@ export default function LandingHeader() {
           }}
         >
           <div className="container mx-auto space-y-3 px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+            </div>
             <Link href="/solutions" className="block text-sm">
               {navSolutions}
             </Link>
