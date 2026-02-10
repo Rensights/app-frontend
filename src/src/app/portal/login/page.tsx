@@ -129,7 +129,8 @@ export default function LoginPage() {
     const nextErrors = { email: "", password: "", code: "" };
     setLoginError("");
 
-    if (!isValidEmail(email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!isValidEmail(normalizedEmail)) {
       nextErrors.email = t("authLogin.errorEmail");
     }
     if (!password) {
@@ -145,11 +146,11 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       const deviceFingerprint = apiClient.getDeviceFingerprint();
-      const loginResponse = await apiClient.login({ email, password, deviceFingerprint });
+      const loginResponse = await apiClient.login({ email: normalizedEmail, password, deviceFingerprint });
       
       if (loginResponse.requiresVerification) {
         // New device or unverified email - verification code already sent by backend
-        showVerificationStep(email);
+        showVerificationStep(normalizedEmail);
         // Store device fingerprint for verification
         if (loginResponse.deviceFingerprint) {
           if (typeof window !== 'undefined') {
@@ -195,7 +196,7 @@ export default function LoginPage() {
       // Check if error is about email not verified
       if (error.message && (error.message.includes("Email not verified") || error.message.includes("email not verified"))) {
         // Backend should send verification code, show verification step
-        showVerificationStep(email);
+        showVerificationStep(normalizedEmail);
         const deviceFingerprint = apiClient.getDeviceFingerprint();
         if (deviceFingerprint && typeof window !== 'undefined') {
           localStorage.setItem('pendingDeviceFingerprint', deviceFingerprint);
@@ -463,6 +464,9 @@ export default function LoginPage() {
                   placeholder={t("authLogin.emailPlaceholder")}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                 />
                 {errors.email && (
