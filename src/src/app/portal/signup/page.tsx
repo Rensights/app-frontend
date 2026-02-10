@@ -130,6 +130,8 @@ function SignUpPageContent() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [termsError, setTermsError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const codeRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
   // Redirect to city analysis if user is already logged in
@@ -811,15 +813,36 @@ function SignUpPageContent() {
                 <label className="form-label required-label" htmlFor="password">
                   {t("authSignup.password")}
                 </label>
-                <input
-                  id="password"
-                  type="password"
-                  className={`form-input ${errors.password ? "error" : ""}`}
-                  placeholder={t("authSignup.passwordPlaceholder")}
-                  value={formState.password}
-                  onChange={(event) => handleChange("password", event.target.value)}
-                  required
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    className={`form-input ${errors.password ? "error" : ""}`}
+                    placeholder={t("authSignup.passwordPlaceholder")}
+                    value={formState.password}
+                    onChange={(event) => handleChange("password", event.target.value)}
+                    style={{ paddingRight: "3rem" }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    style={{
+                      position: "absolute",
+                      right: "0.75rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                      cursor: "pointer",
+                    }}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
                 {errors.password && (
                   <div className="error-message show" style={{ fontSize: '0.75rem' }}>
                     <span>⚠</span>
@@ -857,16 +880,46 @@ function SignUpPageContent() {
                   </div>
                 )}
               </div>
-              <div data-field="confirmPassword">
-                <Field
-                  id="confirmPassword"
-                  label={t("authSignup.confirmPassword")}
-                  type="password"
-                  placeholder={t("authSignup.confirmPlaceholder")}
-                  value={formState.confirmPassword}
-                  onChange={(value) => handleChange("confirmPassword", value)}
-                  error={errors.confirmPassword}
-                />
+              <div className={`form-group ${errors.confirmPassword ? 'has-error' : ''}`} data-field="confirmPassword" style={{ flex: 1 }}>
+                <label className="form-label required-label" htmlFor="confirmPassword">
+                  {t("authSignup.confirmPassword")}
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    className={`form-input ${errors.confirmPassword ? "error" : ""}`}
+                    placeholder={t("authSignup.confirmPlaceholder")}
+                    value={formState.confirmPassword}
+                    onChange={(event) => handleChange("confirmPassword", event.target.value)}
+                    style={{ paddingRight: "3rem" }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    style={{
+                      position: "absolute",
+                      right: "0.75rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                      cursor: "pointer",
+                    }}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <div className="error-message show" style={{ fontSize: '0.75rem' }}>
+                    <span>⚠</span>
+                    <span>{errors.confirmPassword}</span>
+                  </div>
+                )}
               </div>
             </div>
 

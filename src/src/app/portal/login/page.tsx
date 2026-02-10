@@ -55,6 +55,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<Step>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({
     email: "",
     password: "",
@@ -475,15 +476,36 @@ export default function LoginPage() {
                 <label className="form-label" htmlFor="password">
                   {t("authLogin.passwordLabel")}
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  className={`form-input ${errors.password ? "error" : ""}`}
-                  placeholder={t("authLogin.passwordPlaceholder")}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    className={`form-input ${errors.password ? "error" : ""}`}
+                    placeholder={t("authLogin.passwordPlaceholder")}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    style={{ paddingRight: "3rem" }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    style={{
+                      position: "absolute",
+                      right: "0.75rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                      cursor: "pointer",
+                    }}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
                 {errors.password && (
                   <div className="error-message show" id="passwordError">
                     {errors.password}
