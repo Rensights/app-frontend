@@ -821,6 +821,9 @@ function SignUpPageContent() {
                     placeholder={t("authSignup.passwordPlaceholder")}
                     value={formState.password}
                     onChange={(event) => handleChange("password", event.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     style={{ paddingRight: "3rem" }}
                     required
                   />
@@ -892,6 +895,9 @@ function SignUpPageContent() {
                     placeholder={t("authSignup.confirmPlaceholder")}
                     value={formState.confirmPassword}
                     onChange={(event) => handleChange("confirmPassword", event.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     style={{ paddingRight: "3rem" }}
                     required
                   />

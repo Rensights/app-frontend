@@ -488,6 +488,9 @@ export default function LoginPage() {
                     placeholder={t("authLogin.passwordPlaceholder")}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     style={{ paddingRight: "3rem" }}
                     required
                   />
