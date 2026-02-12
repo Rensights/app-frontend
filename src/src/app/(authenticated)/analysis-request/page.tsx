@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import "../dashboard/dashboard.css";
@@ -379,7 +379,12 @@ const areaOptions = [
 
 export default function AnalysisRequestPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const toast = useToast();
+  const reportId = searchParams?.get("id");
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState("");
+  const [report, setReport] = useState<any | null>(null);
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [features, setFeatures] = useState<string[]>([]);
   const [filesMessage, setFilesMessage] = useState("");
@@ -387,6 +392,25 @@ export default function AnalysisRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: string; lng: string } | null>(null);
+
+  useEffect(() => {
+    if (!reportId) {
+      return;
+    }
+    const loadReport = async () => {
+      setReportLoading(true);
+      setReportError("");
+      try {
+        const data = await apiClient.getAnalysisRequestById(reportId);
+        setReport(data);
+      } catch (error: any) {
+        setReportError(error?.message || "Failed to load analysis result");
+      } finally {
+        setReportLoading(false);
+      }
+    };
+    loadReport();
+  }, [reportId]);
 
   const plotVisible = useMemo(
     () => formState.propertyType === "villa",
@@ -535,6 +559,88 @@ export default function AnalysisRequestPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (reportId) {
+    return (
+      <div className="analysis-page">
+        <div className="analysis-page-wrapper">
+          <header className="header">
+            <div className="header-left">
+              <div className="page-title">Property Analysis Report</div>
+              <div className="page-subtitle">Your request status and results</div>
+            </div>
+            <button className="report-back-btn" onClick={() => router.push("/dashboard")}>
+              Back to Reports
+            </button>
+          </header>
+
+          {reportLoading && (
+            <div className="analysis-report-card">
+              <div className="analysis-report-loading">Loading report...</div>
+            </div>
+          )}
+
+          {reportError && (
+            <div className="analysis-report-card">
+              <div className="analysis-report-error">{reportError}</div>
+            </div>
+          )}
+
+          {!reportLoading && report && (
+            <div className="analysis-report-card">
+              <div className="analysis-report-header">
+                <div>
+                  <div className="analysis-report-title">
+                    {report.buildingName || "Property Analysis"}
+                  </div>
+                  <div className="analysis-report-meta">
+                    {report.area || "Dubai"} • {report.city || "Dubai"}
+                  </div>
+                </div>
+                <span className={`analysis-report-status ${report.status?.toLowerCase() || "pending"}`}>
+                  {report.status || "PENDING"}
+                </span>
+              </div>
+
+              <div className="analysis-report-grid">
+                <div>
+                  <div className="analysis-report-label">Property Type</div>
+                  <div className="analysis-report-value">{report.propertyType || "N/A"}</div>
+                </div>
+                <div>
+                  <div className="analysis-report-label">Bedrooms</div>
+                  <div className="analysis-report-value">{report.bedrooms || "N/A"}</div>
+                </div>
+                <div>
+                  <div className="analysis-report-label">Asking Price</div>
+                  <div className="analysis-report-value">{report.askingPrice || "N/A"}</div>
+                </div>
+                <div>
+                  <div className="analysis-report-label">Submitted</div>
+                  <div className="analysis-report-value">
+                    {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : "N/A"}
+                  </div>
+                </div>
+              </div>
+
+              {report.status !== "COMPLETED" && (
+                <div className="analysis-report-processing">
+                  Your analysis is processing. We will publish the report once it is approved.
+                </div>
+              )}
+
+              {report.analysisResult && (
+                <div className="analysis-report-result">
+                  <div className="analysis-report-label">Analysis Result</div>
+                  <pre>{JSON.stringify(report.analysisResult, null, 2)}</pre>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="analysis-page">

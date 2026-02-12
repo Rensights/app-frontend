@@ -9,6 +9,108 @@
   width: 100%;
 }
 
+.analysis-report-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.analysis-report-loading,
+.analysis-report-error,
+.analysis-report-processing {
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.analysis-report-error {
+  color: #b91c1c;
+}
+
+.analysis-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.analysis-report-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.analysis-report-meta {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.analysis-report-status {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(148, 163, 184, 0.2);
+  color: #475569;
+}
+
+.analysis-report-status.completed {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.analysis-report-status.in_progress {
+  background: rgba(234, 179, 8, 0.15);
+  color: #a16207;
+}
+
+.analysis-report-status.pending {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+
+.analysis-report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.analysis-report-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.analysis-report-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.analysis-report-result {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.analysis-report-result pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
 .analysis-page-wrapper {
   width: 100%;
 }
@@ -35,6 +137,22 @@
   display: none;
 }
 
+.report-back-btn {
+  background: transparent;
+  color: #e67e22;
+  border: 1px solid rgba(230, 126, 34, 0.4);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-back-btn:hover {
+  background: rgba(230, 126, 34, 0.08);
+}
+
 .logo {
   font-size: 1.8rem;
   font-weight: 700;
@@ -48,6 +166,12 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: #333;
+}
+
+.page-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin-top: 6px;
 }
 
 .verified-badge {
@@ -394,4 +518,3 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
-

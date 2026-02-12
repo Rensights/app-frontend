@@ -590,6 +590,10 @@ class ApiClient {
     return this.request<any[]>('/api/analysis-requests/my-requests', {}, false);
   }
 
+  async getAnalysisRequestById(requestId: string): Promise<any> {
+    return this.request<any>(`/api/analysis-requests/${requestId}`, {}, false);
+  }
+
   async checkoutSuccess(sessionId: string): Promise<SubscriptionResponse> {
     return this.request<SubscriptionResponse>(`/api/subscriptions/checkout-success?session_id=${sessionId}`, {
       method: 'GET',
