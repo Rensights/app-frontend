@@ -541,7 +541,7 @@ class ApiClient {
     });
   }
 
-  async submitAnalysisRequest(formData: FormData): Promise<{ message: string }> {
+  async submitAnalysisRequest(formData: FormData): Promise<{ message: string; requestId?: string }> {
     // SECURITY: Token is in HttpOnly cookie, automatically sent by browser
     const apiUrl = this.baseUrl || this.getApiUrl();
     const url = `${apiUrl}/api/analysis-requests`;

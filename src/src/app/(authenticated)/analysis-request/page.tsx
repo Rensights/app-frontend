@@ -545,6 +545,9 @@ export default function AnalysisRequestPage() {
       const response = await apiClient.submitAnalysisRequest(formData);
       
       toast.showSuccess(response.message + " Thank you for choosing Rensights!");
+      if (response.requestId) {
+        router.push(`/analysis-request?id=${response.requestId}`);
+      }
       
       // Reset form
       setFormState(initialFormState);
