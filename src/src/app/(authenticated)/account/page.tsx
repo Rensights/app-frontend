@@ -260,16 +260,16 @@ function AccountPageContent() {
               <span className="info-value">{formatDate(user?.createdAt)}</span>
             </div>
             <div className="form-actions">
-              <button className="btn btn-edit" onClick={handleEdit}>
+              <button className="btn btn-primary btn-edit-profile" onClick={handleEdit}>
                 Edit Profile
               </button>
               {canManageStripe && (
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline btn-manage-subscription"
                   onClick={handleManageSubscription}
                   disabled={openingPortal}
                 >
-                  {openingPortal ? "Opening Stripe..." : "Manage in Stripe"}
+                  {openingPortal ? "Opening Portal..." : "Manage Subscription"}
                 </button>
               )}
             </div>

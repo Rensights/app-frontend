@@ -241,6 +241,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  line-height: 1;
 }
 
 .btn:disabled {
@@ -267,6 +268,26 @@
 
 .btn-secondary:hover:not(:disabled) {
   background: rgba(108, 117, 125, 0.2);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #344054;
+  border: 2px solid rgba(52, 64, 84, 0.15);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(52, 64, 84, 0.06);
+  border-color: rgba(52, 64, 84, 0.25);
+}
+
+.btn-edit-profile {
+  box-shadow: 0 6px 18px rgba(243, 156, 18, 0.25);
+}
+
+.btn-manage-subscription {
+  min-width: 200px;
+  justify-content: center;
 }
 
 .btn-danger {
