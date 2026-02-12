@@ -617,6 +617,10 @@ class ApiClient {
     return this.request<PaginatedDealResponse>(`/api/deals?${params.toString()}`, {}, true);
   }
 
+  async getWeeklyDealsEnabled(): Promise<{ enabled: boolean }> {
+    return this.request<{ enabled: boolean }>(`/api/deals/enabled`, {}, false);
+  }
+
   async getDealById(dealId: string): Promise<Deal> {
     return this.request<Deal>(`/api/deals/${dealId}`, {}, true);
   }

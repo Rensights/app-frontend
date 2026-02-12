@@ -6,6 +6,7 @@ import { apiClient, Deal } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import "../dashboard/dashboard.css";
 import "./property-details.css";
 
@@ -17,6 +18,7 @@ function PropertyDetailsPageContent() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
+  const { enabled: weeklyDealsEnabled, loading: weeklyDealsLoading } = useWeeklyDealsEnabled();
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comparableDeals, setComparableDeals] = useState<Deal[]>([]);
@@ -93,10 +95,30 @@ function PropertyDetailsPageContent() {
   }, [propertyId]);
 
   useEffect(() => {
-    if (propertyId) {
+    if (weeklyDealsEnabled === false) {
+      router.replace("/dashboard");
+      return;
+    }
+    if (weeklyDealsEnabled === true && propertyId) {
       loadDeal();
     }
-  }, [propertyId, loadDeal]);
+  }, [propertyId, loadDeal, weeklyDealsEnabled, router]);
+
+  if (weeklyDealsLoading) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Loading..." />
+      </div>
+    );
+  }
+
+  if (weeklyDealsEnabled === false) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Redirecting..." />
+      </div>
+    );
+  }
 
   const handleGoBack = () => router.push("/deals");
   const handleViewProperty = () => {
@@ -601,4 +623,3 @@ const ComparableCard = ({
     </div>
   </div>
 );
-

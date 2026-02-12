@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import "../dashboard/dashboard.css";
 import "../deals/deals.css";
 import { useTranslations } from "@/hooks/useTranslations";
@@ -15,6 +17,7 @@ export default function WeeklyDealsPage() {
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const { enabled: weeklyDealsEnabled, loading: weeklyDealsLoading } = useWeeklyDealsEnabled();
   const { t } = useTranslations("weeklyDeals", {
     "weeklyDeals.upgrade.title": "Upgrade to Standard Package",
     "weeklyDeals.upgrade.price": "$20",
@@ -70,6 +73,28 @@ export default function WeeklyDealsPage() {
       setIsUpgrading(false);
     }
   };
+
+  useEffect(() => {
+    if (weeklyDealsEnabled === false) {
+      router.replace("/dashboard");
+    }
+  }, [weeklyDealsEnabled, router]);
+
+  if (weeklyDealsLoading) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Loading..." />
+      </div>
+    );
+  }
+
+  if (weeklyDealsEnabled === false) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Redirecting..." />
+      </div>
+    );
+  }
 
   return (
     <section className="content-section active" style={{ position: 'relative' }}>
@@ -181,7 +206,6 @@ export default function WeeklyDealsPage() {
     </section>
   );
 }
-
 
 
 

@@ -7,6 +7,7 @@ import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import "../dashboard/dashboard.css";
 import "./deals.css";
 
@@ -15,6 +16,7 @@ export default function DealsPage() {
   const toast = useToast();
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
+  const { enabled: weeklyDealsEnabled, loading: weeklyDealsLoading } = useWeeklyDealsEnabled();
   const [loading, setLoading] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -76,8 +78,30 @@ export default function DealsPage() {
   }, [debouncedCity, debouncedFilters, currentPage]);
 
   useEffect(() => {
-    loadDeals();
-  }, [loadDeals]);
+    if (weeklyDealsEnabled === false) {
+      router.replace("/dashboard");
+      return;
+    }
+    if (weeklyDealsEnabled === true) {
+      loadDeals();
+    }
+  }, [loadDeals, weeklyDealsEnabled, router]);
+
+  if (weeklyDealsLoading) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Loading..." />
+      </div>
+    );
+  }
+
+  if (weeklyDealsEnabled === false) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Redirecting..." />
+      </div>
+    );
+  }
 
   const filteredDeals = useMemo(() => {
     return deals.filter((deal) => {

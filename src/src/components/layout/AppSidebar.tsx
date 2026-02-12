@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { LinkWithPrefetch } from "./LinkWithPrefetch";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslations } from "@/hooks/useTranslations";
+import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 
 export const MENU_ITEMS = [
   { id: "analysis", label: "navigation.cityAnalysis", icon: "📊", path: "/city-analysis" },
@@ -23,6 +24,7 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
   const router = useRouter();
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
+  const { enabled: weeklyDealsEnabled } = useWeeklyDealsEnabled();
   const { t } = useTranslations("navigation", {
     "navigation.cityAnalysis": "City Analysis",
     "navigation.propertyReports": "Property Reports",
@@ -59,6 +61,9 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
 
   // Only show overlay on mobile when sidebar is open
   const showOverlay = isMobile && isOpen;
+  const menuItems = weeklyDealsEnabled === false
+    ? MENU_ITEMS.filter((item) => item.id !== "alerts")
+    : MENU_ITEMS;
 
   return (
     <>
@@ -77,7 +82,7 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
         </div>
 
         <nav className="menu">
-          {MENU_ITEMS.map((item) => {
+          {menuItems.map((item) => {
             // Check if current path matches or starts with the item path
             // This handles sub-routes like /city-analysis/detailed
             let isActive = pathname === item.path || pathname.startsWith(item.path + '/');
