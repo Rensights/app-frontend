@@ -145,6 +145,7 @@ function SignUpPageContent() {
   useEffect(() => {
     if (searchParams?.get('canceled') === 'true') {
       setSubmitError("Payment was canceled. You can try again or continue with a free plan.");
+      setFormState((prev) => ({ ...prev, plan: "free" }));
     }
   }, [searchParams]);
 

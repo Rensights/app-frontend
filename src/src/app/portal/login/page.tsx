@@ -172,6 +172,8 @@ export default function LoginPage() {
         
         // Force a refresh of the user context to pick up the new authentication state
         if (typeof window !== 'undefined') {
+          // Force a one-time subscription sync after login
+          localStorage.setItem('rensights-force-subscription-sync', 'true');
           // Trigger storage event for cross-tab sync
           window.localStorage.setItem('rensights-auth-sync', Date.now().toString());
           window.localStorage.removeItem('rensights-auth-sync');
@@ -291,6 +293,8 @@ export default function LoginPage() {
       // Force a refresh of the user context to pick up the new authentication state
       // This ensures the UserContext recognizes the user is authenticated across tabs
       if (typeof window !== 'undefined') {
+        // Force a one-time subscription sync after login
+        localStorage.setItem('rensights-force-subscription-sync', 'true');
         // Trigger storage event for cross-tab sync
         window.localStorage.setItem('rensights-auth-sync', Date.now().toString());
         window.localStorage.removeItem('rensights-auth-sync');

@@ -510,6 +510,12 @@ class ApiClient {
     return this.request<SubscriptionResponse>('/api/subscriptions', {}, false);
   }
 
+  async refreshCurrentSubscription(): Promise<SubscriptionResponse> {
+    return this.request<SubscriptionResponse>('/api/subscriptions/refresh', {
+      method: 'POST',
+    }, false);
+  }
+
   async purchasePlan(planType: 'FREE' | 'PREMIUM' | 'ENTERPRISE', paymentMethodId?: string): Promise<SubscriptionResponse> {
     return this.request<SubscriptionResponse>('/api/subscriptions/purchase', {
       method: 'POST',

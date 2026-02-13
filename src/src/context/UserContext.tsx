@@ -47,6 +47,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const maxRetries = 2; // Retry up to 2 times for manual navigation
     try {
       setLoading(true);
+      
+      // One-time Stripe sync after login to ensure subscription state is accurate
+      if (typeof window !== 'undefined') {
+        const forceSync = localStorage.getItem('rensights-force-subscription-sync');
+        if (forceSync === 'true') {
+          localStorage.removeItem('rensights-force-subscription-sync');
+          try {
+            await apiClient.refreshCurrentSubscription();
+          } catch (err: any) {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('Subscription sync failed:', err);
+            }
+          }
+        }
+      }
+
       // Don't use cache for user loading - always fetch fresh after login/logout
       // Use caching - these requests are already cached in API client
       const [userData, subscriptionData] = await Promise.all([
@@ -324,4 +340,3 @@ export function useUser() {
   }
   return context;
 }
-

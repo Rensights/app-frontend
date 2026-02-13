@@ -21,6 +21,7 @@ function AccountPageContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [processedSessionId, setProcessedSessionId] = useState<string | null>(null);
+  const [handledCancel, setHandledCancel] = useState(false);
   const [openingPortal, setOpeningPortal] = useState(false);
 
   useEffect(() => {
@@ -46,6 +47,15 @@ function AccountPageContent() {
             setProcessedSessionId(null); // Reset on error so user can retry
           }
         }
+
+        const canceled = searchParams?.get('canceled') === 'true';
+        if (canceled && !handledCancel) {
+          router.replace('/account', { scroll: false });
+          setHandledCancel(true);
+          await refreshSubscription();
+          await refreshUser();
+          toast.showError("Payment was canceled. Your plan remains unchanged.");
+        }
         
         if (contextUser) {
           setEditForm({
@@ -63,7 +73,7 @@ function AccountPageContent() {
     if (!contextLoading && contextUser) {
       loadData();
     }
-  }, [router, searchParams, contextUser, contextLoading, refreshUser, refreshSubscription, processedSessionId]);
+  }, [router, searchParams, contextUser, contextLoading, refreshUser, refreshSubscription, processedSessionId, handledCancel, toast]);
 
   const handleEdit = () => {
     setIsEditing(true);
