@@ -360,6 +360,11 @@ function SignUpPageContent() {
         password: formState.password,
         firstName: formState.firstName,
         lastName: formState.lastName,
+        phone: formState.phone,
+        budget: formState.budget,
+        portfolio: formState.portfolio,
+        goals: formState.goals,
+        plan: formState.plan,
         deviceFingerprint: deviceFingerprint,
       });
 

@@ -42,6 +42,11 @@ export interface RegisterRequest {
   firstName?: string;
   lastName?: string;
   deviceFingerprint?: string;
+  phone?: string;
+  budget?: string;
+  portfolio?: string;
+  goals?: string[];
+  plan?: string;
 }
 
 export interface LoginRequest {
