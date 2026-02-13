@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { ArrowRight, Map, Search, FileCheck, Building2, Target, TrendingUp, CheckCircle2, Shield } from "lucide-react";
 import { Button } from "@/components/landing/ui/button";
@@ -8,8 +8,93 @@ import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import Link from "next/link";
 import { useTranslations } from "@/hooks/useTranslations";
+import { apiClient } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
+
+const DEFAULT_VIDEO_IDS = [
+  "dQw4w9WgXcQ",
+  "dQw4w9WgXcQ",
+  "dQw4w9WgXcQ",
+  "dQw4w9WgXcQ",
+];
+
+const parseYouTubeId = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  // If already looks like a YouTube ID, return as-is
+  if (/^[a-zA-Z0-9_-]{10,}$/.test(trimmed) && !trimmed.includes("/")) {
+    return trimmed;
+  }
+
+  // Try to extract from common YouTube URL formats
+  const match =
+    trimmed.match(/[?&]v=([^&]+)/) ||
+    trimmed.match(/youtu\.be\/([^?&#/]+)/) ||
+    trimmed.match(/youtube\.com\/embed\/([^?&#/]+)/);
+
+  return match?.[1] || null;
+};
+
+const extractVideoIds = (content: Record<string, any>): string[] => {
+  if (!content) return [];
+
+  if (Array.isArray(content.videos)) {
+    return content.videos
+      .map((v: any) => parseYouTubeId(typeof v === "string" ? v : v?.url || v?.id))
+      .filter(Boolean) as string[];
+  }
+
+  if (typeof content.videos === "string") {
+    try {
+      const parsed = JSON.parse(content.videos);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((v: any) => parseYouTubeId(typeof v === "string" ? v : v?.url || v?.id))
+          .filter(Boolean) as string[];
+      }
+    } catch {
+      const single = parseYouTubeId(content.videos);
+      if (single) {
+        return [single];
+      }
+    }
+  }
+
+  if (typeof content.videosJson === "string") {
+    try {
+      const parsed = JSON.parse(content.videosJson);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((v: any) => parseYouTubeId(typeof v === "string" ? v : v?.url || v?.id))
+          .filter(Boolean) as string[];
+      }
+    } catch {
+      // Ignore malformed JSON
+    }
+  }
+
+  const keyMatches = Object.keys(content)
+    .filter((key) =>
+      /^video\d+$/i.test(key) ||
+      /^youtube\d+$/i.test(key) ||
+      /^solutionVideo\d+$/i.test(key) ||
+      /^solutionsVideo\d+$/i.test(key)
+    )
+    .sort((a, b) => {
+      const aNum = parseInt(a.replace(/\D+/g, ""), 10);
+      const bNum = parseInt(b.replace(/\D+/g, ""), 10);
+      return aNum - bNum;
+    });
+
+  return keyMatches
+    .map((key) => parseYouTubeId(content[key]))
+    .filter(Boolean) as string[];
+};
 
 export default function SolutionsPage() {
+  const { language } = useLanguage();
   const { t } = useTranslations("solutions", {
     "solutions.title": "Solutions",
     "solutions.subtitle": "Data-driven tools to find potentially underpriced properties before everyone else",
@@ -32,12 +117,35 @@ export default function SolutionsPage() {
     "solutions.step3.description": "Get expert validation with data-backed price analysis and comprehensive risk assessment.",
     "solutions.step3.feature1": "Price check using live market comparables",
     "solutions.step3.feature2": "Risk, liquidity, and appreciation insights",
+    "solutions.step4.badge": "Step 4",
+    "solutions.step4.title": "Monitor & Optimize",
+    "solutions.step4.subtitle": "Keep your portfolio on track",
+    "solutions.step4.description": "Track performance, optimize returns, and stay ahead with continuous market updates.",
+    "solutions.step4.feature1": "Performance tracking dashboards",
+    "solutions.step4.feature2": "Market alerts and optimization insights",
     "solutions.cta.title": "Ready to Start Your Investment Journey?",
     "solutions.cta.subtitle": "Join thousands of investors using data-driven insights to find the best property deals in Dubai",
     "solutions.cta.button": "Start Free Trial",
     "solutions.disclaimer.title": "Disclaimer",
     "solutions.disclaimer.body": "Rensights provides property market data and analysis for informational purposes only. We are not licensed property valuers, and our estimates do not constitute formal valuations under any regulatory framework. Nothing on this platform should be considered investment, financial, legal, or tax advice. All data is sourced from public records and third-party listing sources, and may contain inaccuracies or delays. Users should conduct their own due diligence and consult qualified professionals before making any property decisions. Past performance and historical trends do not guarantee future results.",
   });
+  const [videoIds, setVideoIds] = useState<string[]>(DEFAULT_VIDEO_IDS);
+
+  useEffect(() => {
+    const loadVideos = async () => {
+      try {
+        const data = await apiClient.getLandingPageSection("solutions", language);
+        const extracted = extractVideoIds(data?.content || {});
+        if (extracted.length > 0) {
+          const padded = [...extracted, ...DEFAULT_VIDEO_IDS].slice(0, 4);
+          setVideoIds(padded);
+        }
+      } catch {
+        // Keep defaults if content fetch fails
+      }
+    };
+    loadVideos();
+  }, [language]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,7 +175,7 @@ export default function SolutionsPage() {
           { icon: Building2, text: t("solutions.step1.feature1") },
           { icon: FileCheck, text: t("solutions.step1.feature2") }
         ]}
-        youtubeId="dQw4w9WgXcQ"
+        youtubeId={videoIds[0]}
       />
 
       {/* Solution 2: Find Deals */}
@@ -84,7 +192,7 @@ export default function SolutionsPage() {
         ]}
         metric={t("solutions.step2.metric")}
         showButton={false}
-        youtubeId="dQw4w9WgXcQ"
+        youtubeId={videoIds[1]}
         reverse
       />
 
@@ -100,8 +208,25 @@ export default function SolutionsPage() {
           { icon: CheckCircle2, text: t("solutions.step3.feature1") },
           { icon: Shield, text: t("solutions.step3.feature2") }
         ]}
-        youtubeId="dQw4w9WgXcQ"
+        youtubeId={videoIds[2]}
       />
+
+      {videoIds[3] && (
+        <SolutionSection
+          id="monitor-optimize"
+          badge={t("solutions.step4.badge")}
+          icon={TrendingUp}
+          title={t("solutions.step4.title")}
+          subtitle={t("solutions.step4.subtitle")}
+          description={t("solutions.step4.description")}
+          features={[
+            { icon: CheckCircle2, text: t("solutions.step4.feature1") },
+            { icon: Shield, text: t("solutions.step4.feature2") }
+          ]}
+          youtubeId={videoIds[3]}
+          reverse
+        />
+      )}
 
       {/* Bottom CTA */}
       <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
