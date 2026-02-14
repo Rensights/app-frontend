@@ -43,7 +43,7 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
     if (scriptLoaded.current) return;
 
     // Use API key from environment or fallback to the one from the HTML file
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg';
+    const apiKey = 'AIzaSyBIsfSpvVTK_C692hxTzkv3dj1ViozBcXU';
     
     // Store reference to component's initMap in closure
     const componentInitMap = () => {
