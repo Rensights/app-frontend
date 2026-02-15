@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import "../dashboard/dashboard.css";
+import "../property-details/property-details.css";
 import "./analysis-request.css";
 
 // Dynamically import Leaflet map component to avoid SSR issues
@@ -564,83 +565,305 @@ export default function AnalysisRequestPage() {
   };
 
   if (reportId) {
+    const getAnalysisValue = (keys: string[]) => {
+      if (!report?.analysisResult) return null;
+      for (const key of keys) {
+        const value = report.analysisResult[key];
+        if (value !== undefined && value !== null && value !== "") {
+          return value;
+        }
+      }
+      return null;
+    };
+
+    const parseJsonArray = (value: any) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+      return [];
+    };
+
+    const formatValue = (value: any) => {
+      if (value === null || value === undefined || value === "") return "N/A";
+      return String(value);
+    };
+
+    const analysis = report?.analysisResult || {};
+    const listedPrice = getAnalysisValue(["listed_price_aed", "listedPriceAed", "listed_price"]);
+    const pricePerSqft = getAnalysisValue(["price_per_sqft", "pricePerSqft"]);
+    const sizeSqft = getAnalysisValue(["size_sqft", "sizeSqft"]);
+    const ourPriceEstimate = getAnalysisValue(["our_price_estimate", "ourPriceEstimate"]);
+    const priceVsEstimations = getAnalysisValue(["price_vs_estimations", "priceVsEstimations"]);
+    const potentialSavings = getAnalysisValue(["potential_savings", "potentialSavings"]);
+    const pricePerSqftVsMarket = getAnalysisValue(["price_per_sqft_vs_market", "pricePerSqftVsMarket"]);
+    const marketAvgPricePerSqft = getAnalysisValue(["market_average_price_per_sqft", "marketAveragePricePerSqft"]);
+    const rensightsScore = getAnalysisValue(["rensights_score", "rensightsScore"]);
+    const priceVsMarketScore = getAnalysisValue(["price_vs_market_score", "priceVsMarketScore"]);
+    const rentalPotentialScore = getAnalysisValue(["rental_potential_score", "rentalPotentialScore"]);
+    const liquidityScore = getAnalysisValue(["liquidity_score", "liquidityScore"]);
+    const locationTransportScore = getAnalysisValue(["location_transport_score", "locationTransportScore"]);
+    const grossRentalYield = getAnalysisValue(["gross_rental_yield", "grossRentalYield"]);
+    const rentalYieldEstimate = getAnalysisValue(["rental_yield_estimate", "rentalYieldEstimate"]);
+    const annualRentEstimate = getAnalysisValue(["annual_rent_estimate", "annualRentEstimate"]);
+    const avgMarketYield = getAnalysisValue(["average_market_yield_estimate", "averageMarketYieldEstimate"]);
+    const marketPosition = getAnalysisValue(["market_position", "marketPosition"]);
+    const dubaiComparison = getAnalysisValue(["dubai_comparison", "dubaiComparison"]);
+    const priceRange = getAnalysisValue(["price_range", "priceRange"]);
+    const nearestLandmark = getAnalysisValue(["nearest_landmark", "nearestLandmark"]);
+    const buildingFeatures = getAnalysisValue(["building_features", "buildingFeatures"]);
+    const investmentAppeal = getAnalysisValue(["investment_appeal", "investmentAppeal"]);
+    const propertyDescription = getAnalysisValue(["property_description", "propertyDescription"]);
+    const listingComparables = parseJsonArray(getAnalysisValue(["listing_comparables", "listingComparables"]));
+    const transactionComparables = parseJsonArray(getAnalysisValue(["transaction_comparables", "transactionComparables"]));
+
     return (
-      <div className="analysis-page">
-        <div className="analysis-page-wrapper">
-          <header className="header">
-            <div className="header-left">
+      <div className="property-page">
+        <header className="header">
+          <div className="header-left">
+            <button className="back-btn" onClick={() => router.push("/dashboard")}>
+              Back to Reports
+            </button>
+            <div>
               <div className="page-title">Property Analysis Report</div>
               <div className="page-subtitle">Your request status and results</div>
             </div>
-            <button className="report-back-btn" onClick={() => router.push("/dashboard")}>
-              Back to Reports
-            </button>
-          </header>
+          </div>
+          <div className="verified-badge">{report?.status || "PENDING"}</div>
+        </header>
 
-          {reportLoading && (
-            <div className="analysis-report-card">
-              <div className="analysis-report-loading">Loading report...</div>
-            </div>
-          )}
+        {reportLoading && (
+          <div className="analysis-report-card">
+            <div className="analysis-report-loading">Loading report...</div>
+          </div>
+        )}
 
-          {reportError && (
-            <div className="analysis-report-card">
-              <div className="analysis-report-error">{reportError}</div>
-            </div>
-          )}
+        {reportError && (
+          <div className="analysis-report-card">
+            <div className="analysis-report-error">{reportError}</div>
+          </div>
+        )}
 
-          {!reportLoading && report && (
-            <div className="analysis-report-card">
-              <div className="analysis-report-header">
-                <div>
-                  <div className="analysis-report-title">
-                    {report.buildingName || "Property Analysis"}
-                  </div>
-                  <div className="analysis-report-meta">
-                    {report.area || "Dubai"} • {report.city || "Dubai"}
-                  </div>
+        {!reportLoading && report && (
+          <div className="property-content-grid">
+            <section className="property-overview">
+              <div className="property-header">
+                <div className="property-title">
+                  {analysis.building_name || report.buildingName || "Property Analysis"}
                 </div>
-                <span className={`analysis-report-status ${report.status?.toLowerCase() || "pending"}`}>
-                  {report.status || "PENDING"}
-                </span>
-              </div>
-
-              <div className="analysis-report-grid">
-                <div>
-                  <div className="analysis-report-label">Property Type</div>
-                  <div className="analysis-report-value">{report.propertyType || "N/A"}</div>
+                <div className="property-location">
+                  {analysis.area || report.area || "Dubai"} • {analysis.city || report.city || "Dubai"}
                 </div>
-                <div>
-                  <div className="analysis-report-label">Bedrooms</div>
-                  <div className="analysis-report-value">{report.bedrooms || "N/A"}</div>
-                </div>
-                <div>
-                  <div className="analysis-report-label">Asking Price</div>
-                  <div className="analysis-report-value">{report.askingPrice || "N/A"}</div>
-                </div>
-                <div>
-                  <div className="analysis-report-label">Submitted</div>
-                  <div className="analysis-report-value">
-                    {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : "N/A"}
-                  </div>
+                <div className="discount-highlight">
+                  {report.status === "COMPLETED" ? "Analysis Complete" : "Analysis In Progress"}
                 </div>
               </div>
 
-              {report.status !== "COMPLETED" && (
-                <div className="analysis-report-processing">
-                  Your analysis is processing. We will publish the report once it is approved.
+              <div className="key-metrics">
+                <div className="metric-card">
+                  <div className="metric-value">{formatValue(listedPrice)}</div>
+                  <div className="metric-label">Listed Price</div>
                 </div>
-              )}
+                <div className="metric-card">
+                  <div className="metric-value">{formatValue(sizeSqft)}</div>
+                  <div className="metric-label">Size (sq ft)</div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-value">{formatValue(analysis.bedrooms || report.bedrooms)}</div>
+                  <div className="metric-label">Bedrooms</div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-value">{formatValue(analysis.property_type || report.propertyType)}</div>
+                  <div className="metric-label">Property Type</div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-value">{formatValue(pricePerSqft)}</div>
+                  <div className="metric-label">Price / Sq Ft</div>
+                </div>
+              </div>
 
-              {report.analysisResult && (
-                <div className="analysis-report-result">
-                  <div className="analysis-report-label">Analysis Result</div>
-                  <pre>{JSON.stringify(report.analysisResult, null, 2)}</pre>
+              <div className="price-analysis">
+                <h3>Price Analysis</h3>
+                <div className="price-grid">
+                  <div>
+                    <div className="price-label">Our Price Estimate</div>
+                    <div className="price-value price-estimate">{formatValue(ourPriceEstimate)}</div>
+                  </div>
+                  <div>
+                    <div className="price-label">Price vs Estimations</div>
+                    <div className="price-value">{formatValue(priceVsEstimations)}</div>
+                  </div>
+                  <div>
+                    <div className="price-label">Potential Savings</div>
+                    <div className="price-value">{formatValue(potentialSavings)}</div>
+                  </div>
+                  <div>
+                    <div className="price-label">Price / Sq Ft vs Market</div>
+                    <div className="price-value">{formatValue(pricePerSqftVsMarket)}</div>
+                  </div>
+                  <div>
+                    <div className="price-label">Market Avg / Sq Ft</div>
+                    <div className="price-value">{formatValue(marketAvgPricePerSqft)}</div>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+
+              <div className="property-description">
+                <h3>Summary</h3>
+                <p>{propertyDescription || "No summary provided yet."}</p>
+              </div>
+            </section>
+
+            <aside className="sidebar-card">
+              <div className="comparison-table">
+                <h3>Scores</h3>
+                <div className="detail-row">
+                  <span>Rensights Score</span>
+                  <strong>{formatValue(rensightsScore)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Price vs Market</span>
+                  <strong>{formatValue(priceVsMarketScore)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Rental Potential</span>
+                  <strong>{formatValue(rentalPotentialScore)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Liquidity</span>
+                  <strong>{formatValue(liquidityScore)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Location & Transport</span>
+                  <strong>{formatValue(locationTransportScore)}</strong>
+                </div>
+              </div>
+
+              <div className="comparison-table">
+                <h3>Rental & Market</h3>
+                <div className="detail-row">
+                  <span>Gross Rental Yield</span>
+                  <strong>{formatValue(grossRentalYield)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Rental Yield Estimate</span>
+                  <strong>{formatValue(rentalYieldEstimate)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Annual Rent Estimate</span>
+                  <strong>{formatValue(annualRentEstimate)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Average Market Yield</span>
+                  <strong>{formatValue(avgMarketYield)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Market Position</span>
+                  <strong>{formatValue(marketPosition)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Dubai Comparison</span>
+                  <strong>{formatValue(dubaiComparison)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Price Range</span>
+                  <strong>{formatValue(priceRange)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Nearest Landmark</span>
+                  <strong>{formatValue(nearestLandmark)}</strong>
+                </div>
+              </div>
+
+              <div className="comparison-table">
+                <h3>Property Details</h3>
+                <div className="detail-row">
+                  <span>Building Status</span>
+                  <strong>{formatValue(analysis.building_status || report.buildingStatus)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Furnishing</span>
+                  <strong>{formatValue(analysis.furnishing || report.furnishing)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Developer</span>
+                  <strong>{formatValue(analysis.developer || report.developer)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>View</span>
+                  <strong>{formatValue(analysis.view || report.view)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Service Charge</span>
+                  <strong>{formatValue(analysis.service_charge || report.serviceCharge)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Building Features</span>
+                  <strong>{formatValue(buildingFeatures)}</strong>
+                </div>
+                <div className="detail-row">
+                  <span>Investment Appeal</span>
+                  <strong>{formatValue(investmentAppeal)}</strong>
+                </div>
+              </div>
+
+              <div className="comparison-table">
+                <h3>Listing Comparables</h3>
+                {listingComparables.length === 0 ? (
+                  <p className="empty-state">No comparables available.</p>
+                ) : (
+                  <div className="comparables-grid">
+                    {listingComparables.map((item: any, index: number) => (
+                      <div key={`listing-${index}`} className="comparable-card">
+                        <div className="comparable-title">{formatValue(item.building || item.name)}</div>
+                        <div className="comparable-meta">
+                          <span>{formatValue(item.price)}</span>
+                          <span>{formatValue(item.sqft)} sq ft</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="comparison-table">
+                <h3>Transaction Comparables</h3>
+                {transactionComparables.length === 0 ? (
+                  <p className="empty-state">No transactions available.</p>
+                ) : (
+                  <div className="comparables-grid">
+                    {transactionComparables.map((item: any, index: number) => (
+                      <div key={`transaction-${index}`} className="comparable-card">
+                        <div className="comparable-title">{formatValue(item.building || item.name)}</div>
+                        <div className="comparable-meta">
+                          <span>{formatValue(item.price)}</span>
+                          <span>{formatValue(item.date)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="investment-insights">
+                <h3>Raw Analysis Result</h3>
+                {report.analysisResult ? (
+                  <pre className="analysis-result-json">
+                    {JSON.stringify(report.analysisResult, null, 2)}
+                  </pre>
+                ) : (
+                  <p>Your analysis is still processing. Results will appear here once approved.</p>
+                )}
+              </div>
+            </aside>
+          </div>
+        )}
       </div>
     );
   }
