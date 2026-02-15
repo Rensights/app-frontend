@@ -631,7 +631,7 @@ export default function AnalysisRequestPage() {
     const savingsMax = savingsNumbers && savingsNumbers.length >= 2 ? parseNumber(savingsNumbers[1]) : null;
     const discountPercent = parsePercent(getAnalysisValue(["price_per_sqft_vs_market", "pricePerSqftVsMarket", "price_vs_estimations", "priceVsEstimations"]));
     const rentalYield = getAnalysisValue(["rental_yield_estimate", "rentalYieldEstimate", "gross_rental_yield", "grossRentalYield"]);
-    const buildingStatusRaw = getAnalysisValue(["building_status", "buildingStatus"]) || report.buildingStatus || "";
+    const buildingStatusRaw = getAnalysisValue(["building_status", "buildingStatus"]) || report?.buildingStatus || "";
     const buildingStatus = /ready|completed/i.test(String(buildingStatusRaw)) ? "READY" : "OFFPLAN";
     const listingComparables = parseJsonArray(getAnalysisValue(["listing_comparables", "listingComparables"]));
     const transactionComparables = parseJsonArray(getAnalysisValue(["transaction_comparables", "transactionComparables"]));
