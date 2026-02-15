@@ -386,6 +386,7 @@ export default function AnalysisRequestPage() {
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState("");
   const [report, setReport] = useState<any | null>(null);
+  const [tab, setTab] = useState<"listed" | "transactions">("listed");
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [features, setFeatures] = useState<string[]>([]);
   const [filesMessage, setFilesMessage] = useState("");
@@ -590,36 +591,48 @@ export default function AnalysisRequestPage() {
       return [];
     };
 
+    const parseNumber = (value: any) => {
+      if (value === null || value === undefined) return null;
+      const cleaned = String(value).replace(/[^0-9.]/g, "");
+      if (!cleaned) return null;
+      const num = Number(cleaned);
+      return Number.isFinite(num) ? num : null;
+    };
+
+    const parsePercent = (value: any) => {
+      if (!value) return null;
+      const match = String(value).match(/(\d+\.?\d*)/);
+      return match ? parseFloat(match[1]) : null;
+    };
+
     const formatValue = (value: any) => {
       if (value === null || value === undefined || value === "") return "N/A";
       return String(value);
     };
 
     const analysis = report?.analysisResult || {};
-    const listedPrice = getAnalysisValue(["listed_price_aed", "listedPriceAed", "listed_price"]);
-    const pricePerSqft = getAnalysisValue(["price_per_sqft", "pricePerSqft"]);
+    const listedPriceRaw = getAnalysisValue(["listed_price_aed", "listedPriceAed", "listed_price"]);
+    const listedPriceNum = parseNumber(listedPriceRaw);
+    const listedPrice = listedPriceRaw
+      ? String(listedPriceRaw).includes("AED")
+        ? String(listedPriceRaw)
+        : `AED ${listedPriceRaw}`
+      : "N/A";
     const sizeSqft = getAnalysisValue(["size_sqft", "sizeSqft"]);
-    const ourPriceEstimate = getAnalysisValue(["our_price_estimate", "ourPriceEstimate"]);
+    const sizeNum = parseNumber(sizeSqft);
+    const pricePerSqftRaw = getAnalysisValue(["price_per_sqft", "pricePerSqft"]);
+    const pricePerSqftNum = parseNumber(pricePerSqftRaw);
+    const pricePerSqft = pricePerSqftNum || (listedPriceNum && sizeNum ? listedPriceNum / sizeNum : 0);
+    const estimateRange = getAnalysisValue(["our_price_estimate", "ourPriceEstimate"]);
     const priceVsEstimations = getAnalysisValue(["price_vs_estimations", "priceVsEstimations"]);
     const potentialSavings = getAnalysisValue(["potential_savings", "potentialSavings"]);
-    const pricePerSqftVsMarket = getAnalysisValue(["price_per_sqft_vs_market", "pricePerSqftVsMarket"]);
-    const marketAvgPricePerSqft = getAnalysisValue(["market_average_price_per_sqft", "marketAveragePricePerSqft"]);
-    const rensightsScore = getAnalysisValue(["rensights_score", "rensightsScore"]);
-    const priceVsMarketScore = getAnalysisValue(["price_vs_market_score", "priceVsMarketScore"]);
-    const rentalPotentialScore = getAnalysisValue(["rental_potential_score", "rentalPotentialScore"]);
-    const liquidityScore = getAnalysisValue(["liquidity_score", "liquidityScore"]);
-    const locationTransportScore = getAnalysisValue(["location_transport_score", "locationTransportScore"]);
-    const grossRentalYield = getAnalysisValue(["gross_rental_yield", "grossRentalYield"]);
-    const rentalYieldEstimate = getAnalysisValue(["rental_yield_estimate", "rentalYieldEstimate"]);
-    const annualRentEstimate = getAnalysisValue(["annual_rent_estimate", "annualRentEstimate"]);
-    const avgMarketYield = getAnalysisValue(["average_market_yield_estimate", "averageMarketYieldEstimate"]);
-    const marketPosition = getAnalysisValue(["market_position", "marketPosition"]);
-    const dubaiComparison = getAnalysisValue(["dubai_comparison", "dubaiComparison"]);
-    const priceRange = getAnalysisValue(["price_range", "priceRange"]);
-    const nearestLandmark = getAnalysisValue(["nearest_landmark", "nearestLandmark"]);
-    const buildingFeatures = getAnalysisValue(["building_features", "buildingFeatures"]);
-    const investmentAppeal = getAnalysisValue(["investment_appeal", "investmentAppeal"]);
-    const propertyDescription = getAnalysisValue(["property_description", "propertyDescription"]);
+    const savingsNumbers = potentialSavings ? String(potentialSavings).match(/[\d,.]+/g) : null;
+    const savingsMin = savingsNumbers && savingsNumbers.length >= 1 ? parseNumber(savingsNumbers[0]) : null;
+    const savingsMax = savingsNumbers && savingsNumbers.length >= 2 ? parseNumber(savingsNumbers[1]) : null;
+    const discountPercent = parsePercent(getAnalysisValue(["price_per_sqft_vs_market", "pricePerSqftVsMarket", "price_vs_estimations", "priceVsEstimations"]));
+    const rentalYield = getAnalysisValue(["rental_yield_estimate", "rentalYieldEstimate", "gross_rental_yield", "grossRentalYield"]);
+    const buildingStatusRaw = getAnalysisValue(["building_status", "buildingStatus"]) || report.buildingStatus || "";
+    const buildingStatus = /ready|completed/i.test(String(buildingStatusRaw)) ? "READY" : "OFFPLAN";
     const listingComparables = parseJsonArray(getAnalysisValue(["listing_comparables", "listingComparables"]));
     const transactionComparables = parseJsonArray(getAnalysisValue(["transaction_comparables", "transactionComparables"]));
 
@@ -628,14 +641,9 @@ export default function AnalysisRequestPage() {
         <header className="header">
           <div className="header-left">
             <button className="back-btn" onClick={() => router.push("/dashboard")}>
-              Back to Reports
+              ← Back to Deals
             </button>
-            <div>
-              <div className="page-title">Property Analysis Report</div>
-              <div className="page-subtitle">Your request status and results</div>
-            </div>
           </div>
-          <div className="verified-badge">{report?.status || "PENDING"}</div>
         </header>
 
         {reportLoading && (
@@ -652,216 +660,323 @@ export default function AnalysisRequestPage() {
 
         {!reportLoading && report && (
           <div className="property-content-grid">
-            <section className="property-overview">
+            <div className="property-overview">
               <div className="property-header">
-                <div className="property-title">
-                  {analysis.building_name || report.buildingName || "Property Analysis"}
-                </div>
-                <div className="property-location">
-                  {analysis.area || report.area || "Dubai"} • {analysis.city || report.city || "Dubai"}
-                </div>
-                <div className="discount-highlight">
-                  {report.status === "COMPLETED" ? "Analysis Complete" : "Analysis In Progress"}
-                </div>
+                <h1 className="property-title">{analysis.building_name || report.buildingName || "Property"}</h1>
+                <p className="property-location">
+                  {analysis.area || report.area || "Location not available"}, {analysis.city || report.city || "City not available"}
+                </p>
+                {discountPercent !== null && (
+                  <div className="discount-highlight">
+                    {discountPercent}% Below Market Value
+                  </div>
+                )}
               </div>
 
-              <div className="key-metrics">
-                <div className="metric-card">
-                  <div className="metric-value">{formatValue(listedPrice)}</div>
-                  <div className="metric-label">Listed Price</div>
-                </div>
-                <div className="metric-card">
-                  <div className="metric-value">{formatValue(sizeSqft)}</div>
-                  <div className="metric-label">Size (sq ft)</div>
-                </div>
-                <div className="metric-card">
-                  <div className="metric-value">{formatValue(analysis.bedrooms || report.bedrooms)}</div>
-                  <div className="metric-label">Bedrooms</div>
-                </div>
-                <div className="metric-card">
-                  <div className="metric-value">{formatValue(analysis.property_type || report.propertyType)}</div>
-                  <div className="metric-label">Property Type</div>
-                </div>
-                <div className="metric-card">
-                  <div className="metric-value">{formatValue(pricePerSqft)}</div>
-                  <div className="metric-label">Price / Sq Ft</div>
-                </div>
-              </div>
+              <section className="key-metrics">
+                {[
+                  { value: analysis.bedrooms || report.bedrooms || "N/A", label: "Bedrooms" },
+                  { value: sizeSqft || report.size || "N/A", label: "Size" },
+                  { value: buildingStatus === "READY" ? "Ready" : "Off-Plan", label: "Handover" },
+                  { value: rentalYield || "N/A", label: "Rental Yield" },
+                ].map((metric) => (
+                  <div key={metric.label} className="metric-card">
+                    <div className="metric-value">{metric.value}</div>
+                    <div className="metric-label">{metric.label}</div>
+                  </div>
+                ))}
+              </section>
 
-              <div className="price-analysis">
+              <section className="price-analysis">
                 <h3>Price Analysis</h3>
                 <div className="price-grid">
-                  <div>
-                    <div className="price-label">Our Price Estimate</div>
-                    <div className="price-value price-estimate">{formatValue(ourPriceEstimate)}</div>
+                  <div className="price-section">
+                    <div className="price-label">Listed Price</div>
+                    <div className="price-value">{listedPrice}</div>
                   </div>
-                  <div>
-                    <div className="price-label">Price vs Estimations</div>
-                    <div className="price-value">{formatValue(priceVsEstimations)}</div>
+                  <div className="price-section">
+                    <div className="price-label">Our Estimate Range</div>
+                    <div className="price-value price-estimate">
+                      {estimateRange || "N/A"}
+                    </div>
                   </div>
-                  <div>
-                    <div className="price-label">Potential Savings</div>
-                    <div className="price-value">{formatValue(potentialSavings)}</div>
-                  </div>
-                  <div>
-                    <div className="price-label">Price / Sq Ft vs Market</div>
-                    <div className="price-value">{formatValue(pricePerSqftVsMarket)}</div>
-                  </div>
-                  <div>
-                    <div className="price-label">Market Avg / Sq Ft</div>
-                    <div className="price-value">{formatValue(marketAvgPricePerSqft)}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="property-description">
-                <h3>Summary</h3>
-                <p>{propertyDescription || "No summary provided yet."}</p>
-              </div>
-            </section>
-
-            <aside className="sidebar-card">
-              <div className="comparison-table">
-                <h3>Scores</h3>
-                <div className="detail-row">
-                  <span>Rensights Score</span>
-                  <strong>{formatValue(rensightsScore)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Price vs Market</span>
-                  <strong>{formatValue(priceVsMarketScore)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Rental Potential</span>
-                  <strong>{formatValue(rentalPotentialScore)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Liquidity</span>
-                  <strong>{formatValue(liquidityScore)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Location & Transport</span>
-                  <strong>{formatValue(locationTransportScore)}</strong>
-                </div>
-              </div>
-
-              <div className="comparison-table">
-                <h3>Rental & Market</h3>
-                <div className="detail-row">
-                  <span>Gross Rental Yield</span>
-                  <strong>{formatValue(grossRentalYield)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Rental Yield Estimate</span>
-                  <strong>{formatValue(rentalYieldEstimate)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Annual Rent Estimate</span>
-                  <strong>{formatValue(annualRentEstimate)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Average Market Yield</span>
-                  <strong>{formatValue(avgMarketYield)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Market Position</span>
-                  <strong>{formatValue(marketPosition)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Dubai Comparison</span>
-                  <strong>{formatValue(dubaiComparison)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Price Range</span>
-                  <strong>{formatValue(priceRange)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Nearest Landmark</span>
-                  <strong>{formatValue(nearestLandmark)}</strong>
-                </div>
-              </div>
-
-              <div className="comparison-table">
-                <h3>Property Details</h3>
-                <div className="detail-row">
-                  <span>Building Status</span>
-                  <strong>{formatValue(analysis.building_status || report.buildingStatus)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Furnishing</span>
-                  <strong>{formatValue(analysis.furnishing || report.furnishing)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Developer</span>
-                  <strong>{formatValue(analysis.developer || report.developer)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>View</span>
-                  <strong>{formatValue(analysis.view || report.view)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Service Charge</span>
-                  <strong>{formatValue(analysis.service_charge || report.serviceCharge)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Building Features</span>
-                  <strong>{formatValue(buildingFeatures)}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Investment Appeal</span>
-                  <strong>{formatValue(investmentAppeal)}</strong>
-                </div>
-              </div>
-
-              <div className="comparison-table">
-                <h3>Listing Comparables</h3>
-                {listingComparables.length === 0 ? (
-                  <p className="empty-state">No comparables available.</p>
-                ) : (
-                  <div className="comparables-grid">
-                    {listingComparables.map((item: any, index: number) => (
-                      <div key={`listing-${index}`} className="comparable-card">
-                        <div className="comparable-title">{formatValue(item.building || item.name)}</div>
-                        <div className="comparable-meta">
-                          <span>{formatValue(item.price)}</span>
-                          <span>{formatValue(item.sqft)} sq ft</span>
-                        </div>
+                  {savingsMin && savingsMax && (
+                    <div className="price-section">
+                      <div className="price-label">Potential Savings</div>
+                      <div className="price-value">
+                        <span className="savings-amount">
+                          AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
+                        </span>
                       </div>
-                    ))}
+                    </div>
+                  )}
+                  <div className="price-section">
+                    <div className="price-label">Price per sq ft</div>
+                    <div className="price-value">
+                      {pricePerSqft > 0
+                        ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })} /sq ft`
+                        : "N/A"}
+                    </div>
+                    {discountPercent !== null && <small>{discountPercent}% below market avg</small>}
                   </div>
-                )}
+                </div>
+              </section>
+
+              <section className="property-description">
+                <h3>Property Description</h3>
+                <div className="description-card">
+                  <p>
+                    {analysis.property_description ||
+                      `This ${analysis.bedrooms || "property"} offers living in the heart of ${analysis.area || "the area"}. The unit features an efficient layout that maximizes the ${sizeSqft || "available"} space. The property is located in ${analysis.area || "the"} area of ${analysis.city || "the city"}.`}
+                  </p>
+                  <div className="description-grid">
+                    <DescriptionStat
+                      label="Price per sq ft:"
+                      value={pricePerSqft > 0
+                        ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`
+                        : "N/A"}
+                    />
+                    <DescriptionStat
+                      label="Building Status:"
+                      value={buildingStatus === "READY" ? "Ready" : "Off-Plan"}
+                    />
+                    <DescriptionStat
+                      label="Listed Price:"
+                      value={listedPrice}
+                    />
+                    <DescriptionStat label="Rental Yield:" value={rentalYield || "N/A"} />
+                  </div>
+                  <div className="description-footer">
+                    <button className="inline-link" type="button">
+                      View the Property
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section className="comparison-table">
+                <h3>Market Comparison</h3>
+                {[
+                  {
+                    label: `This Property (${analysis.bedrooms || report.bedrooms || "N/A"})`,
+                    value: pricePerSqft > 0
+                      ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`
+                      : "N/A",
+                  },
+                  { label: "Listed Price", value: listedPrice },
+                  { label: "Market Position", value: analysis.market_position || (discountPercent !== null ? `${discountPercent}% Below Average` : "N/A") },
+                  { label: "Rental Yield", value: rentalYield || "N/A" },
+                  { label: "Estimate Range", value: estimateRange || "N/A" },
+                ].map((row) => (
+                  <div key={row.label} className="comparison-row">
+                    <span className="comparison-label">{row.label}</span>
+                    <span className="comparison-value">{row.value}</span>
+                  </div>
+                ))}
+              </section>
+
+              <section className="investment-insights">
+                <h3>Investment Insights</h3>
+                {[
+                  `Property is priced ${discountPercent !== null ? `${discountPercent}%` : ""} below similar units in ${analysis.area || "the area"}, indicating strong value opportunity.`,
+                  `${analysis.market_position || "Strong market position for this unit."}`,
+                  `${analysis.investment_appeal || "Investment appeal is favorable based on current market conditions."}`,
+                  `${analysis.dubai_comparison || "Market comparison data is still being compiled."}`,
+                ].map((text, index) => (
+                  <div key={index} className="insight-item">
+                    <div className="insight-icon">✓</div>
+                    <p className="insight-text">{text}</p>
+                  </div>
+                ))}
+              </section>
+
+              <section className="report-disclaimer">
+                <h3>Disclaimer</h3>
+                <p>
+                  This report is generated for informational and educational purposes only. Rensights.com is a data analytics
+                  provider, not a licensed real estate brokerage, financial advisor, or legal consultant. The &quot;Estimated
+                  Price&quot; and &quot;Scores&quot; provided are based on automated algorithms and third-party data; they do not
+                  constitute a formal appraisal or a guarantee of profit. All investments carry risk. We strongly recommend
+                  consulting with a licensed professional before making any financial commitments.
+                </p>
+                <h4>Verification Note</h4>
+                <p>
+                  We scan external websites for pricing anomalies. We do not verify the physical condition, legal title, or
+                  the authenticity of the listing. Users must perform their own due diligence (physical viewing and title deed
+                  verification) before transferring funds to any third party.
+                </p>
+                <h4>No Formal Appraisal</h4>
+                <p>
+                  The property estimates and scores provided by this platform are generated via automated machine learning
+                  algorithms and do not constitute a formal, legal, or professional real estate appraisal. This platform does
+                  not account for the physical condition, interior upgrades, or latent defects of a property.
+                </p>
+                <h4>Data Sources</h4>
+                <p>Dubai Land Department (DLD), Bayut, and various public records.</p>
+              </section>
+            </div>
+
+            <div className="property-sidebar">
+              <div className="sidebar-card">
+                <div className="card-title">
+                  <div className="card-icon">🏠</div>
+                  Comparable Properties
+                </div>
+
+                <div className="subsection-tabs">
+                  <button
+                    className={`tab-button ${tab === "listed" ? "active" : ""}`}
+                    onClick={() => setTab("listed")}
+                  >
+                    Similar Deals ({listingComparables.length})
+                  </button>
+                  <button
+                    className={`tab-button ${tab === "transactions" ? "active" : ""}`}
+                    onClick={() => setTab("transactions")}
+                  >
+                    Recent Sales ({transactionComparables.length})
+                  </button>
+                </div>
+
+                <div className={`tab-content comparable-section ${tab === "listed" ? "active" : ""}`}>
+                  {listingComparables.length === 0 ? (
+                    <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
+                      No similar properties found.
+                    </div>
+                  ) : (
+                    listingComparables.map((item: any, index: number) => {
+                      const itemSize = parseNumber(item.sqft || item.size) || 0;
+                      const itemPrice = parseNumber(item.price) || 0;
+                      const psf = itemSize > 0 && itemPrice > 0 ? itemPrice / itemSize : 0;
+                      return (
+                        <ComparableCard
+                          key={`listing-${index}`}
+                          title={item.building || item.name || "Property"}
+                          details={`${analysis.bedrooms || "N/A"} • ${itemSize ? `${itemSize} sqft` : "N/A"} • ${analysis.area || "N/A"}`}
+                          price={item.price || "N/A"}
+                          psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
+                          status="Available"
+                        />
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className={`tab-content comparable-section ${tab === "transactions" ? "active" : ""}`}>
+                  {transactionComparables.length === 0 ? (
+                    <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
+                      No recent sales found.
+                    </div>
+                  ) : (
+                    transactionComparables.map((sale: any, index: number) => {
+                      const saleSize = parseNumber(sale.sqft || sale.size) || 0;
+                      const salePrice = parseNumber(sale.price) || 0;
+                      const psf = saleSize > 0 && salePrice > 0 ? salePrice / saleSize : 0;
+                      const saleDate = sale.date || "N/A";
+
+                      return (
+                        <ComparableCard
+                          key={`sale-${index}`}
+                          title={sale.building || sale.name || "Property"}
+                          details={`${analysis.bedrooms || "N/A"} • ${saleSize ? `${saleSize} sqft` : "N/A"} • ${analysis.area || "N/A"}`}
+                          price={salePrice > 0 ? `AED ${salePrice.toLocaleString()}` : "N/A"}
+                          psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
+                          status={`Sold ${saleDate}`}
+                        />
+                      );
+                    })
+                  )}
+                </div>
+
+                <button className="action-btn secondary" type="button">
+                  View All Comparable Properties
+                </button>
               </div>
 
-              <div className="comparison-table">
-                <h3>Transaction Comparables</h3>
-                {transactionComparables.length === 0 ? (
-                  <p className="empty-state">No transactions available.</p>
-                ) : (
-                  <div className="comparables-grid">
-                    {transactionComparables.map((item: any, index: number) => (
-                      <div key={`transaction-${index}`} className="comparable-card">
-                        <div className="comparable-title">{formatValue(item.building || item.name)}</div>
-                        <div className="comparable-meta">
-                          <span>{formatValue(item.price)}</span>
-                          <span>{formatValue(item.date)}</span>
-                        </div>
+              <div className="sidebar-card">
+                <div className="card-title">
+                  <div className="card-icon">⭐</div>
+                  Investment Analysis
+                </div>
+
+                <div className="score-section">
+                  {discountPercent !== null && (
+                    <>
+                      <div className="score-value">
+                        {discountPercent.toFixed(1)}%<span> Below Market</span>
                       </div>
-                    ))}
+                      <div className="score-subtitle">
+                        {discountPercent >= 15 ? "Excellent" : discountPercent >= 10 ? "Good" : "Fair"} Investment Opportunity
+                      </div>
+                      <p>
+                        Based on price analysis, market trends, location score, rental
+                        potential, and liquidity in {analysis.area || "the area"} market.
+                      </p>
+                      <div className="score-breakdown">
+                        <p>
+                          <strong>Listed Price:</strong> {listedPrice}
+                        </p>
+                        {estimateRange && (
+                          <p>
+                            <strong>Market Estimate:</strong> {estimateRange}
+                          </p>
+                        )}
+                        {savingsMin && savingsMax && (
+                          <p>
+                            <strong>Potential Savings:</strong> AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
+                          </p>
+                        )}
+                        {rentalYield && (
+                          <p>
+                            <strong>Rental Yield:</strong> {rentalYield}
+                          </p>
+                        )}
+                      </div>
+
+                      <ul className="score-components">
+                        <li>
+                          <span>Price vs Market</span>
+                          <strong>{discountPercent.toFixed(1)}%</strong>
+                        </li>
+                        {rentalYield && (
+                          <li>
+                            <span>Rental Yield</span>
+                            <strong>{rentalYield}</strong>
+                          </li>
+                        )}
+                        <li>
+                          <span>Building Status</span>
+                          <strong>{buildingStatus === "READY" ? "Ready" : "Off-Plan"}</strong>
+                        </li>
+                      </ul>
+                    </>
+                  )}
+                </div>
+
+                {rentalYield && (
+                  <div className="investment-metrics">
+                    <div className="metric-box">
+                      <div>{rentalYield}</div>
+                      <span>Rental Yield</span>
+                    </div>
+                    <div className="metric-box">
+                      <div>{listedPrice}</div>
+                      <span>Listed Price</span>
+                    </div>
+                    <div className="metric-box wide">
+                      <div>{analysis.area || "N/A"}</div>
+                      <span>Location</span>
+                    </div>
                   </div>
                 )}
-              </div>
 
-              <div className="investment-insights">
-                <h3>Raw Analysis Result</h3>
-                {report.analysisResult ? (
-                  <pre className="analysis-result-json">
-                    {JSON.stringify(report.analysisResult, null, 2)}
-                  </pre>
-                ) : (
-                  <p>Your analysis is still processing. Results will appear here once approved.</p>
-                )}
+                <p className="benefits-text">
+                  <strong>Key Benefits:</strong> Property located in {analysis.area || "the area"}, {analysis.city || "the city"}. 
+                  {buildingStatus === "READY" ? " Ready property allows immediate occupancy and rental income." : " Off-plan property offers potential for capital appreciation."}
+                  {rentalYield && ` Rental yield of ${rentalYield} provides attractive returns for investors.`}
+                </p>
               </div>
-            </aside>
+            </div>
           </div>
         )}
       </div>
@@ -1349,6 +1464,48 @@ const InfoCard = ({ title, text }: { title: string; text: string }) => (
       {text.split("\n").map((row, index) => (
         <p key={index}>{row}</p>
       ))}
+    </div>
+  </div>
+);
+
+const DescriptionStat = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) => (
+  <div>
+    <strong>{label}</strong>
+    <br />
+    <span>{typeof value === "number" ? value.toLocaleString() : value}</span>
+  </div>
+);
+
+const ComparableCard = ({
+  title,
+  details,
+  price,
+  psf,
+  status,
+  sold,
+}: {
+  title: string;
+  details: string;
+  price: string | number;
+  psf: string;
+  status: string;
+  sold?: boolean;
+}) => (
+  <div className="similar-property">
+    <div className="similar-title">{title}</div>
+    <div className="similar-details">{details}</div>
+    <div className="similar-price-row">
+      <div className="similar-price">{typeof price === "number" ? price.toLocaleString() : price}</div>
+      <div className="similar-psf">{psf}</div>
+    </div>
+    <div className={`similar-status ${sold ? "status-sold" : "status-listed"}`.trim()}>
+      {status}
     </div>
   </div>
 );
