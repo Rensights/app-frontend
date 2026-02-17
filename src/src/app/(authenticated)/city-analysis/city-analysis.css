@@ -167,6 +167,17 @@ html {
   border-radius: 10px;
   padding: 14px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.document-files {
+  display: grid;
+  gap: 12px;
+}
+
+.document-file-body {
+  flex: 1;
+  min-width: 200px;
 }
 
 .document-file-icon {
@@ -213,6 +224,11 @@ html {
   gap: 10px;
   margin-top: 16px;
   flex-wrap: wrap;
+}
+
+.document-file .document-actions {
+  margin-top: 0;
+  margin-left: auto;
 }
 
 .doc-btn {
@@ -319,6 +335,12 @@ html {
   .document-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .document-file .document-actions {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 12px;
   }
 
   .doc-btn {

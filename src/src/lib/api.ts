@@ -134,6 +134,10 @@ class ApiClient {
     this.baseUrl = newUrl;
   }
 
+  getBaseUrl(): string {
+    return this.baseUrl || this.getApiUrl();
+  }
+
   // Optimized: Request deduplication and caching
   private async request<T>(
     endpoint: string,
@@ -677,6 +681,14 @@ class ApiClient {
       body: JSON.stringify(payload),
     }, false);
   }
+
+  async getReportSections(language: string = "en"): Promise<ReportSection[]> {
+    return this.request<ReportSection[]>(
+      `/api/reports/sections?lang=${encodeURIComponent(language)}`,
+      {},
+      false
+    );
+  }
 }
 
 export interface Deal {
@@ -724,6 +736,27 @@ export interface PaginatedDealResponse {
   totalPages: number;
   size: number;
   number: number;
+}
+
+export interface ReportDocument {
+  id: string;
+  title: string;
+  description?: string;
+  fileUrl: string;
+  displayOrder?: number;
+  languageCode?: string;
+}
+
+export interface ReportSection {
+  id: string;
+  sectionKey: string;
+  title: string;
+  navTitle: string;
+  description?: string;
+  accessTier: 'FREE' | 'PREMIUM' | 'ENTERPRISE';
+  displayOrder?: number;
+  languageCode?: string;
+  documents?: ReportDocument[];
 }
 
 // Create API client - URL will be read lazily from window.__API_URL__ at request time
