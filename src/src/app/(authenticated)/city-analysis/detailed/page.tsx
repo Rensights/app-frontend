@@ -42,14 +42,27 @@ export default function DetailedCityAnalysisPage() {
           <select className="filter-select">
             <option>Dubai</option>
           </select>
+          <span className="status-pill">Live Market Feed</span>
+        </div>
+        <div className="top-bar-right">
+          <button className="outline-btn" onClick={handleContactUs}>Contact Advisory</button>
         </div>
       </div>
 
       <div className="container">
         <div className="hero">
           <div className="hero-content">
-            <h2>Dubai City Analytics</h2>
-            <p>Live investment, pricing and yield intelligence powered by Rensight</p>
+            <div className="hero-label">City Intelligence</div>
+            <h2>Dubai Investment Intelligence</h2>
+            <p>Decision-grade analytics for pricing, yield, liquidity, and negotiation leverage across Dubai.</p>
+            <div className="hero-actions">
+              <button className="primary-btn" onClick={() => router.push("/analysis-request")}>
+                Request Property Analysis
+              </button>
+              <button className="ghost-btn" onClick={handleContactUs}>
+                Speak to Analyst
+              </button>
+            </div>
           </div>
           <div className="hero-metrics">
             <div className="metric-chip">
@@ -58,61 +71,65 @@ export default function DetailedCityAnalysisPage() {
             </div>
             <div className="metric-chip">
               <span className="label">Top Area</span>
-              <span className="value">Marina</span>
+              <span className="value">Dubai Marina</span>
             </div>
             <div className="metric-chip">
               <span className="label">Best Budget</span>
               <span className="value">800K-1.5M</span>
+            </div>
+            <div className="metric-chip">
+              <span className="label">Liquidity</span>
+              <span className="value">High</span>
             </div>
           </div>
         </div>
 
         <div className="executive-summary">
           <div className="section-header">
-            <h3>Executive Summary</h3>
-            <p>Click any card to jump to detailed analysis</p>
+            <h3>Executive Snapshot</h3>
+            <p>Jump to a module or scan the strategic signals below.</p>
           </div>
           <div className="metrics-grid">
             <a href="#areas" className="summary-card" onClick={(e) => { e.preventDefault(); handleSectionClick('areas'); }}>
               <div className="icon">📍</div>
-              <h4>Properties by Areas</h4>
-              <div className="kpi">Marina 7.2%</div>
-              <p className="insight">Comprehensive analysis of Dubai's key investment areas with performance metrics and growth trends</p>
+              <h4>Area Intelligence</h4>
+              <div className="kpi">Marina leads 7.2%</div>
+              <p className="insight">District-level yield, absorption, and price momentum.</p>
             </a>
 
             <a href="#types" className="summary-card" onClick={(e) => { e.preventDefault(); handleSectionClick('types'); }}>
               <div className="icon">🏗️</div>
-              <h4>Properties by Type</h4>
+              <h4>Property Type Mix</h4>
               <div className="kpi">Off-plan +0.8%</div>
-              <p className="insight">Detailed comparison of off-plan versus ready properties examining ROI potential and appreciation rates</p>
+              <p className="insight">ROI spread across apartments, villas, townhouses.</p>
             </a>
 
             <a href="#sizes" className="summary-card" onClick={(e) => { e.preventDefault(); handleSectionClick('sizes'); }}>
               <div className="icon">🏠</div>
-              <h4>Properties by Size</h4>
-              <div className="kpi">Studio 8.1%</div>
-              <p className="insight">In-depth analysis of properties by bedroom count with demand patterns and yield comparisons</p>
+              <h4>Unit Size Demand</h4>
+              <div className="kpi">Studios 8.1%</div>
+              <p className="insight">Demand curve by size and yield intensity.</p>
             </a>
 
             <a href="#which-to-buy" className="summary-card" onClick={(e) => { e.preventDefault(); handleSectionClick('which-to-buy'); }}>
               <div className="icon">🎯</div>
-              <h4>Which Property to Buy</h4>
+              <h4>Acquisition Targets</h4>
               <div className="kpi">ROI +15%</div>
-              <p className="insight">Strategic recommendations based on occupancy rates, proximity to metro, amenities, and key investment variables</p>
+              <p className="insight">Top opportunities by price, liquidity, and access.</p>
             </a>
 
             <a href="#profitability" className="summary-card" onClick={(e) => { e.preventDefault(); handleSectionClick('profitability'); }}>
               <div className="icon">💰</div>
-              <h4>Profitability Assessment</h4>
+              <h4>Profitability Models</h4>
               <div className="kpi">Yield 6.8%</div>
-              <p className="insight">ROI calculator and profit projection models for different investment horizons and market scenarios</p>
+              <p className="insight">Scenario-based profit forecasts and stress tests.</p>
             </a>
 
             <a href="#negotiation" className="summary-card" onClick={(e) => { e.preventDefault(); handleSectionClick('negotiation'); }}>
               <div className="icon">🤝</div>
-              <h4>Price Negotiation</h4>
+              <h4>Negotiation Edge</h4>
               <div className="kpi">-5% avg</div>
-              <p className="insight">Real market value analysis and negotiation strategies to optimize purchase prices</p>
+              <p className="insight">Data-backed pricing leverage and target bands.</p>
             </a>
           </div>
         </div>
