@@ -99,7 +99,7 @@ html {
   border-top: none;
   margin: 0 24px;
   padding: 10px 12px;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .documents-nav-track {
@@ -142,18 +142,21 @@ html {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 }
 
 .document-card h2 {
   font-size: 1.1rem;
   margin-bottom: 6px;
   color: #1f2937;
+  word-break: break-word;
 }
 
 .document-description {
   color: #6b7280;
   font-size: 0.9rem;
   margin-bottom: 16px;
+  word-break: break-word;
 }
 
 .document-file {
@@ -163,6 +166,7 @@ html {
   border: 1px solid #f1e6d5;
   border-radius: 10px;
   padding: 14px;
+  flex-wrap: wrap;
 }
 
 .document-file-icon {
@@ -175,6 +179,7 @@ html {
   gap: 10px;
   font-weight: 600;
   color: #1f2937;
+  flex-wrap: wrap;
 }
 
 .document-tag {
@@ -294,6 +299,52 @@ html {
   }
 
   .documents-container {
+    padding: 16px;
+  }
+
+  .documents-nav-track {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .documents-tab {
+    font-size: 0.75rem;
+  }
+
+  .document-file {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .document-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .doc-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .documents-title h1 {
+    font-size: 1.35rem;
+  }
+
+  .documents-hero p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .documents-hero {
+    padding: 20px 16px;
+  }
+
+  .documents-container {
+    padding: 12px;
+  }
+
+  .document-card {
     padding: 16px;
   }
 }
