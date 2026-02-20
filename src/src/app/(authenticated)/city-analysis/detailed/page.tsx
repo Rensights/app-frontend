@@ -12,6 +12,7 @@ export default function DetailedCityAnalysisPage() {
   const [activeSection, setActiveSection] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewPdf, setPreviewPdf] = useState({ url: "", title: "" });
+  const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,11 +93,42 @@ export default function DetailedCityAnalysisPage() {
     [apiBaseUrl]
   );
 
-  const handlePreview = useCallback((doc: ReportDocument) => {
-    const url = resolveFileUrl(doc);
-    setPreviewPdf({ url, title: doc.title });
-    setPreviewOpen(true);
-  }, [resolveFileUrl]);
+  const handlePreview = useCallback(
+    async (doc: ReportDocument) => {
+      setError(null);
+      const url = resolveFileUrl(doc);
+      if (!url) {
+        setError("Preview unavailable.");
+        return;
+      }
+      try {
+        const response = await fetch(url, { credentials: "include" });
+        if (!response.ok) {
+          const message = await response.text().catch(() => "Preview failed");
+          throw new Error(message || "Preview failed");
+        }
+        const blob = await response.blob();
+        const objectUrl = window.URL.createObjectURL(blob);
+        if (previewObjectUrl) {
+          window.URL.revokeObjectURL(previewObjectUrl);
+        }
+        setPreviewObjectUrl(objectUrl);
+        setPreviewPdf({ url: objectUrl, title: doc.title });
+        setPreviewOpen(true);
+      } catch (err: any) {
+        setError(err.message || "Failed to preview PDF");
+      }
+    },
+    [previewObjectUrl, resolveFileUrl]
+  );
+
+  const closePreview = useCallback(() => {
+    setPreviewOpen(false);
+    if (previewObjectUrl) {
+      window.URL.revokeObjectURL(previewObjectUrl);
+      setPreviewObjectUrl(null);
+    }
+  }, [previewObjectUrl]);
 
   return (
     <div className="city-analysis-page detailed-page">
@@ -191,11 +223,11 @@ export default function DetailedCityAnalysisPage() {
       </div>
 
       {previewOpen && (
-        <div className="pdf-modal" onClick={() => setPreviewOpen(false)}>
+        <div className="pdf-modal" onClick={closePreview}>
           <div className="pdf-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="pdf-modal-header">
               <h3>{previewPdf.title}</h3>
-              <button className="pdf-close" onClick={() => setPreviewOpen(false)}>
+              <button className="pdf-close" onClick={closePreview}>
                 ×
               </button>
             </div>
