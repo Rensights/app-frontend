@@ -641,7 +641,7 @@ export default function AnalysisRequestPage() {
         <header className="header">
           <div className="header-left">
             <button className="back-btn" onClick={() => router.push("/dashboard")}>
-              ← Back to Deals
+              ← Back
             </button>
           </div>
         </header>
