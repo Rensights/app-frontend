@@ -361,10 +361,10 @@ function SignUpPageContent() {
         password: formState.password,
         firstName: formState.firstName,
         lastName: formState.lastName,
-        phone: formState.phone,
+        phone: formState.phone.trim(),
         budget: formState.budget,
         portfolio: formState.portfolio,
-        goals: formState.goals,
+        goals: formState.goals.filter(Boolean),
         plan: formState.plan,
         deviceFingerprint: deviceFingerprint,
       });
