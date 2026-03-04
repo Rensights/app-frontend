@@ -10,7 +10,7 @@ import { useTranslations } from "@/hooks/useTranslations";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { subscription, user } = useUser();
+  const { subscription, user, loading: userLoading } = useUser();
   const toast = useToast();
   const { t } = useTranslations("dashboard", {
     "dashboard.title": "Property Reports",
@@ -57,13 +57,7 @@ export default function DashboardPage() {
   const [reportCount, setReportCount] = useState<{ used: number; remaining: number; max: number } | null>(null);
 
   const fetchReports = useCallback(async () => {
-    if (!user) {
-      setAnalysisRequests([]);
-      setReportCount(null);
-      setLoadingReports(false);
-      return;
-    }
-
+    if (userLoading) return;
     try {
       setLoadingReports(true);
       const [requests, countInfo] = await Promise.all([
@@ -79,21 +73,22 @@ export default function DashboardPage() {
     } finally {
       setLoadingReports(false);
     }
-  }, [user]);
+  }, [userLoading]);
 
   // Fetch user's analysis requests and report count
   useEffect(() => {
     fetchReports();
-  }, [fetchReports]);
+  }, [fetchReports, user?.id]);
 
   // Refresh when returning to the dashboard (tab focus or visibility)
   useEffect(() => {
     const handleFocus = () => {
+      if (userLoading) return;
       fetchReports();
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === "visible" && !userLoading) {
         fetchReports();
       }
     };
@@ -104,7 +99,7 @@ export default function DashboardPage() {
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [fetchReports]);
+  }, [fetchReports, userLoading]);
 
   // Get sorted reports (most recent first)
   const sortedReports = useMemo(() => {
