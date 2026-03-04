@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
@@ -10,7 +10,6 @@ import { useTranslations } from "@/hooks/useTranslations";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const pathname = usePathname();
   const { subscription, user } = useUser();
   const toast = useToast();
   const { t } = useTranslations("dashboard", {
@@ -84,21 +83,17 @@ export default function DashboardPage() {
 
   // Fetch user's analysis requests and report count
   useEffect(() => {
-    if (pathname === "/dashboard") {
-      fetchReports();
-    }
-  }, [fetchReports, pathname]);
+    fetchReports();
+  }, [fetchReports]);
 
   // Refresh when returning to the dashboard (tab focus or visibility)
   useEffect(() => {
     const handleFocus = () => {
-      if (pathname === "/dashboard") {
-        fetchReports();
-      }
+      fetchReports();
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && pathname === "/dashboard") {
+      if (document.visibilityState === "visible") {
         fetchReports();
       }
     };
@@ -109,7 +104,7 @@ export default function DashboardPage() {
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [fetchReports, pathname]);
+  }, [fetchReports]);
 
   // Get sorted reports (most recent first)
   const sortedReports = useMemo(() => {
