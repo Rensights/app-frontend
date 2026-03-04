@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import "../dashboard/dashboard.css";
@@ -380,6 +380,7 @@ const areaOptions = [
 
 export default function AnalysisRequestPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const toast = useToast();
   const reportId = searchParams?.get("id");
@@ -395,24 +396,50 @@ export default function AnalysisRequestPage() {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: string; lng: string } | null>(null);
 
-  useEffect(() => {
+  const loadReport = useCallback(async () => {
     if (!reportId) {
+      setReport(null);
+      setReportError("");
+      setReportLoading(false);
       return;
     }
-    const loadReport = async () => {
-      setReportLoading(true);
-      setReportError("");
-      try {
-        const data = await apiClient.getAnalysisRequestById(reportId);
-        setReport(data);
-      } catch (error: any) {
-        setReportError(error?.message || "Failed to load analysis result");
-      } finally {
-        setReportLoading(false);
+    setReportLoading(true);
+    setReportError("");
+    try {
+      const data = await apiClient.getAnalysisRequestById(reportId);
+      setReport(data);
+    } catch (error: any) {
+      setReportError(error?.message || "Failed to load analysis result");
+    } finally {
+      setReportLoading(false);
+    }
+  }, [reportId]);
+
+  useEffect(() => {
+    if (pathname === "/analysis-request") {
+      loadReport();
+    }
+  }, [loadReport, pathname]);
+
+  // Refresh when returning to the report (tab focus or visibility)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (pathname === "/analysis-request") {
+        loadReport();
       }
     };
-    loadReport();
-  }, [reportId]);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && pathname === "/analysis-request") {
+        loadReport();
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [loadReport, pathname]);
 
   const plotVisible = useMemo(
     () => formState.propertyType === "villa",
