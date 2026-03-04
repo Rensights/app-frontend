@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
@@ -10,6 +10,7 @@ import { useTranslations } from "@/hooks/useTranslations";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { subscription, user } = useUser();
   const toast = useToast();
   const { t } = useTranslations("dashboard", {
@@ -56,30 +57,59 @@ export default function DashboardPage() {
   const [loadingReports, setLoadingReports] = useState(true);
   const [reportCount, setReportCount] = useState<{ used: number; remaining: number; max: number } | null>(null);
 
+  const fetchReports = useCallback(async () => {
+    if (!user) {
+      setAnalysisRequests([]);
+      setReportCount(null);
+      setLoadingReports(false);
+      return;
+    }
+
+    try {
+      setLoadingReports(true);
+      const [requests, countInfo] = await Promise.all([
+        apiClient.getMyAnalysisRequests(),
+        apiClient.getReportCount()
+      ]);
+      setAnalysisRequests(Array.isArray(requests) ? requests : []);
+      setReportCount(countInfo);
+    } catch (error: any) {
+      console.error("Error fetching analysis requests:", error);
+      setAnalysisRequests([]);
+      setReportCount(null);
+    } finally {
+      setLoadingReports(false);
+    }
+  }, [user]);
+
   // Fetch user's analysis requests and report count
   useEffect(() => {
-    const fetchReports = async () => {
-      if (!user) return;
-      
-      try {
-        setLoadingReports(true);
-        const [requests, countInfo] = await Promise.all([
-          apiClient.getMyAnalysisRequests(),
-          apiClient.getReportCount()
-        ]);
-        setAnalysisRequests(Array.isArray(requests) ? requests : []);
-        setReportCount(countInfo);
-      } catch (error: any) {
-        console.error("Error fetching analysis requests:", error);
-        setAnalysisRequests([]);
-        setReportCount(null);
-      } finally {
-        setLoadingReports(false);
+    if (pathname === "/dashboard") {
+      fetchReports();
+    }
+  }, [fetchReports, pathname]);
+
+  // Refresh when returning to the dashboard (tab focus or visibility)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (pathname === "/dashboard") {
+        fetchReports();
       }
     };
 
-    fetchReports();
-  }, [user]);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && pathname === "/dashboard") {
+        fetchReports();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchReports, pathname]);
 
   // Get sorted reports (most recent first)
   const sortedReports = useMemo(() => {
