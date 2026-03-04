@@ -5,6 +5,7 @@ import { UserProvider } from "../context/UserContext";
 import { ToastProvider } from "../components/ui/Toast";
 import { LanguageProvider } from "../context/LanguageContext";
 import Clarity from "../components/analytics/Clarity";
+import { ErrorLogger } from "../components/analytics/ErrorLogger";
 
 export const metadata: Metadata = {
   title: "Rensights",
@@ -69,6 +70,7 @@ export default function RootLayout({
       </head>
       <body>
         <Clarity />
+        <ErrorLogger />
         <LanguageProvider>
           <ToastProvider>
             <UserProvider>

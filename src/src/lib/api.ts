@@ -2,6 +2,15 @@
 // Runtime: Injected via window.__API_URL__ from server-side (Kubernetes secret)
 // Build time: NEXT_PUBLIC_API_URL (Next.js replaces it at build time)
 // Priority: window.__API_URL__ (runtime) > process.env.NEXT_PUBLIC_API_URL (build time)
+import { logError, logInfo } from "./logger";
+
+const createTraceId = (): string => {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `trace-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+};
+
 const getApiUrlFromEnv = (): string => {
   // Check if we're in browser/client-side
   if (typeof window !== 'undefined') {
@@ -147,6 +156,8 @@ class ApiClient {
     const apiUrl = this.baseUrl || this.getApiUrl();
     const url = `${apiUrl}${endpoint}`;
     const cacheKey = `${options.method || 'GET'}:${url}`;
+    const startedAt = Date.now();
+    const traceId = createTraceId();
     
     // Check cache for GET requests
     if (useCache && (options.method === 'GET' || !options.method)) {
@@ -176,8 +187,18 @@ class ApiClient {
     if (options.headers) {
       Object.assign(headers, options.headers);
     }
+
+    if (!headers['X-Trace-Id']) {
+      headers['X-Trace-Id'] = traceId;
+    }
     
     // Note: Authorization header removed - using HttpOnly cookie instead
+
+    logInfo("api.request.start", {
+      method: options.method || "GET",
+      endpoint,
+      traceId,
+    });
 
     const requestPromise = fetch(url, {
       ...options,
@@ -201,6 +222,13 @@ class ApiClient {
           } catch {
             error = { error: errorText || `Request failed with status ${response.status}` };
           }
+          logError("api.request.error", {
+            method: options.method || "GET",
+            endpoint,
+            status: response.status,
+            durationMs: Date.now() - startedAt,
+            traceId,
+          });
           if (process.env.NODE_ENV === 'development') {
             console.error(`API Error [${response.status}]: ${endpoint}`, error);
           }
@@ -229,6 +257,13 @@ class ApiClient {
           (apiError as any).response = error;
           throw apiError;
         }
+        logInfo("api.request.success", {
+          method: options.method || "GET",
+          endpoint,
+          status: response.status,
+          durationMs: Date.now() - startedAt,
+          traceId,
+        });
         return response.json();
       })
       .then((data: T) => {
@@ -360,16 +395,25 @@ class ApiClient {
     
     // Use fetch directly to ensure cookie is set properly and avoid cache interference
     const apiUrl = this.baseUrl || this.getApiUrl();
+    const traceId = createTraceId();
+    logInfo("api.request.start", { method: "POST", endpoint: "/api/auth/login", traceId });
     const response = await fetch(`${apiUrl}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Trace-Id': traceId,
       },
       credentials: 'include', // CRITICAL: Include credentials to receive and send cookies
       body: JSON.stringify(data),
     });
     
     if (!response.ok) {
+      logError("api.request.error", {
+        method: "POST",
+        endpoint: "/api/auth/login",
+        status: response.status,
+        traceId,
+      });
       const errorText = await response.text().catch(() => 'Unknown error');
       let error;
       try {
@@ -383,6 +427,12 @@ class ApiClient {
       throw apiError;
     }
     
+    logInfo("api.request.success", {
+      method: "POST",
+      endpoint: "/api/auth/login",
+      status: response.status,
+      traceId,
+    });
     const loginResponse: LoginResponse = await response.json();
     
     // Token is now in HttpOnly cookie (set by backend), no need to store it
@@ -412,11 +462,14 @@ class ApiClient {
       this.clearCache();
       
       // Call logout endpoint - cookie will be cleared by backend
+      const traceId = createTraceId();
+      logInfo("api.request.start", { method: "POST", endpoint: "/api/auth/logout", traceId });
       const response = await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include', // CRITICAL: Include cookies so backend can clear them
         headers: {
           'Content-Type': 'application/json',
+          'X-Trace-Id': traceId,
         },
         // Don't cache this request
         cache: 'no-store',
@@ -425,6 +478,21 @@ class ApiClient {
       // Even if response is not ok, we still want to clear local state
       if (!response.ok && process.env.NODE_ENV === 'development') {
         console.warn('Logout endpoint returned non-OK status:', response.status);
+      }
+      if (!response.ok) {
+        logError("api.request.error", {
+          method: "POST",
+          endpoint: "/api/auth/logout",
+          status: response.status,
+          traceId,
+        });
+      } else {
+        logInfo("api.request.success", {
+          method: "POST",
+          endpoint: "/api/auth/logout",
+          status: response.status,
+          traceId,
+        });
       }
     } catch (error) {
       // Continue with logout even if backend call fails
@@ -565,14 +633,25 @@ class ApiClient {
     const headers: Record<string, string> = {};
     // Don't set Content-Type for FormData - browser will set it with boundary
     
+    const traceId = createTraceId();
+    logInfo("api.request.start", { method: "POST", endpoint: "/api/analysis-requests", traceId });
     const response = await fetch(url, {
       method: 'POST',
-      headers,
+      headers: {
+        ...headers,
+        'X-Trace-Id': traceId,
+      },
       body: formData,
       credentials: 'include', // CRITICAL: Include credentials (cookies) for cookie-based authentication
     });
     
     if (!response.ok) {
+          logError("api.request.error", {
+            method: "POST",
+            endpoint: "/api/analysis-requests",
+            status: response.status,
+            traceId,
+          });
           // Handle authentication errors (401/403)
           // Don't clear token or redirect here - let UserContext/AppLayout handle it
           // This prevents aggressive clearing on manual navigation or temporary network issues
@@ -597,6 +676,13 @@ class ApiClient {
       (apiError as any).response = error;
       throw apiError;
     }
+
+    logInfo("api.request.success", {
+      method: "POST",
+      endpoint: "/api/analysis-requests",
+      status: response.status,
+      traceId,
+    });
     
     return response.json();
   }
