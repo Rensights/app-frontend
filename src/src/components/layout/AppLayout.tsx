@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, ReactNode, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { AppSidebar } from "./AppSidebar";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -13,6 +13,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { loading, user, logout } = useUser();
   // Initialize sidebar as open (desktop default) - will be adjusted on mount
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -113,7 +114,7 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
         onLogout={handleLogout} 
       />
       
-      <main className="main-content">
+      <main className="main-content" key={pathname}>
         <button
           className={`menu-toggle ${isSidebarOpen ? 'hidden' : ''}`}
           type="button"
