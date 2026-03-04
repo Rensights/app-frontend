@@ -1,7 +1,7 @@
 "use client";
 
 import { TrendingUp, Shield, FileCheck, Award } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -16,6 +16,28 @@ export default function WhyInvestInDubai() {
   const { language } = useLanguage();
   const [content, setContent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const defaultBenefits = useMemo(() => ([
+    {
+      icon: "TrendingUp",
+      title: "High Profitability",
+      description: "Average rental yields reach 6–8%, among the highest globally. Investors enjoy both steady rental income and strong capital appreciation.",
+    },
+    {
+      icon: "Shield",
+      title: "Tax-Free Returns",
+      description: "Dubai has no property tax or capital gains tax, allowing investors to maximize their net returns compared to most global cities.",
+    },
+    {
+      icon: "FileCheck",
+      title: "Easy Investment Process",
+      description: "Foreign investors can own property 100% in designated areas, with a transparent, fast, and secure buying process regulated by the Dubai Land Department.",
+    },
+    {
+      icon: "Award",
+      title: "Residence Permit Opportunity",
+      description: "By purchasing property above certain thresholds, investors can qualify for renewable residence visas, providing long-term access and benefits in the UAE.",
+    },
+  ]), []);
 
   useEffect(() => {
     loadContent();
@@ -24,34 +46,16 @@ export default function WhyInvestInDubai() {
   const loadContent = async () => {
     try {
       const data = await apiClient.getLandingPageSection('why-invest', language);
+      if (process.env.NODE_ENV === "development") {
+        console.log("[landing] why-invest content", data);
+      }
       setContent(data.content || {});
     } catch (error) {
       console.error("Error loading why-invest content:", error);
       // Fallback to default content
       setContent({
         title: "Why Invest in Dubai",
-        benefits: [
-          {
-            icon: "TrendingUp",
-            title: "High Profitability",
-            description: "Average rental yields reach 6–8%, among the highest globally. Investors enjoy both steady rental income and strong capital appreciation.",
-          },
-          {
-            icon: "Shield",
-            title: "Tax-Free Returns",
-            description: "Dubai has no property tax or capital gains tax, allowing investors to maximize their net returns compared to most global cities.",
-          },
-          {
-            icon: "FileCheck",
-            title: "Easy Investment Process",
-            description: "Foreign investors can own property 100% in designated areas, with a transparent, fast, and secure buying process regulated by the Dubai Land Department.",
-          },
-          {
-            icon: "Award",
-            title: "Residence Permit Opportunity",
-            description: "By purchasing property above certain thresholds, investors can qualify for renewable residence visas, providing long-term access and benefits in the UAE.",
-          },
-        ],
+        benefits: defaultBenefits,
       });
     } finally {
       setLoading(false);
@@ -63,7 +67,18 @@ export default function WhyInvestInDubai() {
   }
 
   const title = content?.title || "Why Invest in Dubai";
-  const benefits = content?.benefits || (content?.benefitsJson ? JSON.parse(content.benefitsJson) : []);
+  let benefits = content?.benefits;
+  if (!Array.isArray(benefits) || benefits.length === 0) {
+    if (content?.benefitsJson) {
+      try {
+        benefits = JSON.parse(content.benefitsJson);
+      } catch {
+        benefits = defaultBenefits;
+      }
+    } else {
+      benefits = defaultBenefits;
+    }
+  }
 
   return (
     <section id="why-invest" className="py-16 sm:py-24">
