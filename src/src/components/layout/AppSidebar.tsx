@@ -53,9 +53,17 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
     setTimeout(() => {
       if (item.id === "account") {
         router.push("/account");
-      } else {
-        router.push(item.path);
+        return;
       }
+
+      if (item.id === "reports") {
+        if (typeof window !== "undefined") {
+          window.location.assign(item.path);
+          return;
+        }
+      }
+
+      router.push(item.path);
     }, isMobile ? 100 : 0);
   }, [router, onClose, isMobile]);
 
