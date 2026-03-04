@@ -44,6 +44,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  async redirects() {
+    return [
+      {
+        source: '/dashbooard',
+        destination: '/dashboard',
+        permanent: false,
+      },
+    ];
+  },
   
   // Image optimization
   images: {
