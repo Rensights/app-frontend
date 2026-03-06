@@ -345,6 +345,12 @@
   color: white;
 }
 
+.request-new-btn:hover:not(:disabled),
+.request-new-btn:active:not(:disabled),
+.request-new-btn:focus-visible:not(:disabled) {
+  color: white;
+}
+
 .btn-outline:disabled {
   opacity: 1;
   border-color: #f39c12;
