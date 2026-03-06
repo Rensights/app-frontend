@@ -294,7 +294,7 @@ export default function DashboardPage() {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-1px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(243, 156, 18, 0.3)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 255, 255, 0.3)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)';
