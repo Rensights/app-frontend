@@ -87,22 +87,6 @@ export default function DealsPage() {
     }
   }, [loadDeals, weeklyDealsEnabled, router]);
 
-  if (weeklyDealsLoading) {
-    return (
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Loading..." />
-      </div>
-    );
-  }
-
-  if (weeklyDealsEnabled === false) {
-    return (
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Redirecting..." />
-      </div>
-    );
-  }
-
   const filteredDeals = useMemo(() => {
     return deals.filter((deal) => {
       // Price filter is handled client-side since API doesn't support it yet
@@ -168,6 +152,22 @@ export default function DealsPage() {
       avgYield: avgYield > 0 ? `${avgYield.toFixed(1)}%` : "N/A",
     };
   }, [filteredDeals]);
+
+  if (weeklyDealsLoading) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Loading..." />
+      </div>
+    );
+  }
+
+  if (weeklyDealsEnabled === false) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Redirecting..." />
+      </div>
+    );
+  }
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
