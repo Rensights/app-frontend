@@ -323,21 +323,9 @@ export default function DashboardPage() {
             </div>
             <div className="report-actions">
               <button 
-                className="btn btn-outline"
+                className="btn btn-outline request-first-btn"
                 onClick={handleRequestNewReport}
                 disabled={isReportLimitReached}
-                style={isReportLimitReached ? { 
-                  cursor: 'not-allowed',
-                  color: '#f39c12',
-                  borderColor: '#f39c12',
-                  borderWidth: '2px',
-                  borderStyle: 'solid'
-                } : {
-                  color: '#f39c12',
-                  borderColor: '#f39c12',
-                  borderWidth: '2px',
-                  borderStyle: 'solid'
-                }}
               >
                 {t("dashboard.requestFirst")}
               </button>

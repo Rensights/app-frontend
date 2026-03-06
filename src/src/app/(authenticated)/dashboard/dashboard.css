@@ -339,6 +339,12 @@
   color: white;
 }
 
+.request-first-btn:hover:not(:disabled),
+.request-first-btn:active:not(:disabled),
+.request-first-btn:focus-visible:not(:disabled) {
+  color: white;
+}
+
 .btn-outline:disabled {
   opacity: 1;
   border-color: #f39c12;
