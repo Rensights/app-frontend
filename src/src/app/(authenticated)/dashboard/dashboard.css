@@ -332,7 +332,9 @@
   color: #f39c12;
 }
 
-.btn-outline:hover:not(:disabled) {
+.btn-outline:hover:not(:disabled),
+.btn-outline:active:not(:disabled),
+.btn-outline:focus-visible:not(:disabled) {
   background: linear-gradient(135deg, #f39c12, #e67e22);
   color: white;
 }
