@@ -290,6 +290,12 @@
   justify-content: center;
 }
 
+.btn-manage-subscription:hover:not(:disabled),
+.btn-manage-subscription:active:not(:disabled),
+.btn-manage-subscription:focus-visible:not(:disabled) {
+  color: #344054;
+}
+
 .btn-danger {
   background: rgba(231, 76, 60, 0.1);
   color: #e74c3c;
