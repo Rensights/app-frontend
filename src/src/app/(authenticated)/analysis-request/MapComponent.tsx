@@ -106,7 +106,7 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
 
     // Add click listener to map
     mapInstance.current.addListener('click', (event: any) => {
-      placeMarker(event.latLng);
+      placeMarker(event.latLng, true);
     });
 
     // If coordinates are already set, place marker
@@ -115,13 +115,13 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
       const lng = parseFloat(coordinates.lng);
       if (!isNaN(lat) && !isNaN(lng)) {
         const location = new window.google.maps.LatLng(lat, lng);
-        placeMarker(location);
+        placeMarker(location, false);
       }
     }
   };
 
   // Place marker function
-  const placeMarker = (location: any) => {
+  const placeMarker = (location: any, updateState = true) => {
     if (!mapInstance.current) return;
 
     // Remove existing marker
@@ -129,19 +129,26 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
       markerRef.current.setMap(null);
     }
 
+    const latValue = typeof location.lat === "function" ? location.lat() : location.lat;
+    const lngValue = typeof location.lng === "function" ? location.lng() : location.lng;
+    if (typeof latValue !== "number" || typeof lngValue !== "number") return;
+
+    const lat = Number(latValue.toFixed(6));
+    const lng = Number(lngValue.toFixed(6));
+
     // Create new marker
     markerRef.current = new window.google.maps.Marker({
-      position: location,
+      position: { lat, lng },
       map: mapInstance.current,
       animation: window.google.maps.Animation.DROP,
     });
 
-    // Get coordinates
-    const lat = location.lat().toFixed(6);
-    const lng = location.lng().toFixed(6);
+    mapInstance.current.panTo({ lat, lng });
 
     // Call callback to update parent component
-    onLocationSelect(parseFloat(lat), parseFloat(lng));
+    if (updateState) {
+      onLocationSelect(lat, lng);
+    }
   };
 
   // Update map center when city changes
@@ -162,7 +169,7 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
     if (isNaN(lat) || isNaN(lng)) return;
 
     const location = new window.google.maps.LatLng(lat, lng);
-    placeMarker(location);
+    placeMarker(location, false);
   }, [coordinates]);
 
   return null;
