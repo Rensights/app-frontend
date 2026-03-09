@@ -93,6 +93,13 @@ export default function DetailedCityAnalysisPage() {
     [apiBaseUrl]
   );
 
+  const formatUpdatedAt = useCallback((value?: string) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  }, []);
+
   const handlePreview = useCallback(
     async (doc: ReportDocument) => {
       setError(null);
@@ -195,6 +202,11 @@ export default function DetailedCityAnalysisPage() {
                       {doc.description && (
                         <p className="document-file-subtitle">{doc.description}</p>
                       )}
+                      <div className="document-meta">
+                        <span>PDF</span>
+                        <span className="dot">•</span>
+                        <span>Last updated: {formatUpdatedAt(doc.updatedAt)}</span>
+                      </div>
                     </div>
                     <div className="document-actions">
                       <button

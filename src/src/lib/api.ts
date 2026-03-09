@@ -831,6 +831,7 @@ export interface ReportDocument {
   fileUrl: string;
   displayOrder?: number;
   languageCode?: string;
+  updatedAt?: string;
 }
 
 export interface ReportSection {
