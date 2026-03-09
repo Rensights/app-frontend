@@ -7,6 +7,7 @@ import { useTranslations } from "@/hooks/useTranslations";
 export default function PrivacyTermsPage() {
   const { t } = useTranslations("privacyTerms", {
     "privacyTerms.title": "Privacy Policy & Terms of Service",
+    "privacyTerms.fullContent": "",
     "privacyTerms.privacy.title": "Privacy Policy",
     "privacyTerms.privacy.p1": "At Rensights, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.",
     "privacyTerms.privacy.infoTitle": "Information We Collect",
@@ -33,6 +34,8 @@ export default function PrivacyTermsPage() {
     "privacyTerms.disclaimer.changesBody": "We reserve the right to modify these terms at any time. We will notify users of any material changes by posting the new terms on this page. Your continued use of the platform after any such changes constitutes your acceptance of the new terms.",
     "privacyTerms.lastUpdated": "Last Updated:",
   });
+  const fullContent = t("privacyTerms.fullContent").trim();
+  const hasFullContent = fullContent.length > 0;
 
   return (
     <div className="min-h-screen">
@@ -40,57 +43,70 @@ export default function PrivacyTermsPage() {
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-4xl font-bold mb-8">{t("privacyTerms.title")}</h1>
         
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">{t("privacyTerms.privacy.title")}</h2>
-          <div className="space-y-4 text-muted-foreground">
-            <p>{t("privacyTerms.privacy.p1")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.privacy.infoTitle")}</h3>
-            <p>{t("privacyTerms.privacy.infoBody")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.privacy.useTitle")}</h3>
-            <p>{t("privacyTerms.privacy.useBody")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.privacy.securityTitle")}</h3>
-            <p>{t("privacyTerms.privacy.securityBody")}</p>
-          </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">{t("privacyTerms.terms.title")}</h2>
-          <div className="space-y-4 text-muted-foreground">
-            <p>{t("privacyTerms.terms.p1")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.terms.licenseTitle")}</h3>
-            <p>{t("privacyTerms.terms.licenseBody")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.terms.modificationsTitle")}</h3>
-            <p>{t("privacyTerms.terms.modificationsBody")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.terms.responsibilitiesTitle")}</h3>
-            <p>{t("privacyTerms.terms.responsibilitiesBody")}</p>
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">{t("privacyTerms.disclaimer.title")}</h2>
-          <div className="space-y-4 text-muted-foreground">
-            <p>{t("privacyTerms.disclaimer.p1")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.disclaimer.investmentTitle")}</h3>
-            <p>{t("privacyTerms.disclaimer.investmentBody")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.disclaimer.liabilityTitle")}</h3>
-            <p>{t("privacyTerms.disclaimer.liabilityBody")}</p>
-            
-            <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.disclaimer.changesTitle")}</h3>
-            <p>{t("privacyTerms.disclaimer.changesBody")}</p>
-            
+        {hasFullContent ? (
+          <section>
+            <div className="text-muted-foreground whitespace-pre-wrap">
+              {fullContent}
+            </div>
             <p className="mt-6">
               <strong>{t("privacyTerms.lastUpdated")}</strong> {new Date().toLocaleDateString()}
             </p>
-          </div>
-        </section>
+          </section>
+        ) : (
+          <>
+            <section className="mb-12">
+              <h2 className="text-2xl font-semibold mb-4">{t("privacyTerms.privacy.title")}</h2>
+              <div className="space-y-4 text-muted-foreground">
+                <p>{t("privacyTerms.privacy.p1")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.privacy.infoTitle")}</h3>
+                <p>{t("privacyTerms.privacy.infoBody")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.privacy.useTitle")}</h3>
+                <p>{t("privacyTerms.privacy.useBody")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.privacy.securityTitle")}</h3>
+                <p>{t("privacyTerms.privacy.securityBody")}</p>
+              </div>
+            </section>
+
+            <section className="mb-12">
+              <h2 className="text-2xl font-semibold mb-4">{t("privacyTerms.terms.title")}</h2>
+              <div className="space-y-4 text-muted-foreground">
+                <p>{t("privacyTerms.terms.p1")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.terms.licenseTitle")}</h3>
+                <p>{t("privacyTerms.terms.licenseBody")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.terms.modificationsTitle")}</h3>
+                <p>{t("privacyTerms.terms.modificationsBody")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.terms.responsibilitiesTitle")}</h3>
+                <p>{t("privacyTerms.terms.responsibilitiesBody")}</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">{t("privacyTerms.disclaimer.title")}</h2>
+              <div className="space-y-4 text-muted-foreground">
+                <p>{t("privacyTerms.disclaimer.p1")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.disclaimer.investmentTitle")}</h3>
+                <p>{t("privacyTerms.disclaimer.investmentBody")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.disclaimer.liabilityTitle")}</h3>
+                <p>{t("privacyTerms.disclaimer.liabilityBody")}</p>
+                
+                <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">{t("privacyTerms.disclaimer.changesTitle")}</h3>
+                <p>{t("privacyTerms.disclaimer.changesBody")}</p>
+                
+                <p className="mt-6">
+                  <strong>{t("privacyTerms.lastUpdated")}</strong> {new Date().toLocaleDateString()}
+                </p>
+              </div>
+            </section>
+          </>
+        )}
       </main>
       <LandingFooter />
     </div>
