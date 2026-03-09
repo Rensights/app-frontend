@@ -45,9 +45,10 @@ export default function PrivacyTermsPage() {
         
         {hasFullContent ? (
           <section>
-            <div className="text-muted-foreground whitespace-pre-wrap">
-              {fullContent}
-            </div>
+            <div
+              className="text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: fullContent }}
+            />
             <p className="mt-6">
               <strong>{t("privacyTerms.lastUpdated")}</strong> {new Date().toLocaleDateString()}
             </p>
