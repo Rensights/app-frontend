@@ -5,6 +5,7 @@ import { UserProvider } from "../context/UserContext";
 import { ToastProvider } from "../components/ui/Toast";
 import { LanguageProvider } from "../context/LanguageContext";
 import Clarity from "../components/analytics/Clarity";
+import GoogleAnalytics from "../components/analytics/GoogleAnalytics";
 import { ErrorLogger } from "../components/analytics/ErrorLogger";
 
 export const metadata: Metadata = {
@@ -70,6 +71,7 @@ export default function RootLayout({
       </head>
       <body>
         <Clarity />
+        <GoogleAnalytics />
         <ErrorLogger />
         <LanguageProvider>
           <ToastProvider>
