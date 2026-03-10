@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
 import "../property-details/property-details.css";
 import "./analysis-request.css";
@@ -673,7 +674,7 @@ export default function AnalysisRequestPage() {
 
         {reportLoading && (
           <div className="analysis-report-card">
-            <div className="analysis-report-loading">Loading report...</div>
+            <LoadingSpinner message="Loading report..." />
           </div>
         )}
 

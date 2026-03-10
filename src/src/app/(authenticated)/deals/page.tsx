@@ -373,7 +373,7 @@ export default function DealsPage() {
             {loading ? (
               <tr>
                 <td colSpan={8} style={{ textAlign: "center", padding: "2rem" }}>
-                  Loading deals...
+                  <LoadingSpinner message="Loading deals..." />
                 </td>
               </tr>
             ) : error ? (

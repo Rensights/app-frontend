@@ -409,7 +409,7 @@ function PropertyDetailsPageContent() {
               >
                 {loadingComparables ? (
                   <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
-                    Loading similar properties...
+                    <LoadingSpinner message="Loading similar properties..." />
                   </div>
                 ) : comparableDeals.length === 0 ? (
                   <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
@@ -442,7 +442,7 @@ function PropertyDetailsPageContent() {
               >
                 {loadingComparables ? (
                   <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
-                    Loading recent sales...
+                    <LoadingSpinner message="Loading recent sales..." />
                   </div>
                 ) : recentSales.length === 0 ? (
                   <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>

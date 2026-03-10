@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useTranslations } from "@/hooks/useTranslations";
 import "../../login.css";
 
@@ -481,7 +482,7 @@ export default function ResetPasswordPage() {
         <div className="login-container">
           <div className="login-box">
             <div className="login-header">
-              <h1>Loading...</h1>
+              <LoadingSpinner message="Loading..." />
             </div>
           </div>
         </div>

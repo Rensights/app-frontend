@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient, ReportDocument, ReportSection } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../../dashboard/dashboard.css";
 import "../city-analysis.css";
 
@@ -168,7 +169,7 @@ export default function DetailedCityAnalysisPage() {
       <div className="documents-container">
         {loading && (
           <div className="document-card">
-            <p className="document-description">Loading reports...</p>
+            <LoadingSpinner message="Loading reports..." />
           </div>
         )}
         {!loading && error && (

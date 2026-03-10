@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import { apiClient } from "@/lib/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 type Article = {
   id: string;
@@ -56,7 +57,9 @@ export default function ArticlesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Articles</h1>
         </div>
         {loading ? (
-          <p className="mt-6 text-gray-600">Loading articles...</p>
+          <div className="mt-6">
+            <LoadingSpinner message="Loading articles..." />
+          </div>
         ) : articles.length === 0 ? (
           <p className="mt-6 text-gray-600">No articles yet.</p>
         ) : (

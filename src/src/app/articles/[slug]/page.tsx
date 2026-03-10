@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import { apiClient } from "@/lib/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 type Article = {
   title: string;
@@ -41,7 +42,7 @@ export default function ArticleDetailPage() {
       <LandingHeader />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {loading ? (
-          <p className="text-gray-600">Loading article...</p>
+          <LoadingSpinner message="Loading article..." />
         ) : notFound || !article ? (
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Article not found</h1>

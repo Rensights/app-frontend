@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "./signup.css";
 import { useTranslations } from "@/hooks/useTranslations";
 
@@ -1108,7 +1109,7 @@ function SignUpPageContent() {
 
 export default function SignUpPage() {
   return (
-    <Suspense fallback={<div className="signup-page"><div className="signup-container"><div className="signup-card">Loading...</div></div></div>}>
+    <Suspense fallback={<div className="signup-page"><div className="signup-container"><div className="signup-card"><LoadingSpinner message="Loading..." /></div></div></div>}>
       <SignUpPageContent />
     </Suspense>
   );
