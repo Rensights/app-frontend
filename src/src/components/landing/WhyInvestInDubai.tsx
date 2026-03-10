@@ -4,6 +4,7 @@ import { TrendingUp, Shield, FileCheck, Award } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const iconMap: Record<string, any> = {
   TrendingUp,
@@ -12,10 +13,15 @@ const iconMap: Record<string, any> = {
   Award,
 };
 
-export default function WhyInvestInDubai() {
+type WhyInvestInDubaiProps = {
+  initialContent?: any;
+};
+
+export default function WhyInvestInDubai({ initialContent }: WhyInvestInDubaiProps) {
   const { language } = useLanguage();
-  const [content, setContent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const hasPrefetchedContent = initialContent !== undefined;
+  const [content, setContent] = useState<any>(initialContent ?? null);
+  const [loading, setLoading] = useState(!hasPrefetchedContent);
   const defaultBenefits = useMemo(() => ([
     {
       icon: "TrendingUp",
@@ -40,8 +46,13 @@ export default function WhyInvestInDubai() {
   ]), []);
 
   useEffect(() => {
+    if (hasPrefetchedContent) {
+      setContent(initialContent ?? {});
+      setLoading(false);
+      return;
+    }
     loadContent();
-  }, [language]);
+  }, [language, hasPrefetchedContent, initialContent]);
 
   const loadContent = async () => {
     try {
@@ -63,7 +74,11 @@ export default function WhyInvestInDubai() {
   };
 
   if (loading) {
-    return <div className="py-16 sm:py-24 text-center">Loading...</div>;
+    return (
+      <div className="py-16 sm:py-24 text-center">
+        <LoadingSpinner message="Loading..." />
+      </div>
+    );
   }
 
   const title = content?.title || "Why Invest in Dubai";

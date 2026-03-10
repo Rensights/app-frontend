@@ -6,11 +6,17 @@ import { useEffect, useState, useContext } from "react";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import { UserContext } from "@/context/UserContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export default function LandingHero() {
+type LandingHeroProps = {
+  initialContent?: any;
+};
+
+export default function LandingHero({ initialContent }: LandingHeroProps) {
   const { language } = useLanguage();
-  const [content, setContent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const hasPrefetchedContent = initialContent !== undefined;
+  const [content, setContent] = useState<any>(initialContent ?? null);
+  const [loading, setLoading] = useState(!hasPrefetchedContent);
   
   // Get user info to check if logged in
   const userContext = useContext(UserContext);
@@ -18,8 +24,13 @@ export default function LandingHero() {
   const isLoggedIn = !!user;
 
   useEffect(() => {
+    if (hasPrefetchedContent) {
+      setContent(initialContent ?? {});
+      setLoading(false);
+      return;
+    }
     loadContent();
-  }, [language]);
+  }, [language, hasPrefetchedContent, initialContent]);
 
   const loadContent = async () => {
     try {
@@ -46,7 +57,11 @@ export default function LandingHero() {
   };
 
   if (loading) {
-    return <div className="min-h-[70vh] flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <LoadingSpinner message="Loading..." />
+      </div>
+    );
   }
 
   const title = content?.title || "Discover <span class='text-primary'>Underpriced</span> Dubai Properties";

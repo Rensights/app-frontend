@@ -4,15 +4,26 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export default function LandingFooter() {
+type LandingFooterProps = {
+  initialContent?: any;
+};
+
+export default function LandingFooter({ initialContent }: LandingFooterProps) {
   const { language } = useLanguage();
-  const [content, setContent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const hasPrefetchedContent = initialContent !== undefined;
+  const [content, setContent] = useState<any>(initialContent ?? null);
+  const [loading, setLoading] = useState(!hasPrefetchedContent);
 
   useEffect(() => {
+    if (hasPrefetchedContent) {
+      setContent(initialContent ?? {});
+      setLoading(false);
+      return;
+    }
     loadContent();
-  }, [language]);
+  }, [language, hasPrefetchedContent, initialContent]);
 
   const loadContent = async () => {
     try {
@@ -27,7 +38,13 @@ export default function LandingFooter() {
   };
 
   if (loading) {
-    return <footer className="border-t bg-card py-6"><div className="container mx-auto px-4 text-center">Loading...</div></footer>;
+    return (
+      <footer className="border-t bg-card py-6">
+        <div className="container mx-auto px-4 text-center">
+          <LoadingSpinner message="Loading..." />
+        </div>
+      </footer>
+    );
   }
 
   const tagline = content?.tagline || "Data-backed real estate investing in Dubai";

@@ -6,15 +6,26 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export default function LandingCTA() {
+type LandingCTAProps = {
+  initialContent?: any;
+};
+
+export default function LandingCTA({ initialContent }: LandingCTAProps) {
   const { language } = useLanguage();
-  const [content, setContent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const hasPrefetchedContent = initialContent !== undefined;
+  const [content, setContent] = useState<any>(initialContent ?? null);
+  const [loading, setLoading] = useState(!hasPrefetchedContent);
 
   useEffect(() => {
+    if (hasPrefetchedContent) {
+      setContent(initialContent ?? {});
+      setLoading(false);
+      return;
+    }
     loadContent();
-  }, [language]);
+  }, [language, hasPrefetchedContent, initialContent]);
 
   const loadContent = async () => {
     try {
@@ -29,7 +40,11 @@ export default function LandingCTA() {
   };
 
   if (loading) {
-    return <div className="py-16 text-center">Loading...</div>;
+    return (
+      <div className="py-16 text-center">
+        <LoadingSpinner message="Loading..." />
+      </div>
+    );
   }
 
   const bottomTitle = content?.bottomTitle || "Ready to Start Your Investment Journey?";
@@ -56,5 +71,4 @@ export default function LandingCTA() {
     </section>
   );
 }
-
 

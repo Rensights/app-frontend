@@ -7,19 +7,30 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const iconMap: Record<string, any> = {
   Map, TrendingUp, FileCheck, Building2, Search, CheckCircle2, Target, Shield,
 };
 
-export default function LandingSolutions() {
+type LandingSolutionsProps = {
+  initialContent?: any;
+};
+
+export default function LandingSolutions({ initialContent }: LandingSolutionsProps) {
   const { language } = useLanguage();
-  const [content, setContent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const hasPrefetchedContent = initialContent !== undefined;
+  const [content, setContent] = useState<any>(initialContent ?? null);
+  const [loading, setLoading] = useState(!hasPrefetchedContent);
 
   useEffect(() => {
+    if (hasPrefetchedContent) {
+      setContent(initialContent ?? {});
+      setLoading(false);
+      return;
+    }
     loadContent();
-  }, [language]);
+  }, [language, hasPrefetchedContent, initialContent]);
 
   const loadContent = async () => {
     try {
@@ -35,7 +46,11 @@ export default function LandingSolutions() {
   };
 
   if (loading) {
-    return <div className="py-20 text-center">Loading...</div>;
+    return (
+      <div className="py-20 text-center">
+        <LoadingSpinner message="Loading..." />
+      </div>
+    );
   }
 
   const title = content?.title || "Your Journey to Smart Property Investment";

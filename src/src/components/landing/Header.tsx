@@ -4,17 +4,25 @@ import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LanguageSwitcher, { type Language } from "@/components/LanguageSwitcher";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import { useUser } from "@/context/UserContext";
 
-export default function LandingHeader() {
+type LandingHeaderProps = {
+  initialContent?: any;
+  prefetchedHasArticles?: boolean;
+  availableLanguages?: Language[];
+};
+
+export default function LandingHeader({ initialContent, prefetchedHasArticles, availableLanguages }: LandingHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [content, setContent] = useState<any>({});
+  const hasPrefetchedContent = initialContent !== undefined;
+  const [content, setContent] = useState<any>(initialContent ?? {});
   const [loading, setLoading] = useState(false);
-  const [hasArticles, setHasArticles] = useState(false);
+  const hasPrefetchedArticles = typeof prefetchedHasArticles === "boolean";
+  const [hasArticles, setHasArticles] = useState(prefetchedHasArticles ?? false);
   
   // Get language from context - must be called unconditionally
   // If context throws, React will handle it (component won't render)
@@ -50,17 +58,24 @@ export default function LandingHeader() {
   }, [user]);
 
   useEffect(() => {
-    if (mounted) {
-      loadContent();
+    if (!mounted) return;
+    if (hasPrefetchedContent) {
+      setContent(initialContent ?? {});
+      setLoading(false);
+      return;
     }
+    loadContent();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, mounted]);
+  }, [language, mounted, hasPrefetchedContent, initialContent]);
 
   useEffect(() => {
-    if (mounted) {
-      loadArticlesStatus();
+    if (!mounted) return;
+    if (hasPrefetchedArticles) {
+      setHasArticles(prefetchedHasArticles ?? false);
+      return;
     }
-  }, [mounted]);
+    loadArticlesStatus();
+  }, [mounted, hasPrefetchedArticles, prefetchedHasArticles]);
 
   const loadContent = async () => {
     // Don't load if not mounted (prevents SSR/client mismatch)
@@ -178,7 +193,7 @@ export default function LandingHeader() {
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
-            <LanguageSwitcher />
+            <LanguageSwitcher initialLanguages={availableLanguages} />
             {isLoggedIn ? (
               <Link href="/dashboard">
                 <Button size="sm">Dashboard</Button>
@@ -216,7 +231,7 @@ export default function LandingHeader() {
         >
           <div className="container mx-auto space-y-3 px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-2">
-              <LanguageSwitcher />
+              <LanguageSwitcher initialLanguages={availableLanguages} />
             </div>
             <Link href="/solutions" className="block text-sm">
               {navSolutions}

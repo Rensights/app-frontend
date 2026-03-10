@@ -8,11 +8,17 @@ import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export default function LandingPricing() {
+type LandingPricingProps = {
+  initialContent?: any;
+};
+
+export default function LandingPricing({ initialContent }: LandingPricingProps) {
   const { language } = useLanguage();
-  const [content, setContent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const hasPrefetchedContent = initialContent !== undefined;
+  const [content, setContent] = useState<any>(initialContent ?? null);
+  const [loading, setLoading] = useState(!hasPrefetchedContent);
   
   // Get toast
   const toast = useToast();
@@ -25,8 +31,13 @@ export default function LandingPricing() {
   const isFreeTier = !userTier || userTier === 'FREE';
 
   useEffect(() => {
+    if (hasPrefetchedContent) {
+      setContent(initialContent ?? {});
+      setLoading(false);
+      return;
+    }
     loadContent();
-  }, [language]);
+  }, [language, hasPrefetchedContent, initialContent]);
 
   const loadContent = async () => {
     try {
@@ -41,7 +52,11 @@ export default function LandingPricing() {
   };
 
   if (loading) {
-    return <div className="py-16 text-center">Loading...</div>;
+    return (
+      <div className="py-16 text-center">
+        <LoadingSpinner message="Loading..." />
+      </div>
+    );
   }
 
   const title = content?.title || "Choose Your Plan";

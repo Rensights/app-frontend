@@ -3,7 +3,7 @@
 import { useLanguage } from "../context/LanguageContext";
 import { useState, useEffect } from "react";
 
-interface Language {
+export interface Language {
   code: string;
   name: string;
   nativeName?: string;
@@ -16,12 +16,24 @@ const API_URL = typeof window !== 'undefined'
   ? (window as any).__API_URL__ || process.env.NEXT_PUBLIC_API_URL || ''
   : process.env.NEXT_PUBLIC_API_URL || '';
 
-export default function LanguageSwitcher() {
+type LanguageSwitcherProps = {
+  initialLanguages?: Language[];
+};
+
+export default function LanguageSwitcher({ initialLanguages }: LanguageSwitcherProps) {
   const { language, setLanguage } = useLanguage();
-  const [availableLanguages, setAvailableLanguages] = useState<Language[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [availableLanguages, setAvailableLanguages] = useState<Language[]>(
+    initialLanguages || []
+  );
+  const [loading, setLoading] = useState(!initialLanguages || initialLanguages.length === 0);
 
   useEffect(() => {
+    if (initialLanguages && initialLanguages.length > 0) {
+      setAvailableLanguages(initialLanguages);
+      setLoading(false);
+      return;
+    }
+
     const loadLanguages = async () => {
       try {
         const response = await fetch(`${API_URL}/api/languages`);
@@ -51,15 +63,9 @@ export default function LanguageSwitcher() {
     };
 
     loadLanguages();
-  }, [language, setLanguage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [language, setLanguage, initialLanguages]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading || availableLanguages.length === 0) {
-    return (
-      <div className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-400">
-        Loading...
-      </div>
-    );
-  }
+  if (loading || availableLanguages.length === 0) return null;
 
   if (availableLanguages.length <= 1) {
     return null;

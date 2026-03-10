@@ -4,6 +4,7 @@ import { Database, Brain, Mail, LayoutDashboard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const iconMap: Record<string, any> = {
   Database,
@@ -12,14 +13,24 @@ const iconMap: Record<string, any> = {
   LayoutDashboard,
 };
 
-export default function LandingHowItWorks() {
+type LandingHowItWorksProps = {
+  initialContent?: any;
+};
+
+export default function LandingHowItWorks({ initialContent }: LandingHowItWorksProps) {
   const { language } = useLanguage();
-  const [content, setContent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const hasPrefetchedContent = initialContent !== undefined;
+  const [content, setContent] = useState<any>(initialContent ?? null);
+  const [loading, setLoading] = useState(!hasPrefetchedContent);
 
   useEffect(() => {
+    if (hasPrefetchedContent) {
+      setContent(initialContent ?? {});
+      setLoading(false);
+      return;
+    }
     loadContent();
-  }, [language]);
+  }, [language, hasPrefetchedContent, initialContent]);
 
   const loadContent = async () => {
     try {
@@ -34,7 +45,11 @@ export default function LandingHowItWorks() {
   };
 
   if (loading) {
-    return <div className="py-16 text-center">Loading...</div>;
+    return (
+      <div className="py-16 text-center">
+        <LoadingSpinner message="Loading..." />
+      </div>
+    );
   }
 
   const title = content?.title || "How it works?";
