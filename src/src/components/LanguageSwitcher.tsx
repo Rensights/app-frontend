@@ -61,6 +61,10 @@ export default function LanguageSwitcher() {
     );
   }
 
+  if (availableLanguages.length <= 1) {
+    return null;
+  }
+
   return (
     <div className="relative inline-block">
       <select
@@ -92,4 +96,3 @@ export default function LanguageSwitcher() {
     </div>
   );
 }
-
