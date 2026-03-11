@@ -97,15 +97,6 @@ function SignUpPageContent() {
     "authSignup.portfolio": "Current Investment Portfolio",
     "authSignup.portfolioSelect": "Select portfolio size",
     "authSignup.planTitle": "Choose Your Plan",
-    "authSignup.planFree": "Free Registration",
-    "authSignup.planFreeDesc": "Get started with basic insights",
-    "authSignup.planStandard": "Standard Package",
-    "authSignup.planStandardDesc": "Perfect for active property seekers",
-    "authSignup.planFeature1": "1 tailored pricing analysis of properties selected by you",
-    "authSignup.planFeature2": "City analysis",
-    "authSignup.planFeature3": "5 tailored pricing analysis of properties selected by you",
-    "authSignup.planFeature4": "Advanced city analysis",
-    "authSignup.planFeature5": "Potentially underpriced deals",
     "authSignup.termsText": "I have read and agree to the",
     "authSignup.and": "and",
     "authSignup.termsLink": "Terms of Services",
@@ -118,6 +109,21 @@ function SignUpPageContent() {
     "authSignup.goals.capitalAppreciation": "Capital Appreciation",
     "authSignup.goals.portfolioDiversification": "Portfolio Diversification",
     "authSignup.goals.lifestyleResidence": "Lifestyle/Residence Investment",
+  });
+  const { t: tPricing } = useTranslations("pricing", {
+    "pricing.free.name": "Free Registration",
+    "pricing.free.description": "Get started with basic insights",
+    "pricing.free.feature1": "1 tailored pricing analysis of properties selected by you",
+    "pricing.free.feature2": "City analysis",
+    "pricing.free.price": "$0",
+    "pricing.free.period": "/mo",
+    "pricing.standard.name": "Standard Package",
+    "pricing.standard.description": "Perfect for active property seekers",
+    "pricing.standard.feature1": "5 tailored pricing analysis of properties selected by you",
+    "pricing.standard.feature2": "Advanced city analysis",
+    "pricing.standard.feature3": "Potentially underpriced deals",
+    "pricing.standard.price": "$20",
+    "pricing.standard.period": "/mo",
   });
   const [step, setStep] = useState<Step>("form");
   const [formState, setFormState] = useState<FormState>(initialFormState);
@@ -999,26 +1005,26 @@ function SignUpPageContent() {
 
             <div className="plans-grid two-cols" data-field="plan">
               <PlanCard
-                title={t("authSignup.planFree")}
-                price="$0"
-                cadence="/mo"
-                description={t("authSignup.planFreeDesc")}
+                title={tPricing("pricing.free.name")}
+                price={tPricing("pricing.free.price")}
+                cadence={tPricing("pricing.free.period")}
+                description={tPricing("pricing.free.description")}
                 features={[
-                  t("authSignup.planFeature1"),
-                  t("authSignup.planFeature2"),
+                  tPricing("pricing.free.feature1"),
+                  tPricing("pricing.free.feature2"),
                 ]}
                 selected={formState.plan === "free"}
                 onSelect={() => handlePlanSelect("free")}
               />
               <PlanCard
-                title={t("authSignup.planStandard")}
-                price="$20"
-                cadence="/mo"
-                description={t("authSignup.planStandardDesc")}
+                title={tPricing("pricing.standard.name")}
+                price={tPricing("pricing.standard.price")}
+                cadence={tPricing("pricing.standard.period")}
+                description={tPricing("pricing.standard.description")}
                 features={[
-                  t("authSignup.planFeature3"),
-                  t("authSignup.planFeature4"),
-                  t("authSignup.planFeature5"),
+                  tPricing("pricing.standard.feature1"),
+                  tPricing("pricing.standard.feature2"),
+                  tPricing("pricing.standard.feature3"),
                 ]}
                 selected={formState.plan === "premium"}
                 onSelect={() => handlePlanSelect("premium")}
