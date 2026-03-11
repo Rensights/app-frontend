@@ -438,7 +438,7 @@ export default function DealsPage() {
             Previous
           </button>
           <span>
-            Page {currentPage + 1} of {totalPages || 1} ({totalElements} total)
+            Page {currentPage + 1} of {totalPages || 1}
           </span>
           <button
             disabled={currentPage >= totalPages - 1 || loading}
