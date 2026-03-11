@@ -1116,6 +1116,9 @@ export default function AnalysisRequestPage() {
                 <FormInput
                   label="Floor Number"
                   placeholder="e.g., 28"
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={formState.floor}
                   onChange={(value) => handleInputChange("floor", value)}
                 />
@@ -1123,6 +1126,8 @@ export default function AnalysisRequestPage() {
                   label="Total Number of Floors"
                   placeholder="45"
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={formState.totalFloors}
                   onChange={(value) => handleInputChange("totalFloors", value)}
                 />
@@ -1335,9 +1340,8 @@ export default function AnalysisRequestPage() {
                       fileArray.length === 1
                         ? `${fileArray[0].name} selected`
                         : `${fileArray.length} files selected`
-                    );
+                      );
                   }}
-                  capture="environment"
                 />
               </div>
             </section>
@@ -1389,6 +1393,8 @@ const FormInput = ({
   type = "text",
   placeholder,
   required,
+  inputMode,
+  pattern,
   className,
 }: {
   label: string;
@@ -1397,8 +1403,21 @@ const FormInput = ({
   type?: string;
   placeholder?: string;
   required?: boolean;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  pattern?: string;
   className?: string;
-}) => (
+}) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value;
+    if (type === "number") {
+      const cleaned = nextValue.replace(/[^\d]/g, "");
+      onChange(cleaned);
+      return;
+    }
+    onChange(nextValue);
+  };
+
+  return (
   <div className={`form-group ${className ?? ""}`.trim()}>
     <label>
       {label} {required && <span className="required">*</span>}
@@ -1408,10 +1427,13 @@ const FormInput = ({
       value={value}
       placeholder={placeholder}
       required={required}
-      onChange={(event) => onChange(event.target.value)}
+      inputMode={inputMode}
+      pattern={pattern}
+      onChange={handleChange}
     />
   </div>
-);
+  );
+};
 
 const FormSelect = ({
   label,
