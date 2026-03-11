@@ -22,6 +22,10 @@ export default function DealsPage() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const { t: tWeeklyDeals } = useTranslations("weeklyDeals", {
     "weeklyDeals.pageTitle": "Underpriced Property Deals",
+    "weeklyDeals.stats.availableDeals": "Available Deals in Selected Area",
+    "weeklyDeals.stats.avgPriceVsMarket": "Avg. Price vs. Market",
+    "weeklyDeals.stats.liquidSizeRange": "Most Liquid Size Range",
+    "weeklyDeals.stats.avgGrossYield": "Avg. Gross Rental Yield",
   });
   const { t: tPricing } = useTranslations("pricing", {
     "pricing.standard.upgradeTitle": "Upgrade to Standard Package",
@@ -46,34 +50,112 @@ export default function DealsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    avgDiscount: "N/A",
+    sizeRange: "N/A",
+    avgYield: "N/A",
+  });
 
   // Debounce filters to avoid excessive API calls (500ms delay)
   const debouncedFilters = useDebounce(filters, 500);
   const debouncedCity = useDebounce(city, 300);
+
+  const getApiFilters = useCallback(() => {
+    let buildingStatus = undefined;
+    if (debouncedFilters.status !== "all") {
+      // Map "ready" to "completed" and "off-plan" to "under-construction"
+      buildingStatus = debouncedFilters.status === "ready"
+        ? "completed"
+        : debouncedFilters.status === "off-plan"
+        ? "under-construction"
+        : debouncedFilters.status;
+    }
+
+    const area = debouncedFilters.area !== "all" ? debouncedFilters.area : undefined;
+    const bedroomCount = debouncedFilters.bedroom !== "all" ? debouncedFilters.bedroom : undefined;
+
+    return {
+      city: debouncedCity,
+      area,
+      bedroomCount,
+      buildingStatus,
+    };
+  }, [debouncedCity, debouncedFilters]);
+
+  const applyPriceFilter = useCallback((items: Deal[]) => {
+    if (debouncedFilters.price === "all") return items;
+    return items.filter((deal) => {
+      const p = deal.priceValue || 0;
+      if (debouncedFilters.price === "under-1m" && p >= 1000000) return false;
+      if (debouncedFilters.price === "1m-2m" && (p < 1000000 || p > 2000000))
+        return false;
+      if (debouncedFilters.price === "2m-5m" && (p <= 2000000 || p > 5000000))
+        return false;
+      if (debouncedFilters.price === "over-5m" && p <= 5000000) return false;
+      return true;
+    });
+  }, [debouncedFilters.price]);
+
+  const computeStats = useCallback((items: Deal[], totalCount: number) => {
+    const filteredByPrice = applyPriceFilter(items);
+    const base = filteredByPrice;
+    if (!base.length) {
+      return {
+        total: debouncedFilters.price === "all" ? totalCount : 0,
+        avgDiscount: "N/A",
+        sizeRange: "N/A",
+        avgYield: "N/A",
+      };
+    }
+
+    const priceVsMarketValues = base
+      .map(deal => {
+        const match = (deal.priceVsEstimations || "").match(/(\d+\.?\d*)%/);
+        return match ? parseFloat(match[1]) : 0;
+      })
+      .filter(val => val > 0);
+
+    const avgPriceVsMarket = priceVsMarketValues.length > 0
+      ? priceVsMarketValues.reduce((sum, val) => sum + val, 0) / priceVsMarketValues.length
+      : 0;
+
+    const yieldValues = base
+      .map(deal => {
+        const match = (deal.rentalYield || "").match(/(\d+\.?\d*)%/);
+        return match ? parseFloat(match[1]) : 0;
+      })
+      .filter(val => val > 0);
+
+    const avgYield = yieldValues.length > 0
+      ? yieldValues.reduce((sum, val) => sum + val, 0) / yieldValues.length
+      : 0;
+
+    const sizes = base
+      .map(deal => typeof deal.size === 'number' ? deal.size : parseInt(String(deal.size).replace(/[^0-9]/g, ""), 10))
+      .filter(size => !isNaN(size) && size > 0);
+
+    const minSize = sizes.length > 0 ? Math.min(...sizes) : 0;
+    const maxSize = sizes.length > 0 ? Math.max(...sizes) : 0;
+
+    return {
+      total: debouncedFilters.price === "all" ? totalCount : filteredByPrice.length,
+      avgDiscount: avgPriceVsMarket > 0 ? `${avgPriceVsMarket.toFixed(1)}%` : "N/A",
+      sizeRange: minSize > 0 && maxSize > 0 ? `${minSize.toLocaleString()}-${maxSize.toLocaleString()} sq ft` : "N/A",
+      avgYield: avgYield > 0 ? `${avgYield.toFixed(1)}%` : "N/A",
+    };
+  }, [applyPriceFilter, debouncedFilters.price]);
 
   const loadDeals = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Map frontend filter values to API values
-      let buildingStatus = undefined;
-      if (debouncedFilters.status !== "all") {
-        // Map "ready" to "completed" and "off-plan" to "under-construction"
-        buildingStatus = debouncedFilters.status === "ready"
-          ? "completed"
-          : debouncedFilters.status === "off-plan"
-          ? "under-construction"
-          : debouncedFilters.status;
-      }
-
-      const area = debouncedFilters.area !== "all" ? debouncedFilters.area : undefined;
-      const bedroomCount = debouncedFilters.bedroom !== "all" ? debouncedFilters.bedroom : undefined;
-
+      const { city, area, bedroomCount, buildingStatus } = getApiFilters();
       const response = await apiClient.getDeals(
         currentPage,
         20,
-        debouncedCity,
+        city,
         area,
         bedroomCount,
         buildingStatus
@@ -90,7 +172,45 @@ export default function DealsPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedCity, debouncedFilters, currentPage]);
+  }, [getApiFilters, currentPage]);
+
+  const loadStats = useCallback(async () => {
+    if (weeklyDealsEnabled === false) {
+      setStats({
+        total: 0,
+        avgDiscount: "N/A",
+        sizeRange: "N/A",
+        avgYield: "N/A",
+      });
+      return;
+    }
+
+    try {
+      const { city, area, bedroomCount, buildingStatus } = getApiFilters();
+      const totalsResponse = await apiClient.getDeals(0, 1, city, area, bedroomCount, buildingStatus);
+      const totalCount = totalsResponse.totalElements || 0;
+      if (totalCount === 0) {
+        setStats({
+          total: 0,
+          avgDiscount: "N/A",
+          sizeRange: "N/A",
+          avgYield: "N/A",
+        });
+        return;
+      }
+
+      const fetchSize = Math.min(totalCount, 5000);
+      const fullResponse = await apiClient.getDeals(0, fetchSize, city, area, bedroomCount, buildingStatus);
+      setStats(computeStats(fullResponse.content || [], totalCount));
+    } catch (err) {
+      setStats({
+        total: 0,
+        avgDiscount: "N/A",
+        sizeRange: "N/A",
+        avgYield: "N/A",
+      });
+    }
+  }, [computeStats, getApiFilters, weeklyDealsEnabled]);
 
   useEffect(() => {
     if (weeklyDealsEnabled === false) {
@@ -118,55 +238,11 @@ export default function DealsPage() {
     });
   }, [deals, filters]);
 
-  const stats = useMemo(() => {
-    if (!filteredDeals.length) {
-      return {
-        total: 0,
-        avgDiscount: "0%",
-        sizeRange: "N/A",
-        avgYield: "0%",
-      };
+  useEffect(() => {
+    if (weeklyDealsEnabled === true) {
+      loadStats();
     }
-
-    // Calculate average price vs market
-    const priceVsMarketValues = filteredDeals
-      .map(deal => {
-        const match = (deal.priceVsEstimations || "").match(/(\d+\.?\d*)%/);
-        return match ? parseFloat(match[1]) : 0;
-      })
-      .filter(val => val > 0);
-
-    const avgPriceVsMarket = priceVsMarketValues.length > 0
-      ? priceVsMarketValues.reduce((sum, val) => sum + val, 0) / priceVsMarketValues.length
-      : 0;
-
-    // Calculate average yield
-    const yieldValues = filteredDeals
-      .map(deal => {
-        const match = (deal.rentalYield || "").match(/(\d+\.?\d*)%/);
-        return match ? parseFloat(match[1]) : 0;
-      })
-      .filter(val => val > 0);
-
-    const avgYield = yieldValues.length > 0
-      ? yieldValues.reduce((sum, val) => sum + val, 0) / yieldValues.length
-      : 0;
-
-    // Calculate size range
-    const sizes = filteredDeals
-      .map(deal => typeof deal.size === 'number' ? deal.size : parseInt(String(deal.size).replace(/[^0-9]/g, ""), 10))
-      .filter(size => !isNaN(size) && size > 0);
-
-    const minSize = sizes.length > 0 ? Math.min(...sizes) : 0;
-    const maxSize = sizes.length > 0 ? Math.max(...sizes) : 0;
-
-    return {
-      total: filteredDeals.length,
-      avgDiscount: avgPriceVsMarket > 0 ? `${avgPriceVsMarket.toFixed(1)}%` : "N/A",
-      sizeRange: minSize > 0 && maxSize > 0 ? `${minSize.toLocaleString()}-${maxSize.toLocaleString()} sq ft` : "N/A",
-      avgYield: avgYield > 0 ? `${avgYield.toFixed(1)}%` : "N/A",
-    };
-  }, [filteredDeals]);
+  }, [loadStats, weeklyDealsEnabled]);
 
   if (weeklyDealsLoading) {
     return (
@@ -297,19 +373,19 @@ export default function DealsPage() {
         <div className="stats-grid">
           <StatCard
             value={stats.total.toString()}
-            label="Available Deals in Selected Area"
+            label={tWeeklyDeals("weeklyDeals.stats.availableDeals")}
           />
           <StatCard
             value={stats.avgDiscount || '0%'}
-            label="Avg. Price vs. Market"
+            label={tWeeklyDeals("weeklyDeals.stats.avgPriceVsMarket")}
           />
           <StatCard
             value={stats.sizeRange || 'N/A'}
-            label="Most Liquid Size Range"
+            label={tWeeklyDeals("weeklyDeals.stats.liquidSizeRange")}
           />
           <StatCard
             value={stats.avgYield || '0%'}
-            label="Avg. Gross Rental Yield"
+            label={tWeeklyDeals("weeklyDeals.stats.avgGrossYield")}
           />
         </div>
       </section>
