@@ -744,7 +744,7 @@ class ApiClient {
   }
 
   async getArticleBySlug(slug: string): Promise<any> {
-    return this.request<any>(`/api/articles/${slug}`, {}, false);
+    return this.request<any>(`/api/articles/slug/${slug}`, {}, false);
   }
 
   async submitEarlyAccessRequest(payload: {
