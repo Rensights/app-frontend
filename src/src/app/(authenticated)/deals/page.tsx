@@ -20,6 +20,9 @@ export default function DealsPage() {
   const { enabled: weeklyDealsEnabled, loading: weeklyDealsLoading } = useWeeklyDealsEnabled();
   const [loading, setLoading] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const { t: tDeals } = useTranslations("deals", {
+    "deals.pageTitle": "Underpriced Property Deals",
+  });
   const { t: tPricing } = useTranslations("pricing", {
     "pricing.standard.upgradeTitle": "Upgrade to Standard Package",
     "pricing.standard.upgradeSubtitle": "Access exclusive deals and premium features with Standard Package.",
@@ -278,7 +281,7 @@ export default function DealsPage() {
       <div style={{ opacity: isFreeUser ? 0.4 : 1, pointerEvents: isFreeUser ? 'none' : 'auto' }}>
       <header className="header">
         <div className="header-left">
-          <div className="page-title">Underpriced Property Deals</div>
+          <div className="page-title">{tDeals("deals.pageTitle")}</div>
         </div>
         <div className="city-filter">
           <button
