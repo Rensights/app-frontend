@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
+import { useTranslations } from "@/hooks/useTranslations";
 import "../dashboard/dashboard.css";
 import "./deals.css";
 
@@ -19,6 +20,17 @@ export default function DealsPage() {
   const { enabled: weeklyDealsEnabled, loading: weeklyDealsLoading } = useWeeklyDealsEnabled();
   const [loading, setLoading] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const { t: tPricing } = useTranslations("pricing", {
+    "pricing.standard.upgradeTitle": "Upgrade to Standard Package",
+    "pricing.standard.upgradeSubtitle": "Access exclusive deals and premium features with Standard Package.",
+    "pricing.standard.upgradeFeature4": "Full access to property analytics",
+    "pricing.standard.upgradeButton": "Upgrade to Standard Package",
+    "pricing.standard.price": "$20",
+    "pricing.standard.period": "/month",
+    "pricing.standard.feature1": "5 tailored pricing analysis of properties selected by you",
+    "pricing.standard.feature2": "Advanced city analysis",
+    "pricing.standard.feature3": "Potentially underpriced deals",
+  });
   const [deals, setDeals] = useState<Deal[]>([]);
   const [city, setCity] = useState<"dubai">("dubai");
   const [filters, setFilters] = useState({
@@ -239,23 +251,26 @@ export default function DealsPage() {
         <div className="upgrade-overlay">
           <div className="upgrade-content">
             <div className="upgrade-icon">🔒</div>
-            <h2>Upgrade to Standard Package</h2>
+            <h2>{tPricing("pricing.standard.upgradeTitle")}</h2>
             <div className="upgrade-pricing">
-              <div className="pricing-amount">$20<span className="pricing-period">/month</span></div>
+              <div className="pricing-amount">
+                {tPricing("pricing.standard.price")}
+                <span className="pricing-period">{tPricing("pricing.standard.period")}</span>
+              </div>
             </div>
-            <p>Access exclusive deals and premium features with Standard Package.</p>
+            <p>{tPricing("pricing.standard.upgradeSubtitle")}</p>
             <ul className="upgrade-features">
-              <li>✓ 5 tailored pricing analysis of properties selected by you</li>
-              <li>✓ Advanced city analysis</li>
-              <li>✓ Potentially underpriced deals</li>
-              <li>✓ Full access to property analytics</li>
+              <li>✓ {tPricing("pricing.standard.feature1")}</li>
+              <li>✓ {tPricing("pricing.standard.feature2")}</li>
+              <li>✓ {tPricing("pricing.standard.feature3")}</li>
+              <li>✓ {tPricing("pricing.standard.upgradeFeature4")}</li>
             </ul>
             <button
               className="upgrade-button"
               onClick={handleUpgrade}
               disabled={isUpgrading}
             >
-              {isUpgrading ? "Processing..." : "Upgrade to Standard Package"}
+              {isUpgrading ? "Processing..." : tPricing("pricing.standard.upgradeButton")}
             </button>
           </div>
         </div>

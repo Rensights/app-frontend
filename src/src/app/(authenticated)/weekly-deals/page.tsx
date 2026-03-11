@@ -19,15 +19,6 @@ export default function WeeklyDealsPage() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const { enabled: weeklyDealsEnabled, loading: weeklyDealsLoading } = useWeeklyDealsEnabled();
   const { t } = useTranslations("weeklyDeals", {
-    "weeklyDeals.upgrade.title": "Upgrade to Standard Package",
-    "weeklyDeals.upgrade.price": "$20",
-    "weeklyDeals.upgrade.perMonth": "/month",
-    "weeklyDeals.upgrade.subtitle": "Access exclusive deals and premium features with Standard Package.",
-    "weeklyDeals.upgrade.feature1": "5 tailored pricing analysis of properties selected by you",
-    "weeklyDeals.upgrade.feature2": "Advanced city analysis",
-    "weeklyDeals.upgrade.feature3": "Potentially underpriced deals",
-    "weeklyDeals.upgrade.feature4": "Full access to property analytics",
-    "weeklyDeals.upgrade.button": "Upgrade to Standard Package",
     "weeklyDeals.section.title": "Weekly Property Deals",
     "weeklyDeals.alert.title": "Latest Alert",
     "weeklyDeals.alert.subtitle": "Hot deals discovered across Dubai areas this week!",
@@ -56,6 +47,17 @@ export default function WeeklyDealsPage() {
     "weeklyDeals.disclaimer.appraisalBody": "The property estimates and scores provided by this platform are generated via automated machine learning algorithms and do not constitute a formal, legal, or professional real estate appraisal. This platform does not account for the physical condition, interior upgrades, or latent defects of a property.",
     "weeklyDeals.disclaimer.sourcesTitle": "Data Sources",
     "weeklyDeals.disclaimer.sourcesBody": "Dubai Land Department (DLD), Bayut, and various public records.",
+  });
+  const { t: tPricing } = useTranslations("pricing", {
+    "pricing.standard.upgradeTitle": "Upgrade to Standard Package",
+    "pricing.standard.upgradeSubtitle": "Access exclusive deals and premium features with Standard Package.",
+    "pricing.standard.upgradeFeature4": "Full access to property analytics",
+    "pricing.standard.upgradeButton": "Upgrade to Standard Package",
+    "pricing.standard.price": "$20",
+    "pricing.standard.period": "/month",
+    "pricing.standard.feature1": "5 tailored pricing analysis of properties selected by you",
+    "pricing.standard.feature2": "Advanced city analysis",
+    "pricing.standard.feature3": "Potentially underpriced deals",
   });
 
   const handleUpgrade = async () => {
@@ -100,25 +102,28 @@ export default function WeeklyDealsPage() {
     <section className="content-section active" style={{ position: 'relative' }}>
       {isFreeUser && (
         <div className="upgrade-overlay">
-          <div className="upgrade-content">
-            <div className="upgrade-icon">🔒</div>
-            <h2>{t("weeklyDeals.upgrade.title")}</h2>
+            <div className="upgrade-content">
+              <div className="upgrade-icon">🔒</div>
+            <h2>{tPricing("pricing.standard.upgradeTitle")}</h2>
             <div className="upgrade-pricing">
-              <div className="pricing-amount">{t("weeklyDeals.upgrade.price")}<span className="pricing-period">{t("weeklyDeals.upgrade.perMonth")}</span></div>
+              <div className="pricing-amount">
+                {tPricing("pricing.standard.price")}
+                <span className="pricing-period">{tPricing("pricing.standard.period")}</span>
+              </div>
             </div>
-            <p>{t("weeklyDeals.upgrade.subtitle")}</p>
+            <p>{tPricing("pricing.standard.upgradeSubtitle")}</p>
             <ul className="upgrade-features">
-              <li>✓ {t("weeklyDeals.upgrade.feature1")}</li>
-              <li>✓ {t("weeklyDeals.upgrade.feature2")}</li>
-              <li>✓ {t("weeklyDeals.upgrade.feature3")}</li>
-              <li>✓ {t("weeklyDeals.upgrade.feature4")}</li>
+              <li>✓ {tPricing("pricing.standard.feature1")}</li>
+              <li>✓ {tPricing("pricing.standard.feature2")}</li>
+              <li>✓ {tPricing("pricing.standard.feature3")}</li>
+              <li>✓ {tPricing("pricing.standard.upgradeFeature4")}</li>
             </ul>
             <button 
               className="upgrade-button" 
               onClick={handleUpgrade}
               disabled={isUpgrading}
             >
-              {isUpgrading ? "Processing..." : t("weeklyDeals.upgrade.button")}
+              {isUpgrading ? "Processing..." : tPricing("pricing.standard.upgradeButton")}
             </button>
           </div>
         </div>
@@ -206,6 +211,4 @@ export default function WeeklyDealsPage() {
     </section>
   );
 }
-
-
 

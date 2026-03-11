@@ -27,7 +27,6 @@ export default function LandingPage() {
     whyInvest: any;
     solutions: any;
     howItWorks: any;
-    pricing: any;
     footer: any;
     hasArticles: boolean;
     languages: Language[];
@@ -37,7 +36,6 @@ export default function LandingPage() {
     whyInvest: {},
     solutions: {},
     howItWorks: {},
-    pricing: {},
     footer: {},
     hasArticles: false,
     languages: [],
@@ -69,7 +67,6 @@ export default function LandingPage() {
         whyInvest,
         solutions,
         howItWorks,
-        pricing,
         footer,
         articles,
         languages,
@@ -79,7 +76,6 @@ export default function LandingPage() {
         safeSection("why-invest"),
         safeSection("solutions"),
         safeSection("how-it-works"),
-        safeSection("pricing"),
         safeSection("footer"),
         apiClient.getArticles().catch(() => []),
         languagesPromise,
@@ -92,7 +88,6 @@ export default function LandingPage() {
         whyInvest,
         solutions,
         howItWorks,
-        pricing,
         footer,
         hasArticles: Array.isArray(articles) && articles.length > 0,
         languages: Array.isArray(languages) ? languages : [],
@@ -121,7 +116,7 @@ export default function LandingPage() {
       <WhyInvestInDubai initialContent={landingData.whyInvest} />
       <LandingSolutions initialContent={landingData.solutions} />
       <LandingHowItWorks initialContent={landingData.howItWorks} />
-      <LandingPricing initialContent={landingData.pricing} />
+      <LandingPricing />
       <LandingCTA initialContent={landingData.solutions} />
       <LandingFooter initialContent={landingData.footer} />
     </div>

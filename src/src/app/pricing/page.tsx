@@ -40,6 +40,13 @@ export default function PricingPage() {
     "pricing.button.pay": "Pay",
     "pricing.button.requestEarlyAccess": "Request Early Access",
     "pricing.annualPriceNote": "/month billed annually",
+    "pricing.free.price": "$0",
+    "pricing.free.period": "/month",
+    "pricing.standard.price": "$20",
+    "pricing.standard.period": "/month",
+    "pricing.standard.annualPrice": "$16",
+    "pricing.trusted.price": "$2,000",
+    "pricing.trusted.period": "/year",
     "pricing.why.title": "Why Choose Rensights?",
     "pricing.why.subtitle": "Data-driven insights to help you make smarter property investment decisions",
     "pricing.why.noFees.title": "No Hidden Fees",
@@ -58,8 +65,8 @@ export default function PricingPage() {
     {
       id: "free",
       nameKey: "pricing.free.name",
-      price: "$0",
-      period: "/month",
+      priceKey: "pricing.free.price",
+      periodKey: "pricing.free.period",
       descriptionKey: "pricing.free.description",
       features: [
         "pricing.free.feature1",
@@ -69,9 +76,9 @@ export default function PricingPage() {
     {
       id: "standard",
       nameKey: "pricing.standard.name",
-      price: "$20",
-      period: "/month",
-      annualPrice: "$16",
+      priceKey: "pricing.standard.price",
+      periodKey: "pricing.standard.period",
+      annualPriceKey: "pricing.standard.annualPrice",
       descriptionKey: "pricing.standard.description",
       features: [
         "pricing.standard.feature1",
@@ -83,8 +90,8 @@ export default function PricingPage() {
     {
       id: "trusted",
       nameKey: "pricing.trusted.name",
-      price: "$2,000",
-      period: "/year",
+      priceKey: "pricing.trusted.price",
+      periodKey: "pricing.trusted.period",
       descriptionKey: "pricing.trusted.description",
       features: [
         "pricing.trusted.feature1",
@@ -136,12 +143,12 @@ export default function PricingPage() {
                 <div className="text-center">
                   <h3 className="text-xl font-semibold">{t(plan.nameKey)}</h3>
                   <div className="mt-4 flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
+                    <span className="text-4xl font-bold">{t(plan.priceKey)}</span>
+                    <span className="text-muted-foreground">{t(plan.periodKey)}</span>
                   </div>
-                  {plan.annualPrice && (
+                  {plan.annualPriceKey && (
                     <div className="mt-1 text-sm text-primary">
-                      {plan.annualPrice}{t("pricing.annualPriceNote")}
+                      {t(plan.annualPriceKey)}{t("pricing.annualPriceNote")}
                     </div>
                   )}
                   <p className="mt-2 text-sm text-muted-foreground">{t(plan.descriptionKey)}</p>
