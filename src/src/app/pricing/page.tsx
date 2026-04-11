@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/landing/ui/button";
 import LandingHeader from "@/components/landing/Header";
@@ -13,6 +14,7 @@ import { useTranslations } from "@/hooks/useTranslations";
 export default function PricingPage() {
   // Get toast
   const toast = useToast();
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   
   // Get user info to check tier
   const { user, subscription } = useUser();
@@ -42,9 +44,10 @@ export default function PricingPage() {
     "pricing.annualPriceNote": "/month billed annually",
     "pricing.free.price": "$0",
     "pricing.free.period": "/month",
-    "pricing.standard.price": "$20",
+    "pricing.standard.price": "$60",
     "pricing.standard.period": "/month",
-    "pricing.standard.annualPrice": "$16",
+    "pricing.standard.annualPrice": "$48",
+    "pricing.standard.yearlyTotal": "$576 billed yearly",
     "pricing.trusted.price": "$2,000",
     "pricing.trusted.period": "/year",
     "pricing.why.title": "Why Choose Rensights?",
@@ -119,6 +122,22 @@ export default function PricingPage() {
           <p className="text-lg text-primary font-semibold">
             {t("pricing.annualNote")}
           </p>
+          <div className="mt-8 inline-flex rounded-full border border-border bg-background p-1">
+            <button
+              type="button"
+              className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${billingInterval === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              onClick={() => setBillingInterval("monthly")}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${billingInterval === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              onClick={() => setBillingInterval("yearly")}
+            >
+              Yearly
+            </button>
+          </div>
         </div>
       </section>
 
@@ -143,12 +162,21 @@ export default function PricingPage() {
                 <div className="text-center">
                   <h3 className="text-xl font-semibold">{t(plan.nameKey)}</h3>
                   <div className="mt-4 flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold">{t(plan.priceKey)}</span>
+                    <span className="text-4xl font-bold">
+                      {plan.id === "standard" && billingInterval === "yearly"
+                        ? t(plan.annualPriceKey || plan.priceKey)
+                        : t(plan.priceKey)}
+                    </span>
                     <span className="text-muted-foreground">{t(plan.periodKey)}</span>
                   </div>
-                  {plan.annualPriceKey && (
+                  {plan.annualPriceKey && billingInterval === "monthly" && (
                     <div className="mt-1 text-sm text-primary">
                       {t(plan.annualPriceKey)}{t("pricing.annualPriceNote")}
+                    </div>
+                  )}
+                  {plan.annualPriceKey && billingInterval === "yearly" && (
+                    <div className="mt-1 text-sm text-primary">
+                      {t("pricing.annualPriceNote")} • {t("pricing.standard.yearlyTotal")}
                     </div>
                   )}
                   <p className="mt-2 text-sm text-muted-foreground">{t(plan.descriptionKey)}</p>
@@ -196,7 +224,7 @@ export default function PricingPage() {
                             onClick={async (e) => {
                               e.preventDefault();
                               try {
-                                const { url } = await apiClient.createCheckoutSession("PREMIUM");
+                                const { url } = await apiClient.createCheckoutSession("PREMIUM", billingInterval);
                                 if (url) {
                                   window.location.href = url;
                                 } else {

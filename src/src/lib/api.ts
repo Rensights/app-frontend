@@ -100,6 +100,8 @@ export interface SubscriptionResponse {
   createdAt: string;
 }
 
+export type BillingInterval = 'monthly' | 'yearly';
+
 export interface InvoiceResponse {
   id: string;
   invoiceNumber: string;
@@ -598,10 +600,13 @@ class ApiClient {
     });
   }
 
-  async createCheckoutSession(planType: 'PREMIUM' | 'ENTERPRISE'): Promise<{ url: string }> {
+  async createCheckoutSession(
+    planType: 'PREMIUM' | 'ENTERPRISE',
+    billingInterval: BillingInterval = 'monthly'
+  ): Promise<{ url: string }> {
     return this.request<{ url: string }>('/api/subscriptions/create-checkout-session', {
       method: 'POST',
-      body: JSON.stringify({ planType }),
+      body: JSON.stringify({ planType, billingInterval }),
     });
   }
 
