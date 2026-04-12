@@ -281,7 +281,7 @@ export default function DealsPage() {
   const handleUpgrade = async () => {
     try {
       setIsUpgrading(true);
-      const { url } = await apiClient.createCheckoutSession('PREMIUM');
+      const { url } = await apiClient.createCheckoutSession('PREMIUM', 'upsell');
       if (url) {
         window.location.href = url;
       } else {
