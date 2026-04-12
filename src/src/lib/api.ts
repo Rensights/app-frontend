@@ -600,11 +600,12 @@ class ApiClient {
 
   async createCheckoutSession(
     planType: 'PREMIUM' | 'ENTERPRISE',
-    checkoutType: 'standard' | 'upsell' = 'standard'
+    checkoutType: 'standard' | 'upsell' = 'standard',
+    billingInterval: 'monthly' | 'yearly' = 'monthly'
   ): Promise<{ url: string }> {
     return this.request<{ url: string }>('/api/subscriptions/create-checkout-session', {
       method: 'POST',
-      body: JSON.stringify({ planType, checkoutType }),
+      body: JSON.stringify({ planType, checkoutType, billingInterval }),
     });
   }
 
