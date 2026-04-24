@@ -8,6 +8,10 @@ import Clarity from "../components/analytics/Clarity";
 import GoogleAnalytics from "../components/analytics/GoogleAnalytics";
 import { ErrorLogger } from "../components/analytics/ErrorLogger";
 
+// Root layout must read K8s env at request time, not at `next build` (otherwise
+// `window.__API_URL__` is stuck with build-time or fallback values).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Rensights",
   description: "Property Intelligence Platform",
@@ -36,10 +40,12 @@ export default function RootLayout({
   
   if (typeof window === 'undefined') {
     // Server-side: try environment variables first
-    apiUrl = process.env.API_URL 
-      || process.env.NEXT_PUBLIC_API_URL 
+    apiUrl = process.env.API_URL
+      || process.env.NEXT_PUBLIC_API_URL
       || getRuntimeApiUrl()
-      || 'http://dev-api.72.62.40.154.nip.io:31416'; // Hardcoded fallback for dev
+      // Same-origin API when proxied (e.g. https://rensights.com/api) — never use http: here
+      // or the browser will block mixed content on HTTPS pages.
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://rensights.com");
     
     if (process.env.NODE_ENV === 'development') {
       console.log('[Layout] process.env.API_URL:', process.env.API_URL);

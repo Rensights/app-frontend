@@ -11,19 +11,29 @@ const createTraceId = (): string => {
   return `trace-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 };
 
+/** Avoid mixed content: never call http: APIs from an https: page. */
+const normalizeClientApiUrl = (url: string): string => {
+  if (typeof window === "undefined" || !url) return url;
+  if (window.location?.protocol === "https:" && url.startsWith("http://")) {
+    // Same host serves /api via reverse proxy
+    return window.location.origin;
+  }
+  return url;
+};
+
 const getApiUrlFromEnv = (): string => {
   // Check if we're in browser/client-side
   if (typeof window !== 'undefined') {
     // Client-side: First check for runtime-injected value (from Kubernetes secret)
     const runtimeUrl = (window as any).__API_URL__;
     if (runtimeUrl && runtimeUrl !== '') {
-      return runtimeUrl;
+      return normalizeClientApiUrl(String(runtimeUrl));
     }
     
     // Fallback to build-time value (Next.js replaced process.env.NEXT_PUBLIC_API_URL)
     const buildTimeUrl = process.env.NEXT_PUBLIC_API_URL;
     if (buildTimeUrl && buildTimeUrl !== '') {
-      return buildTimeUrl;
+      return normalizeClientApiUrl(String(buildTimeUrl));
     }
     
     // Neither runtime nor build-time URL available
