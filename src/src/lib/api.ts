@@ -11,12 +11,34 @@ const createTraceId = (): string => {
   return `trace-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 };
 
-/** Avoid mixed content: never call http: APIs from an https: page. */
+const isLocalHostname = (host: string) => host === "localhost" || host === "127.0.0.1";
+
+/**
+ * Use the page origin for API calls in the browser when:
+ * - HTTPS page would call HTTP API (mixed content), or
+ * - HTTPS page would call a different HTTPS origin (so HttpOnly auth cookies set on login
+ *   are sent on follow-up requests like GET /users/me — cookies are per-host).
+ * Skip forcing same-origin for localhost split-port dev (e.g. :3000 vs :8080).
+ */
 const normalizeClientApiUrl = (url: string): string => {
   if (typeof window === "undefined" || !url) return url;
-  if (window.location?.protocol === "https:" && url.startsWith("http://")) {
-    // Same host serves /api via reverse proxy
-    return window.location.origin;
+  const loc = window.location;
+  if (loc.protocol !== "https:") return url;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "http:") {
+      return loc.origin;
+    }
+    if (parsed.origin !== loc.origin) {
+      if (isLocalHostname(loc.hostname) && isLocalHostname(parsed.hostname)) {
+        return url;
+      }
+      return loc.origin;
+    }
+  } catch {
+    if (url.startsWith("http://")) {
+      return loc.origin;
+    }
   }
   return url;
 };
