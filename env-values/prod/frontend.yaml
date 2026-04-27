@@ -12,19 +12,19 @@ service:
 
 ingress:
   enabled: true
-  className: "kong"
+  # Public HTTPS hits Traefik on this cluster; Kong-class Ingress is ignored by Traefik → default cert for rensights.com
+  className: "traefik"
   hosts:
-    - host: 72.62.40.154.nip.io
+    - host: rensights.com
       paths:
         - path: /
           pathType: Prefix
   annotations:
-    konghq.com/strip-path: "true"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   tls:
-    - secretName: frontend-72-62-40-154-nip-io-tls
+    - secretName: frontend-rensights-com-tls
       hosts:
-        - 72.62.40.154.nip.io
+        - rensights.com
 
 secrets:
   frontendConfig: frontend-config

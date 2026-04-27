@@ -6,14 +6,17 @@ metadata:
   labels:
     {{- include "frontend.labels" . | nindent 4 }}
   annotations:
+    {{- $ann := .Values.ingress.annotations | default dict }}
     {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    {{- if not (hasKey .Values.ingress.annotations "konghq.com/strip-path") }}
+    {{- if eq (default "" .Values.ingress.className) "kong" }}
+    {{- if not (hasKey $ann "konghq.com/strip-path") }}
     konghq.com/strip-path: "false"
     {{- end }}
-    {{- if not (hasKey .Values.ingress.annotations "konghq.com/protocols") }}
+    {{- if not (hasKey $ann "konghq.com/protocols") }}
     konghq.com/protocols: "http"
+    {{- end }}
     {{- end }}
 spec:
   {{- if .Values.ingress.className }}
