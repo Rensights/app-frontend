@@ -117,7 +117,9 @@ jobs:
             type=registry,ref=ghcr.io/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }}:buildcache,mode=max
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            # Force HTTPS same-origin API in built frontend assets for dev deployment.
+            # This avoids mixed-content errors when the page is served over HTTPS.
+            NEXT_PUBLIC_API_URL=https://rensights.com
             NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
 
       - name: Output image info
@@ -217,11 +219,9 @@ jobs:
         id: frontend-config
         run: |
           export KUBECONFIG=/tmp/kubeconfig
-          BACKEND_URL="http://dev-api.72.62.40.154.nip.io:31416"
-          if kubectl get ingress backend -n ${DEV_NAMESPACE} &>/dev/null; then
-            BACKEND_HOST=$(kubectl get ingress backend -n ${DEV_NAMESPACE} -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || echo "")
-            [ -n "$BACKEND_HOST" ] && BACKEND_URL="http://${BACKEND_HOST}:31416"
-          fi
+          # Use HTTPS same-origin API route exposed at /api on rensights.com.
+          # Do not use the legacy dev-api NodePort host:port here.
+          BACKEND_URL="https://rensights.com"
           STRIPE_KEY="pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
           echo "api_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
           echo "stripe_key=${STRIPE_KEY}" >> $GITHUB_OUTPUT
