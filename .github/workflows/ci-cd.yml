@@ -267,6 +267,12 @@ jobs:
           
           printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
             "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values.yaml
+
+          # These resources were manually patched on-cluster before CI ownership.
+          # If they already exist with conflicting field managers, Helm may fail
+          # with "Apply failed with conflicts". Remove them before (re)install.
+          kubectl delete ingress frontend -n ${DEV_NAMESPACE} --ignore-not-found=true
+          kubectl delete networkpolicy frontend-allow-kong -n ${DEV_NAMESPACE} --ignore-not-found=true
           
           helm upgrade --install frontend ./charts \
             --namespace ${DEV_NAMESPACE} \
@@ -276,6 +282,7 @@ jobs:
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
+            --force \
             --rollback-on-failure --timeout=8m \
             --wait
 
