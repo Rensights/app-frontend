@@ -282,7 +282,6 @@ jobs:
             --set image.tag=${IMAGE_TAG} \
             --set image.repository=${REGISTRY}/${{ steps.image-repo.outputs.repo_owner }}/${{ steps.image-repo.outputs.repo_name }} \
             --set imagePullSecrets[0].name=ghcr-secret \
-            --force \
             --rollback-on-failure --timeout=8m \
             --wait
 
