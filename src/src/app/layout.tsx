@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { getRuntimeApiUrl } from "../lib/runtime-config";
 import { UserProvider } from "../context/UserContext";
@@ -60,6 +61,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <Script
+          id="Cookiebot"
+          src="https://consent.cookiebot.com/uc.js"
+          strategy="beforeInteractive"
+          data-cbid="dc13aae5-c69f-42aa-85b3-a0809f605ec3"
+          data-blockingmode="auto"
+        />
         {/* Inject API URL into client-side JavaScript at runtime */}
         {/* Server Component reads runtime env var and injects it for client-side access */}
         {/* This is how Kubernetes secrets work with Next.js App Router */}
