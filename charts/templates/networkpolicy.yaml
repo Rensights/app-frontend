@@ -20,6 +20,10 @@ spec:
           {{- else }}
           name: kong
           {{- end }}
+    # k3s / RKE2: Traefik often runs in kube-system while HTTPS ingress uses ingressClassName traefik
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
     ports:
     - protocol: TCP
       port: {{ .Values.service.port }}
