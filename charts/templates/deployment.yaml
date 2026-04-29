@@ -16,6 +16,11 @@ spec:
       {{- include "frontend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        reloader.stakater.com/auto: "true"
       labels:
         {{- include "frontend.selectorLabels" . | nindent 8 }}
     spec:
