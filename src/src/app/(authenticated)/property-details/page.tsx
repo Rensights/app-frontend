@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import { useTranslations } from "@/hooks/useTranslations";
+import { formatListedPriceAed } from "@/lib/formatPrice";
 import "../dashboard/dashboard.css";
 import "./property-details.css";
 
@@ -266,7 +267,7 @@ function PropertyDetailsPageContent() {
               <div className="price-grid">
                 <div className="price-section">
                   <div className="price-label">Listed Price</div>
-                  <div className="price-value">{deal.listedPrice || "N/A"}</div>
+                  <div className="price-value">{formatListedPriceAed(deal.listedPrice ?? deal.priceValue)}</div>
                 </div>
                 <div className="price-section">
                   <div className="price-label">Our Estimate Range</div>
@@ -318,7 +319,7 @@ function PropertyDetailsPageContent() {
                   />
                   <DescriptionStat
                     label="Listed Price:"
-                    value={deal.listedPrice || "N/A"}
+                    value={formatListedPriceAed(deal.listedPrice ?? deal.priceValue)}
                   />
                   <DescriptionStat label="Rental Yield:" value={deal.rentalYield || "N/A"} />
                 </div>
@@ -342,7 +343,7 @@ function PropertyDetailsPageContent() {
                     ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`
                     : "N/A",
                 },
-                { label: "Listed Price", value: deal.listedPrice || "N/A" },
+                { label: "Listed Price", value: formatListedPriceAed(deal.listedPrice ?? deal.priceValue) },
                 { label: "Market Position", value: deal.discount ? `${deal.discount} Below Average` : "N/A" },
                 { label: "Rental Yield", value: deal.rentalYield || "N/A" },
                 { label: "Estimate Range", value: deal.estimateRange || "N/A" },
@@ -441,7 +442,7 @@ function PropertyDetailsPageContent() {
                         key={item.id}
                         title={item.name || "Property"}
                         details={`${item.bedrooms || "N/A"} • ${item.size || "N/A"} • ${item.location || "N/A"}`}
-                        price={item.listedPrice || "N/A"}
+                        price={formatListedPriceAed(item.listedPrice ?? item.priceValue)}
                         psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
                         status="Available"
                       />
@@ -475,7 +476,7 @@ function PropertyDetailsPageContent() {
                         key={`sale-${index}`}
                         title={sale.building_name || sale.name || "Property"}
                         details={`${sale.bedrooms || "N/A"} • ${saleSize ? `${saleSize} sqft` : "N/A"} • ${sale.area || sale.location || "N/A"}`}
-                        price={salePrice > 0 ? `AED ${salePrice.toLocaleString()}` : "N/A"}
+                        price={salePrice > 0 ? formatListedPriceAed(salePrice) : "N/A"}
                         psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
                         status={`Sold ${saleDate}`}
                       />
@@ -514,7 +515,7 @@ function PropertyDetailsPageContent() {
                     </p>
                     <div className="score-breakdown">
                       <p>
-                        <strong>Listed Price:</strong> {deal.listedPrice}
+                        <strong>Listed Price:</strong> {formatListedPriceAed(deal.listedPrice ?? deal.priceValue)}
                       </p>
                       {deal.estimateRange && (
                         <p>
@@ -560,7 +561,7 @@ function PropertyDetailsPageContent() {
                     <span>Rental Yield</span>
                   </div>
                   <div className="metric-box">
-                    <div>{deal.listedPrice}</div>
+                    <div>{formatListedPriceAed(deal.listedPrice ?? deal.priceValue)}</div>
                     <span>Listed Price</span>
                   </div>
                   <div className="metric-box wide">
@@ -617,7 +618,7 @@ const ComparableCard = ({
 }: {
   title: string;
   details: string;
-  price: string | number;
+  price: string;
   psf: string;
   status: string;
   sold?: boolean;
@@ -626,7 +627,7 @@ const ComparableCard = ({
     <div className="similar-title">{title}</div>
     <div className="similar-details">{details}</div>
     <div className="similar-price-row">
-      <div className="similar-price">{typeof price === 'number' ? price.toLocaleString() : price}</div>
+      <div className="similar-price">{price}</div>
       <div className="similar-psf">{psf}</div>
     </div>
     <div

@@ -37,26 +37,6 @@ export default function LandingHeader({ initialContent, prefetchedHasArticles, a
     setMounted(true);
   }, []);
 
-  // Listen for auth state changes to update header buttons across tabs
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const handleAuthChange = () => {
-        // The useUser hook will automatically update, this just ensures we're listening
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Auth state changed in header, user:', user);
-        }
-      };
-
-      window.addEventListener('auth-state-changed', handleAuthChange);
-      window.addEventListener('storage', handleAuthChange);
-
-      return () => {
-        window.removeEventListener('auth-state-changed', handleAuthChange);
-        window.removeEventListener('storage', handleAuthChange);
-      };
-    }
-  }, [user]);
-
   useEffect(() => {
     if (!mounted) return;
     if (hasPrefetchedContent) {

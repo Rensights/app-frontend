@@ -161,7 +161,6 @@ export default function EarlyAccessPage() {
       const scrollToErrorField = () => {
         const fieldContainer = document.querySelector(`[data-field="${firstErrorField}"]`) as HTMLElement;
         if (!fieldContainer) {
-          console.log('Field container not found:', firstErrorField);
           return false;
         }
         
@@ -171,7 +170,6 @@ export default function EarlyAccessPage() {
         const elementToScroll = inputElement || checkboxGroup || fieldContainer;
         
         if (!elementToScroll) {
-          console.log('Element to scroll not found');
           return false;
         }
         

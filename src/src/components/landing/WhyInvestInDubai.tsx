@@ -57,9 +57,6 @@ export default function WhyInvestInDubai({ initialContent }: WhyInvestInDubaiPro
   const loadContent = async () => {
     try {
       const data = await apiClient.getLandingPageSection('why-invest', language);
-      if (process.env.NODE_ENV === "development") {
-        console.log("[landing] why-invest content", data);
-      }
       setContent(data.content || {});
     } catch (error) {
       console.error("Error loading why-invest content:", error);

@@ -47,6 +47,31 @@
   text-align: center;
 }
 
+.signup-google-wrap {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.signup-or-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0 24px;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.signup-or-divider::before,
+.signup-or-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.signup-or-divider span {
+  padding: 0 15px;
+}
+
 .section-title {
   font-size: 1.3rem;
   font-weight: 700;

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import { formatListedPriceAed } from "@/lib/formatPrice";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../dashboard/dashboard.css";
@@ -631,19 +632,13 @@ export default function AnalysisRequestPage() {
       return match ? parseFloat(match[1]) : null;
     };
 
-    const formatValue = (value: any) => {
-      if (value === null || value === undefined || value === "") return "N/A";
-      return String(value);
-    };
-
     const analysis = report?.analysisResult || {};
     const listedPriceRaw = getAnalysisValue(["listed_price_aed", "listedPriceAed", "listed_price"]);
     const listedPriceNum = parseNumber(listedPriceRaw);
-    const listedPrice = listedPriceRaw
-      ? String(listedPriceRaw).includes("AED")
-        ? String(listedPriceRaw)
-        : `AED ${listedPriceRaw}`
-      : "N/A";
+    const listedPrice =
+      listedPriceNum != null
+        ? formatListedPriceAed(listedPriceNum)
+        : formatListedPriceAed(listedPriceRaw);
     const sizeSqft = getAnalysisValue(["size_sqft", "sizeSqft"]);
     const sizeNum = parseNumber(sizeSqft);
     const pricePerSqftRaw = getAnalysisValue(["price_per_sqft", "pricePerSqft"]);

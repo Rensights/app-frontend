@@ -9,6 +9,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import { useTranslations } from "@/hooks/useTranslations";
+import { formatListedPriceAed } from "@/lib/formatPrice";
 import "../dashboard/dashboard.css";
 import "./deals.css";
 
@@ -294,13 +295,7 @@ export default function DealsPage() {
     }
   };
 
-  // Helper function to format price
-  const formatPrice = (price: any): string => {
-    if (!price) return "N/A";
-    const numPrice = typeof price === 'number' ? price : parseFloat(String(price).replace(/[^0-9.]/g, ""));
-    if (isNaN(numPrice)) return "N/A";
-    return `AED ${numPrice.toLocaleString()}`;
-  };
+  const formatPrice = (price: unknown): string => formatListedPriceAed(price);
 
   // Helper function to format size
   const formatSize = (size: any): string => {

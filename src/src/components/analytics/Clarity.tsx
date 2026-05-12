@@ -32,9 +32,6 @@ export default function Clarity() {
     // Initialize Clarity
     try {
       clarity.init(projectId);
-      if (process.env.NODE_ENV === "development") {
-        console.log("Microsoft Clarity initialized with project ID:", projectId);
-      }
     } catch (error) {
       console.error("Error initializing Microsoft Clarity:", error);
     }

@@ -474,6 +474,55 @@ class ApiClient {
     return loginResponse;
   }
 
+  async loginWithGoogle(credential: string): Promise<LoginResponse> {
+    const deviceFingerprint = this.getDeviceFingerprint();
+    this.clearCache();
+
+    const apiUrl = this.baseUrl || this.getApiUrl();
+    const traceId = createTraceId();
+    logInfo("api.request.start", { method: "POST", endpoint: "/api/auth/google", traceId });
+    const response = await fetch(`${apiUrl}/api/auth/google`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Trace-Id": traceId,
+      },
+      credentials: "include",
+      body: JSON.stringify({ credential, deviceFingerprint }),
+    });
+
+    if (!response.ok) {
+      logError("api.request.error", {
+        method: "POST",
+        endpoint: "/api/auth/google",
+        status: response.status,
+        traceId,
+      });
+      const errorText = await response.text().catch(() => "Unknown error");
+      let error: { error?: string; message?: string };
+      try {
+        error = JSON.parse(errorText);
+      } catch {
+        error = { error: errorText || `Google login failed with status ${response.status}` };
+      }
+      const errorMessage =
+        error.error || error.message || `Google login failed with status ${response.status}`;
+      const apiError = new Error(errorMessage);
+      (apiError as Error & { status?: number }).status = response.status;
+      throw apiError;
+    }
+
+    logInfo("api.request.success", {
+      method: "POST",
+      endpoint: "/api/auth/google",
+      status: response.status,
+      traceId,
+    });
+    const loginResponse: LoginResponse = await response.json();
+    this.clearCache();
+    return loginResponse;
+  }
+
   async verifyDevice(email: string, code: string, deviceFingerprint: string): Promise<AuthResponse> {
     // SECURITY: Token is now set in HttpOnly cookie by backend
     const response = await this.request<AuthResponse>('/api/auth/verify-device', {

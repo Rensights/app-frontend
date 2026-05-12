@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect, Suspense } from "react";
+import React, { useState, useRef, useEffect, Suspense, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "./signup.css";
 import { useTranslations } from "@/hooks/useTranslations";
+import { GoogleSignInButton, getGoogleClientId } from "@/components/auth/GoogleSignInButton";
 
 type Plan = "free" | "premium";
 
@@ -105,6 +106,7 @@ function SignUpPageContent() {
     "authSignup.submitPay": "Pay",
     "authSignup.submitting": "Creating Account...",
     "authSignup.haveAccount": "Already have an account? Sign In",
+    "authSignup.or": "OR",
     "authSignup.goals.rentalIncome": "Rental Income",
     "authSignup.goals.capitalAppreciation": "Capital Appreciation",
     "authSignup.goals.portfolioDiversification": "Portfolio Diversification",
@@ -140,6 +142,7 @@ function SignUpPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const codeRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+  const googleClientId = useMemo(() => getGoogleClientId(), []);
 
   // Redirect to city analysis if user is already logged in
   useEffect(() => {
@@ -351,6 +354,49 @@ function SignUpPageContent() {
     return Object.keys(nextErrors).length === 0 && agreeTerms;
   };
 
+  const handleGoogleSignup = useCallback(async (credential: string) => {
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      const loginResponse = await apiClient.loginWithGoogle(credential);
+      const resolvedEmail = (loginResponse.email || "").trim().toLowerCase();
+
+      if (loginResponse.requiresVerification) {
+        if (loginResponse.deviceFingerprint && typeof window !== "undefined") {
+          localStorage.setItem("pendingDeviceFingerprint", loginResponse.deviceFingerprint);
+        } else {
+          const fp = apiClient.getDeviceFingerprint();
+          if (fp && typeof window !== "undefined") {
+            localStorage.setItem("pendingDeviceFingerprint", fp);
+          }
+        }
+        setVerificationEmail(resolvedEmail);
+        setStep("verification");
+        setResendTimer(60);
+        setCodeDigits(Array(CODE_LENGTH).fill(""));
+        setCodeError("");
+        setIsSubmitting(false);
+        setTimeout(() => codeRefs.current[0]?.focus(), 200);
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("rensights-force-subscription-sync", "true");
+        window.localStorage.setItem("rensights-auth-sync", Date.now().toString());
+        window.localStorage.removeItem("rensights-auth-sync");
+        window.dispatchEvent(new Event("auth-state-changed"));
+      }
+      setTimeout(() => {
+        window.location.replace("/city-analysis");
+      }, 300);
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Google sign-up failed. Please try again."
+      );
+      setIsSubmitting(false);
+    }
+  }, []);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validateForm()) return;
@@ -378,9 +424,6 @@ function SignUpPageContent() {
 
       // Check if token is returned (email verification disabled)
       if ('token' in registerResponse && registerResponse.token) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("Email verification disabled - token received, redirecting to dashboard");
-        }
         // Token received - save it and redirect
         apiClient.setToken(registerResponse.token);
         
@@ -445,17 +488,17 @@ function SignUpPageContent() {
     setCodeError("");
 
     try {
-      // Get device fingerprint
-      const deviceFingerprint = apiClient.getDeviceFingerprint();
-      
+      const deviceFingerprint =
+        typeof window !== "undefined"
+          ? localStorage.getItem("pendingDeviceFingerprint") || apiClient.getDeviceFingerprint()
+          : apiClient.getDeviceFingerprint();
+
       // Verify email and get token (device will be registered)
       // Note: Token is set in HttpOnly cookie by backend, no need to manually set it
       const authResponse = await apiClient.verifyEmail(verificationEmail, code, deviceFingerprint);
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Email verified successfully. Plan:", formState.plan);
-        console.log("Auth response:", authResponse);
-        console.log("Current step before check:", step);
+
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("pendingDeviceFingerprint");
       }
 
       // Show success message first
@@ -476,9 +519,6 @@ function SignUpPageContent() {
       // If a paid plan is selected, redirect to Stripe Checkout after success message
       if (formState.plan === "premium") {
         setTimeout(() => {
-          if (process.env.NODE_ENV === 'development') {
-            console.log("✅ Premium plan detected! Redirecting to Stripe Checkout");
-          }
           setIsSubmitting(true);
           try {
             apiClient.createCheckoutSession("PREMIUM").then((checkoutResponse) => {
@@ -504,9 +544,6 @@ function SignUpPageContent() {
       // Redirect to dashboard for free plan after success message
       // Wait a bit longer to ensure UserContext has time to load the user
       setTimeout(() => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("Free plan selected, redirecting to dashboard");
-        }
         // Save token if present in response
         if (authResponse.token) {
           apiClient.setToken(authResponse.token);
@@ -768,6 +805,26 @@ function SignUpPageContent() {
         <div className="signup-card">
           <div className="logo">Rensights</div>
           <div className="tagline">{t("authSignup.tagline")}</div>
+
+          {googleClientId ? (
+            <>
+              <div className="signup-google-wrap">
+                <GoogleSignInButton
+                  clientId={googleClientId}
+                  buttonText="signup_with"
+                  disabled={isSubmitting}
+                  onCredential={handleGoogleSignup}
+                  onError={(message) => {
+                    setSubmitError(message);
+                    setIsSubmitting(false);
+                  }}
+                />
+              </div>
+              <div className="signup-or-divider">
+                <span>{t("authSignup.or")}</span>
+              </div>
+            </>
+          ) : null}
 
           <form className="signup-form" onSubmit={handleSubmit} noValidate>
             <SectionTitle>{t("authSignup.accountInfo")}</SectionTitle>
