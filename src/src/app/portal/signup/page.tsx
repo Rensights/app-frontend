@@ -107,6 +107,7 @@ function SignUpPageContent() {
     "authSignup.submitting": "Creating Account...",
     "authSignup.haveAccount": "Already have an account? Sign In",
     "authSignup.or": "OR",
+    "authSignup.googleNotConfigured": "Google sign-up is hidden until NEXT_PUBLIC_GOOGLE_CLIENT_ID is set (build-time or container env).",
     "authSignup.goals.rentalIncome": "Rental Income",
     "authSignup.goals.capitalAppreciation": "Capital Appreciation",
     "authSignup.goals.portfolioDiversification": "Portfolio Diversification",
@@ -824,7 +825,19 @@ function SignUpPageContent() {
                 <span>{t("authSignup.or")}</span>
               </div>
             </>
-          ) : null}
+          ) : (
+            <p
+              style={{
+                textAlign: "center",
+                color: "#888",
+                fontSize: "0.875rem",
+                margin: "0 0 1.25rem",
+                lineHeight: 1.45,
+              }}
+            >
+              {t("authSignup.googleNotConfigured")}
+            </p>
+          )}
 
           <form className="signup-form" onSubmit={handleSubmit} noValidate>
             <SectionTitle>{t("authSignup.accountInfo")}</SectionTitle>

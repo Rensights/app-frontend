@@ -52,6 +52,7 @@ export default function LoginPage() {
     "authLogin.errorCode": "Please enter the complete verification code",
     "authLogin.errorLogin": "Login failed. Please check your credentials.",
     "authLogin.errorDevice": "Device fingerprint not available",
+    "authLogin.googleNotConfigured": "Google sign-in is hidden until NEXT_PUBLIC_GOOGLE_CLIENT_ID is set (build-time or container env).",
   });
   const [step, setStep] = useState<Step>("login");
   const [email, setEmail] = useState("");
@@ -580,28 +581,38 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {googleClientId ? (
-              <>
-                <div className="divider">
-                  <span>{t("authLogin.or")}</span>
-                </div>
+            <div className="divider">
+              <span>{t("authLogin.or")}</span>
+            </div>
 
-                <div className="social-login-section">
-                  <div className="social-buttons">
-                    <GoogleSignInButton
-                      clientId={googleClientId}
-                      buttonText="signin_with"
-                      disabled={isSubmitting}
-                      onCredential={handleGoogleCredential}
-                      onError={(message) => {
-                        setLoginError(message);
-                        setIsSubmitting(false);
-                      }}
-                    />
-                  </div>
+            {googleClientId ? (
+              <div className="social-login-section">
+                <div className="social-buttons">
+                  <GoogleSignInButton
+                    clientId={googleClientId}
+                    buttonText="signin_with"
+                    disabled={isSubmitting}
+                    onCredential={handleGoogleCredential}
+                    onError={(message) => {
+                      setLoginError(message);
+                      setIsSubmitting(false);
+                    }}
+                  />
                 </div>
-              </>
-            ) : null}
+              </div>
+            ) : (
+              <p
+                style={{
+                  textAlign: "center",
+                  color: "#888",
+                  fontSize: "0.875rem",
+                  margin: "0 0 1rem",
+                  lineHeight: 1.45,
+                }}
+              >
+                {t("authLogin.googleNotConfigured")}
+              </p>
+            )}
 
             <div className="forgot-password">
               <div className="forgot-links">
