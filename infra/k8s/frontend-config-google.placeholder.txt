@@ -1,0 +1,12 @@
+# Placeholder Google OAuth (Web client ID) for app-frontend
+#
+# The Deployment reads NEXT_PUBLIC_GOOGLE_CLIENT_ID from Secret `frontend-config` (see charts).
+#
+# Option A — patch existing Secret in cluster (dev):
+#   kubectl patch secret frontend-config -n dev --type merge -p \
+#     '{"stringData":{"NEXT_PUBLIC_GOOGLE_CLIENT_ID":"YOUR_ID.apps.googleusercontent.com"}}'
+#
+# Option B — Vault KV v2 path secret/data/dev/frontend-config: add key NEXT_PUBLIC_GOOGLE_CLIENT_ID
+#
+# Dummy value for local testing only:
+#   000000000000-REPLACE_ME.apps.googleusercontent.com

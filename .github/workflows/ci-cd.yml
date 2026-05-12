@@ -251,6 +251,7 @@ jobs:
           kubectl create secret generic frontend-config \
             --from-literal=NEXT_PUBLIC_API_URL="$BACKEND_URL" \
             --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
+            --from-literal=NEXT_PUBLIC_GOOGLE_CLIENT_ID="REPLACE_ME.apps.googleusercontent.com" \
             --namespace ${DEV_NAMESPACE} \
             --dry-run=client -o yaml | kubectl apply -f -
 

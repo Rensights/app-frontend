@@ -31,4 +31,5 @@ secrets:
   frontendConfig: frontend-config
 
 # API_URL / NEXT_PUBLIC_* come from Secret `frontend-config` (synced from Vault via ESO).
+# Add NEXT_PUBLIC_GOOGLE_CLIENT_ID there (or patch the Secret); see infra/k8s/frontend-config-google.placeholder.txt
 extraEnv: {}
