@@ -2,7 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/api';
+import { apiClient, type UserResponse } from '@/lib/api';
+
+function normalizeUserFromApi(userData: UserResponse): User {
+  return {
+    ...userData,
+    registrationProfileComplete: userData.registrationProfileComplete === false ? false : true,
+  };
+}
 
 interface User {
   id: string;
@@ -13,6 +20,12 @@ interface User {
   emailVerified?: boolean;
   customerId?: string;
   createdAt?: string;
+  registrationProfileComplete?: boolean;
+  phone?: string;
+  budget?: string;
+  portfolio?: string;
+  registrationPlan?: string;
+  goals?: string[];
 }
 
 interface Subscription {
@@ -69,7 +82,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         apiClient.getCurrentUser(),
         apiClient.getCurrentSubscription().catch(() => null),
       ]);
-      setUser(userData);
+      setUser(normalizeUserFromApi(userData));
       setSubscription(subscriptionData);
       setError(null);
     } catch (err: any) {
@@ -101,7 +114,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     try {
       const userData = await apiClient.getCurrentUser();
-      setUser(userData);
+      setUser(normalizeUserFromApi(userData));
       setError(null);
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
@@ -213,7 +226,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         try {
           // Quick auth check - will fail fast if not authenticated
           const userData = await apiClient.getCurrentUser();
-          setUser(userData);
+          setUser(normalizeUserFromApi(userData));
           setLoading(false);
         } catch (err: any) {
           // Not authenticated - this is expected on portal pages
@@ -230,7 +243,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         try {
           // Quick auth check - will fail fast if not authenticated
           const userData = await apiClient.getCurrentUser();
-          setUser(userData);
+          setUser(normalizeUserFromApi(userData));
           setLoading(false);
         } catch (err: any) {
           // Not authenticated - this is expected on landing page
@@ -265,7 +278,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           // On landing page and portal pages, check auth status
           apiClient.getCurrentUser()
             .then(userData => {
-              setUser(userData);
+              setUser(normalizeUserFromApi(userData));
               setLoading(false);
             })
             .catch(() => {
@@ -297,7 +310,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         // On landing page and portal pages, check auth status
         apiClient.getCurrentUser()
           .then(userData => {
-            setUser(userData);
+            setUser(normalizeUserFromApi(userData));
             setLoading(false);
           })
           .catch(() => {

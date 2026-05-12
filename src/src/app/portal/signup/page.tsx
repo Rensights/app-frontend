@@ -48,14 +48,14 @@ const goalOptions = [
   { value: "lifestyle-residence", labelKey: "authSignup.goals.lifestyleResidence" },
 ];
 
-type Step = "form" | "verification" | "payment";
+type Step = "form" | "verification" | "payment" | "googleComplete";
 
 const CODE_LENGTH = 6;
 
 function SignUpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading } = useUser();
+  const { user, loading, refreshUser } = useUser();
   const { t } = useTranslations("authSignup", {
     "authSignup.loading": "Loading...",
     "authSignup.redirecting": "Redirecting to dashboard...",
@@ -107,6 +107,9 @@ function SignUpPageContent() {
     "authSignup.submitting": "Creating Account...",
     "authSignup.haveAccount": "Already have an account? Sign In",
     "authSignup.or": "OR",
+    "authSignup.googleCompleteTitle": "Complete your profile",
+    "authSignup.googleCompleteSubtitle": "Add the same details as full registration so we can tailor your experience.",
+    "authSignup.googleCompleteSubmit": "Continue",
     "authSignup.googleNotConfigured": "Google sign-up: set NEXT_PUBLIC_GOOGLE_CLIENT_ID on the frontend container (e.g. Secret frontend-config), then restart the pod.",
     "authSignup.goals.rentalIncome": "Rental Income",
     "authSignup.goals.capitalAppreciation": "Capital Appreciation",
@@ -145,14 +148,35 @@ function SignUpPageContent() {
   const codeRefs = React.useRef<(HTMLInputElement | null)[]>([]);
   const googleClientId = useMemo(() => getGoogleClientId(), []);
 
-  // Redirect to city analysis if user is already logged in
+  // Redirect fully registered users away from signup
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && user.registrationProfileComplete !== false) {
       router.push("/city-analysis");
     }
   }, [loading, user, router]);
 
-  // Check if user canceled Stripe checkout
+  const profileHydratedFromQuery = useRef(false);
+
+  // Deep link after Google login from AppLayout: open completion step
+  useEffect(() => {
+    if (loading || !user || user.registrationProfileComplete !== false) return;
+    if (searchParams?.get("completeRegistration") !== "1" || profileHydratedFromQuery.current) return;
+    profileHydratedFromQuery.current = true;
+    setFormState((prev) => ({
+      ...prev,
+      firstName: user.firstName || prev.firstName,
+      lastName: user.lastName || prev.lastName,
+      email: user.email || prev.email,
+      phone: user.phone || prev.phone,
+      budget: user.budget || prev.budget,
+      portfolio: user.portfolio || prev.portfolio,
+      plan: (user.registrationPlan === "premium" || user.registrationPlan === "free"
+        ? user.registrationPlan
+        : prev.plan) as Plan,
+      goals: user.goals?.length ? user.goals : prev.goals,
+    }));
+    setStep("googleComplete");
+  }, [loading, user, searchParams]);
   useEffect(() => {
     if (searchParams?.get('canceled') === 'true') {
       setSubmitError("Payment was canceled. You can try again or continue with a free plan.");
@@ -355,6 +379,68 @@ function SignUpPageContent() {
     return Object.keys(nextErrors).length === 0 && agreeTerms;
   };
 
+  const validateGoogleProfileForm = () => {
+    const nextErrors: FormErrors = {};
+    if (!formState.firstName.trim()) nextErrors.firstName = "Required";
+    if (!formState.lastName.trim()) nextErrors.lastName = "Required";
+    if (formState.phone.trim() && !/^[\d+\-() ]+$/.test(formState.phone.trim())) {
+      nextErrors.phone = "Phone number can only contain numbers, +, -, spaces, and parentheses";
+    }
+    if (!formState.budget) nextErrors.budget = "Required";
+    if (formState.goals.length === 0) nextErrors.goals = "Select at least one goal";
+    if (!formState.portfolio) nextErrors.portfolio = "Required";
+    if (!formState.plan) nextErrors.plan = "Please select a plan";
+    if (!agreeTerms) setTermsError("Please accept the Terms of Services and Privacy Policy.");
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0 && agreeTerms;
+  };
+
+  const handleGoogleProfileComplete = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!validateGoogleProfileForm()) return;
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      await apiClient.updateUserProfile({
+        firstName: formState.firstName.trim(),
+        lastName: formState.lastName.trim(),
+        phone: formState.phone.trim() || undefined,
+        budget: formState.budget,
+        portfolio: formState.portfolio,
+        plan: formState.plan,
+        goals: formState.goals.filter(Boolean),
+      });
+      await refreshUser();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("rensights-force-subscription-sync", "true");
+        window.localStorage.setItem("rensights-auth-sync", Date.now().toString());
+        window.localStorage.removeItem("rensights-auth-sync");
+        window.dispatchEvent(new Event("auth-state-changed"));
+      }
+      if (formState.plan === "premium") {
+        try {
+          const checkoutResponse = await apiClient.createCheckoutSession("PREMIUM");
+          if (checkoutResponse.url) {
+            window.location.href = checkoutResponse.url;
+            return;
+          }
+        } catch (error: unknown) {
+          const msg = error instanceof Error ? error.message : "Failed to start payment.";
+          setSubmitError(msg);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      router.push("/city-analysis");
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Could not save profile. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleGoogleSignup = useCallback(async (credential: string) => {
     setSubmitError("");
     setIsSubmitting(true);
@@ -387,6 +473,29 @@ function SignUpPageContent() {
         window.localStorage.removeItem("rensights-auth-sync");
         window.dispatchEvent(new Event("auth-state-changed"));
       }
+
+      const me = await apiClient.getCurrentUser();
+      if (me.registrationProfileComplete === false) {
+        setFormState((prev) => ({
+          ...prev,
+          firstName: me.firstName || loginResponse.firstName || prev.firstName,
+          lastName: me.lastName || loginResponse.lastName || prev.lastName,
+          email: me.email || resolvedEmail || prev.email,
+          phone: me.phone || prev.phone,
+          budget: me.budget || prev.budget,
+          portfolio: me.portfolio || prev.portfolio,
+          plan: (me.registrationPlan === "premium" || me.registrationPlan === "free"
+            ? me.registrationPlan
+            : prev.plan) as Plan,
+          goals: me.goals?.length ? me.goals : prev.goals,
+        }));
+        await refreshUser();
+        setStep("googleComplete");
+        setIsSubmitting(false);
+        return;
+      }
+
+      await refreshUser();
       setTimeout(() => {
         window.location.replace("/city-analysis");
       }, 300);
@@ -396,7 +505,7 @@ function SignUpPageContent() {
       );
       setIsSubmitting(false);
     }
-  }, []);
+  }, [refreshUser]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -652,14 +761,207 @@ function SignUpPageContent() {
     );
   }
 
-  // Don't render signup form if user is logged in (redirect will happen)
-  if (user) {
+  if (step === "googleComplete" && user && user.registrationProfileComplete === false) {
     return (
       <div className="signup-page">
         <div className="signup-container">
           <div className="signup-card">
             <div className="logo">Rensights</div>
-            <div style={{ textAlign: 'center', padding: '2rem' }}>{t("authSignup.redirecting")}</div>
+            <div className="tagline">{t("authSignup.tagline")}</div>
+            <div className="form-step active">
+              <div className="step-title">{t("authSignup.googleCompleteTitle")}</div>
+              <div className="step-description" style={{ marginBottom: "1.5rem" }}>
+                {t("authSignup.googleCompleteSubtitle")}
+              </div>
+              <form className="signup-form" onSubmit={handleGoogleProfileComplete} noValidate>
+                <SectionTitle>{t("authSignup.accountInfo")}</SectionTitle>
+                <div className="form-row">
+                  <div data-field="firstName">
+                    <Field
+                      id="gc-firstName"
+                      label={t("authSignup.firstName")}
+                      placeholder="John"
+                      value={formState.firstName}
+                      onChange={(value) => handleChange("firstName", value)}
+                      error={errors.firstName}
+                    />
+                  </div>
+                  <div data-field="lastName">
+                    <Field
+                      id="gc-lastName"
+                      label={t("authSignup.lastName")}
+                      placeholder="Doe"
+                      value={formState.lastName}
+                      onChange={(value) => handleChange("lastName", value)}
+                      error={errors.lastName}
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label required-label" htmlFor="gc-email">
+                    {t("authSignup.email")}
+                  </label>
+                  <input
+                    id="gc-email"
+                    className="form-input"
+                    value={formState.email}
+                    readOnly
+                    aria-readonly="true"
+                  />
+                </div>
+                <div data-field="phone">
+                  <Field
+                    id="gc-phone"
+                    label={t("authSignup.phone")}
+                    type="tel"
+                    placeholder="+1 (555) 000-0000"
+                    value={formState.phone}
+                    onChange={(value) => handleChange("phone", value)}
+                    error={errors.phone}
+                    required={false}
+                  />
+                </div>
+
+                <SectionTitle>{t("authSignup.profileTitle")}</SectionTitle>
+                <div data-field="budget">
+                  <SelectField
+                    id="gc-budget"
+                    label={t("authSignup.budget")}
+                    value={formState.budget}
+                    onChange={(value) => handleChange("budget", value)}
+                    options={[
+                      { value: "", label: t("authSignup.budgetSelect") },
+                      { value: "under-100k", label: "Under $100,000" },
+                      { value: "100k-250k", label: "$100,000 - $250,000" },
+                      { value: "250k-500k", label: "$250,000 - $500,000" },
+                      { value: "500k-1m", label: "$500,000 - $1M" },
+                      { value: "1m-5m", label: "$1M - $5M" },
+                      { value: "above-5m", label: "Above $5M" },
+                    ]}
+                    error={errors.budget}
+                  />
+                </div>
+                <div className={`form-group ${errors.goals ? "has-error" : ""}`} data-field="goals">
+                  <label className="form-label required-label">{t("authSignup.goalsTitle")}</label>
+                  <div className={`goals-grid ${errors.goals ? "has-error" : ""}`}>
+                    {goalOptions.map((goal) => (
+                      <label key={goal.value} className="goal-option">
+                        <input
+                          type="checkbox"
+                          checked={formState.goals.includes(goal.value)}
+                          onChange={() => toggleGoal(goal.value)}
+                        />
+                        <span>{t(goal.labelKey)}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.goals && (
+                    <div className="error-message show" style={{ fontSize: "0.75rem" }}>
+                      <span>⚠</span>
+                      <span>{errors.goals}</span>
+                    </div>
+                  )}
+                </div>
+                <div data-field="portfolio">
+                  <SelectField
+                    id="gc-portfolio"
+                    label={t("authSignup.portfolio")}
+                    value={formState.portfolio}
+                    onChange={(value) => handleChange("portfolio", value)}
+                    options={[
+                      { value: "", label: t("authSignup.portfolioSelect") },
+                      { value: "below-5", label: "Below 5 properties" },
+                      { value: "5-10", label: "5-10 properties" },
+                      { value: "above-10", label: "Above 10 properties" },
+                    ]}
+                    error={errors.portfolio}
+                  />
+                </div>
+
+                <SectionTitle>{t("authSignup.planTitle")}</SectionTitle>
+                <div className="plans-grid two-cols" data-field="plan">
+                  <PlanCard
+                    title={tPricing("pricing.free.name")}
+                    price={tPricing("pricing.free.price")}
+                    cadence={tPricing("pricing.free.period")}
+                    description={tPricing("pricing.free.description")}
+                    features={[
+                      tPricing("pricing.free.feature1"),
+                      tPricing("pricing.free.feature2"),
+                    ]}
+                    selected={formState.plan === "free"}
+                    onSelect={() => handlePlanSelect("free")}
+                  />
+                  <PlanCard
+                    title={tPricing("pricing.standard.name")}
+                    price={tPricing("pricing.standard.price")}
+                    cadence={tPricing("pricing.standard.period")}
+                    description={tPricing("pricing.standard.description")}
+                    features={[
+                      tPricing("pricing.standard.feature1"),
+                      tPricing("pricing.standard.feature2"),
+                      tPricing("pricing.standard.feature3"),
+                    ]}
+                    selected={formState.plan === "premium"}
+                    onSelect={() => handlePlanSelect("premium")}
+                  />
+                </div>
+                {errors.plan && (
+                  <div className="error-message show plan-error" style={{ marginTop: "0.5rem", fontSize: "0.75rem" }}>
+                    <span>⚠</span>
+                    <span>{errors.plan}</span>
+                  </div>
+                )}
+
+                {submitError && (
+                  <div className="error-message show" style={{ marginBottom: "1rem", fontSize: "0.75rem" }}>
+                    <span>⚠</span>
+                    <span>{submitError}</span>
+                  </div>
+                )}
+
+                <div className="terms-consent">
+                  <label className="terms-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={agreeTerms}
+                      onChange={(event) => {
+                        setAgreeTerms(event.target.checked);
+                        setTermsError("");
+                      }}
+                    />
+                    <span>
+                      {t("authSignup.termsText")}{" "}
+                      <a className="terms-link" href="/privacy-terms" target="_blank" rel="noreferrer">
+                        {t("authSignup.termsLink")}
+                      </a>{" "}
+                      {t("authSignup.and") || "and"}{" "}
+                      <a className="terms-link" href="/privacy-terms" target="_blank" rel="noreferrer">
+                        {t("authSignup.privacyLink")}
+                      </a>
+                      .
+                    </span>
+                  </label>
+                  {termsError && (
+                    <div className="error-message show" style={{ marginTop: "0.75rem", fontSize: "0.75rem" }}>
+                      <span>⚠</span>
+                      <span>{termsError}</span>
+                    </div>
+                  )}
+                </div>
+
+                <button type="submit" className="btn" disabled={isSubmitting || !agreeTerms}>
+                  {isSubmitting ? (
+                    <>
+                      <span className="loading" />
+                      {t("authSignup.submitting")}
+                    </>
+                  ) : (
+                    t("authSignup.googleCompleteSubmit")
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

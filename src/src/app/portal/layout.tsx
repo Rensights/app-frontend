@@ -8,9 +8,9 @@ import LandingHeader from "@/components/landing/Header";
 
 /**
  * Portal Layout - For authentication pages
- * 
- * If user is already logged in, redirect them to dashboard
- * This prevents logged-in users from accessing login/signup pages
+ *
+ * If user is already logged in, redirect them to dashboard (except early access
+ * and Google sign-up profile completion on /portal/signup).
  */
 export default function PortalLayout({
   children,
@@ -24,19 +24,33 @@ export default function PortalLayout({
   const allowWhenAuthenticated = pathname === "/portal/early-access";
 
   useEffect(() => {
-    // Wait for auth state to load
     if (loading) return;
 
-    // If user is authenticated, redirect to dashboard
-    // Portal pages (login, signup, forgot-password, etc.) are only for unauthenticated users
-    if (user && !allowWhenAuthenticated) {
-      setIsRedirecting(true);
-      // Use replace to prevent back button navigation to portal pages
-      router.replace("/dashboard");
+    if (!user) {
+      setIsRedirecting(false);
+      return;
     }
-  }, [user, loading, router, allowWhenAuthenticated]);
+    if (allowWhenAuthenticated) {
+      setIsRedirecting(false);
+      return;
+    }
+    if (user.registrationProfileComplete === false) {
+      if (pathname !== "/portal/signup") {
+        setIsRedirecting(true);
+        router.replace("/portal/signup?completeRegistration=1");
+      } else {
+        setIsRedirecting(false);
+      }
+      return;
+    }
+    if (pathname?.startsWith("/portal/")) {
+      setIsRedirecting(true);
+      router.replace("/dashboard");
+    } else {
+      setIsRedirecting(false);
+    }
+  }, [user, loading, router, allowWhenAuthenticated, pathname]);
 
-  // Show loading spinner while checking auth state
   if (loading || isRedirecting) {
     return (
       <>
@@ -54,25 +68,6 @@ export default function PortalLayout({
     );
   }
 
-  // If user is authenticated, show loading (redirect is in progress)
-  if (user && !allowWhenAuthenticated) {
-    return (
-      <>
-        <LandingHeader />
-        <div style={{ 
-          minHeight: "calc(100vh - 20px)", 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "center",
-          background: "linear-gradient(135deg, #f6b042 0%, #f39c12 100%)"
-        }}>
-          <LoadingSpinner message="Redirecting..." />
-        </div>
-      </>
-    );
-  }
-
-  // User is not authenticated, show portal pages
   return (
     <>
       <LandingHeader />

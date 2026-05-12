@@ -65,6 +65,13 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
     logout();
   }, [logout]);
 
+  // Block app until email/password registration fields are completed (e.g. after Google sign-up)
+  useEffect(() => {
+    if (!loading && requireAuth && user && user.registrationProfileComplete === false) {
+      router.replace("/portal/signup?completeRegistration=1");
+    }
+  }, [loading, requireAuth, user, router]);
+
   // Redirect to login if auth is required but no user is found
   // SECURITY: Cookie-based auth - cookie is automatically checked by backend
   // If user is null after loading, it means authentication failed (no cookie or invalid)
@@ -92,6 +99,14 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
     return (
       <div className="dashboard-page">
         <LoadingSpinner fullPage={true} message="Loading..." />
+      </div>
+    );
+  }
+
+  if (requireAuth && user && user.registrationProfileComplete === false) {
+    return (
+      <div className="dashboard-page">
+        <LoadingSpinner fullPage={true} message="Redirecting..." />
       </div>
     );
   }

@@ -17,7 +17,7 @@ const CODE_LENGTH = 6;
 export default function LoginPage() {
   const router = useRouter();
   const toast = useToast();
-  const { user, loading } = useUser();
+  const { user, loading, refreshUser } = useUser();
   const { t } = useTranslations("authLogin", {
     "authLogin.loading": "Loading...",
     "authLogin.redirecting": "Redirecting to dashboard...",
@@ -75,10 +75,17 @@ export default function LoginPage() {
   const [hasKnownDevice, setHasKnownDevice] = useState(false);
   const googleClientId = useMemo(() => getGoogleClientId(), []);
 
-  // Redirect to city analysis if user is already logged in
+  // Redirect fully registered users away from login
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && user.registrationProfileComplete !== false) {
       router.push("/city-analysis");
+    }
+  }, [loading, user, router]);
+
+  // New Google account: finish registration on signup page
+  useEffect(() => {
+    if (!loading && user && user.registrationProfileComplete === false) {
+      router.replace("/portal/signup?completeRegistration=1");
     }
   }, [loading, user, router]);
 
@@ -426,6 +433,20 @@ export default function LoginPage() {
           return;
         }
 
+        const me = await apiClient.getCurrentUser();
+        if (me.registrationProfileComplete === false) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("rensights-force-subscription-sync", "true");
+            window.localStorage.setItem("rensights-auth-sync", Date.now().toString());
+            window.localStorage.removeItem("rensights-auth-sync");
+            window.dispatchEvent(new Event("auth-state-changed"));
+          }
+          await refreshUser();
+          router.replace("/portal/signup?completeRegistration=1");
+          setIsSubmitting(false);
+          return;
+        }
+
         rememberThisDevice();
         if (typeof window !== "undefined") {
           localStorage.setItem("rensights-force-subscription-sync", "true");
@@ -443,7 +464,7 @@ export default function LoginPage() {
         setIsSubmitting(false);
       }
     },
-    [email, rememberThisDevice, showVerificationStep, t]
+    [email, rememberThisDevice, refreshUser, router, showVerificationStep, t]
   );
   
   // Optimized: Memoize computed values
@@ -464,8 +485,8 @@ export default function LoginPage() {
     );
   }
 
-  // Don't render login form if user is logged in (redirect will happen)
-  if (user) {
+  // Logged-in users are redirected above; incomplete profile goes to signup completion
+  if (user && user.registrationProfileComplete !== false) {
     return (
       <div className="login-page">
         <div className="login-container">

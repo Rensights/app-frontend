@@ -120,6 +120,13 @@ export interface UserResponse {
   userTier: 'FREE' | 'PREMIUM' | 'ENTERPRISE';
   customerId?: string; // Our internal customer ID (format: CUST-XXXXXXXX)
   createdAt?: string; // ISO date string or empty string
+  /** When false, user must submit registration profile fields (e.g. after Google sign-up). */
+  registrationProfileComplete?: boolean;
+  phone?: string;
+  budget?: string;
+  portfolio?: string;
+  registrationPlan?: string;
+  goals?: string[];
 }
 
 export interface SubscriptionResponse {
@@ -624,7 +631,15 @@ class ApiClient {
     return this.request<UserResponse>('/users/me', {}, false);
   }
 
-  async updateUserProfile(data: { firstName?: string; lastName?: string }): Promise<UserResponse> {
+  async updateUserProfile(data: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    budget?: string;
+    portfolio?: string;
+    plan?: string;
+    goals?: string[];
+  }): Promise<UserResponse> {
     const result = await this.request<UserResponse>('/users/me', {
       method: 'PUT',
       body: JSON.stringify(data),
