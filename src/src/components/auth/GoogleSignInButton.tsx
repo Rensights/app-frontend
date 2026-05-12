@@ -121,5 +121,12 @@ export function GoogleSignInButton({
 }
 
 export function getGoogleClientId(): string {
+  if (typeof window !== "undefined") {
+    const fromWindow = (window as Window & { __GOOGLE_CLIENT_ID__?: string })
+      .__GOOGLE_CLIENT_ID__;
+    if (fromWindow && String(fromWindow).trim()) {
+      return String(fromWindow).trim();
+    }
+  }
   return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() || "";
 }

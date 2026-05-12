@@ -27,11 +27,8 @@ export function getCachedApiUrl(): string {
   return cachedApiUrl || '';
 }
 
-
-
-
-
-
-
-
-
+/** Server-only: Google Web client ID from container env (e.g. K8s secret) for root layout injection. */
+export function getRuntimeGoogleClientIdForInjection(): string {
+  if (typeof window !== "undefined") return "";
+  return (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "").trim();
+}

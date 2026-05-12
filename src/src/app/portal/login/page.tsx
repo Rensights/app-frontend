@@ -52,7 +52,8 @@ export default function LoginPage() {
     "authLogin.errorCode": "Please enter the complete verification code",
     "authLogin.errorLogin": "Login failed. Please check your credentials.",
     "authLogin.errorDevice": "Device fingerprint not available",
-    "authLogin.googleNotConfigured": "Google sign-in is hidden until NEXT_PUBLIC_GOOGLE_CLIENT_ID is set (build-time or container env).",
+    "authLogin.googleNotConfigured": "Google sign-in: set NEXT_PUBLIC_GOOGLE_CLIENT_ID on the frontend container (e.g. Secret frontend-config), then restart the pod. It is read at runtime via the root layout.",
+    "authSignup.googleNotConfigured": "Google sign-up: set NEXT_PUBLIC_GOOGLE_CLIENT_ID on the frontend container (e.g. Secret frontend-config), then restart the pod.",
   });
   const [step, setStep] = useState<Step>("login");
   const [email, setEmail] = useState("");

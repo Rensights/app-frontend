@@ -107,7 +107,7 @@ function SignUpPageContent() {
     "authSignup.submitting": "Creating Account...",
     "authSignup.haveAccount": "Already have an account? Sign In",
     "authSignup.or": "OR",
-    "authSignup.googleNotConfigured": "Google sign-up is hidden until NEXT_PUBLIC_GOOGLE_CLIENT_ID is set (build-time or container env).",
+    "authSignup.googleNotConfigured": "Google sign-up: set NEXT_PUBLIC_GOOGLE_CLIENT_ID on the frontend container (e.g. Secret frontend-config), then restart the pod.",
     "authSignup.goals.rentalIncome": "Rental Income",
     "authSignup.goals.capitalAppreciation": "Capital Appreciation",
     "authSignup.goals.portfolioDiversification": "Portfolio Diversification",

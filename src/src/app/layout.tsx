@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
-import { getRuntimeApiUrl } from "../lib/runtime-config";
+import { getRuntimeApiUrl, getRuntimeGoogleClientIdForInjection } from "../lib/runtime-config";
 import { UserProvider } from "../context/UserContext";
 import { ToastProvider } from "../components/ui/Toast";
 import { LanguageProvider } from "../context/LanguageContext";
@@ -47,17 +47,14 @@ export default function RootLayout({
       // Same-origin API when proxied (e.g. https://rensights.com/api) — never use http: here
       // or the browser will block mixed content on HTTPS pages.
       || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://rensights.com");
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Layout] process.env.API_URL:', process.env.API_URL);
-      console.log('[Layout] process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-      console.log('[Layout] ✅ Final API URL:', apiUrl);
-    }
   } else {
     // Client-side: should be injected via script tag below
     apiUrl = '';
   }
-  
+
+  const googleClientIdRuntime =
+    typeof window === "undefined" ? getRuntimeGoogleClientIdForInjection() : "";
+
   return (
     <html lang="en">
       <head>
@@ -73,7 +70,7 @@ export default function RootLayout({
         {/* This is how Kubernetes secrets work with Next.js App Router */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.__API_URL__ = ${JSON.stringify(apiUrl)};`,
+            __html: `window.__API_URL__ = ${JSON.stringify(apiUrl)}; window.__GOOGLE_CLIENT_ID__ = ${JSON.stringify(googleClientIdRuntime)};`,
           }}
         />
         {/* Optimized: Preconnect to API for faster requests */}
