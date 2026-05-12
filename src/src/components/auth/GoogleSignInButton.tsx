@@ -9,6 +9,7 @@ type GoogleIdentityServicesWindow = Window & {
       id?: {
         initialize: (config: Record<string, unknown>) => void;
         renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
+        cancel?: () => void;
       };
     };
   };
@@ -64,6 +65,14 @@ export function GoogleSignInButton({
 
     let cancelled = false;
 
+    const cancelGsi = () => {
+      try {
+        (window as GoogleIdentityServicesWindow).google?.accounts?.id?.cancel?.();
+      } catch {
+        /* ignore */
+      }
+    };
+
     (async () => {
       try {
         await loadGsiScript();
@@ -74,6 +83,19 @@ export function GoogleSignInButton({
           onErrorRef.current?.("Google Sign-In unavailable");
           return;
         }
+
+        // GIS expects button width in pixels, not "100%" (logs: invalid width).
+        const measureWidthPx = (): number => {
+          const el = containerRef.current;
+          if (!el) return 400;
+          const w = Math.round(el.getBoundingClientRect().width);
+          if (Number.isFinite(w) && w >= 200) return w;
+          return 400;
+        };
+
+        cancelGsi();
+        if (cancelled || !containerRef.current) return;
+
         idApi.initialize({
           client_id: clientId,
           callback: (response: { credential?: string }) => {
@@ -86,24 +108,33 @@ export function GoogleSignInButton({
           auto_select: false,
           cancel_on_tap_outside: true,
         });
-        containerRef.current.innerHTML = "";
-        idApi.renderButton(containerRef.current, {
+        if (cancelled || !containerRef.current) return;
+
+        const host = containerRef.current;
+        host.innerHTML = "";
+        const widthPx = measureWidthPx();
+        if (cancelled) return;
+
+        idApi.renderButton(host, {
           type: "standard",
           theme: "outline",
           size: "large",
           text: buttonText,
-          width: "100%",
+          width: widthPx,
           locale: "en",
         });
       } catch (e) {
-        onErrorRef.current?.(
-          e instanceof Error ? e.message : "Google Sign-In failed to load"
-        );
+        if (!cancelled) {
+          onErrorRef.current?.(
+            e instanceof Error ? e.message : "Google Sign-In failed to load"
+          );
+        }
       }
     })();
 
     return () => {
       cancelled = true;
+      cancelGsi();
     };
   }, [clientId, disabled, buttonText]);
 
