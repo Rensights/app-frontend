@@ -222,6 +222,115 @@
   }
 }
 
+/* Weekly deals landing — compact vertical rhythm (page + upgrade overlay height follow content) */
+.weekly-deals-page.content-section.active {
+  height: auto;
+  min-height: 0;
+}
+
+.weekly-deals-page .section-card {
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+}
+
+.weekly-deals-page .section-title {
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.weekly-deals-page .alert-item {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+.weekly-deals-page .alert-title {
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.weekly-deals-page .alert-desc {
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.weekly-deals-page .alert-list {
+  margin: 8px 0;
+}
+
+.weekly-deals-page .alert-row {
+  margin-bottom: 4px;
+  font-size: 0.88rem;
+}
+
+.weekly-deals-page .alert-number {
+  font-size: 0.8rem;
+  padding: 3px 7px;
+}
+
+.weekly-deals-page .alert-stats {
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.weekly-deals-page .highlights {
+  gap: 6px;
+  font-size: 0.88rem;
+}
+
+.weekly-deals-page .highlights div {
+  padding-bottom: 8px;
+}
+
+.weekly-deals-page .info-text {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+.weekly-deals-page .report-disclaimer {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.weekly-deals-page .report-disclaimer .section-title {
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.weekly-deals-page .report-disclaimer h4 {
+  margin: 8px 0 3px;
+  font-size: 0.88rem;
+}
+
+.weekly-deals-page .report-disclaimer p {
+  margin: 0 0 6px;
+}
+
+.weekly-deals-page .btn {
+  margin-top: 8px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .weekly-deals-page .section-card {
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .weekly-deals-page .section-title {
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+  }
+
+  .weekly-deals-page .alert-item {
+    padding: 8px 10px;
+  }
+}
+
 .header {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);

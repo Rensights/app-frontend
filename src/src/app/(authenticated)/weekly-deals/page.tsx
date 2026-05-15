@@ -99,7 +99,10 @@ export default function WeeklyDealsPage() {
   }
 
   return (
-    <section className="content-section active" style={{ position: 'relative' }}>
+    <section
+      className="content-section active weekly-deals-page"
+      style={{ position: "relative" }}
+    >
       {isFreeUser && (
         <div className="upgrade-overlay">
             <div className="upgrade-content">
