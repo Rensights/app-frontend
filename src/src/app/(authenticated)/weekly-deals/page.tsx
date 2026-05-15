@@ -107,7 +107,9 @@ export default function WeeklyDealsPage() {
             <h2>{tPricing("pricing.standard.upgradeTitle")}</h2>
             <div className="upgrade-pricing">
               <div className="pricing-amount">
-                {tPricing("pricing.standard.price")}
+                <span className="pricing-amount-value">
+                  {tPricing("pricing.standard.price")}
+                </span>
                 <span className="pricing-period">{tPricing("pricing.standard.period")}</span>
               </div>
             </div>
