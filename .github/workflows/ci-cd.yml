@@ -241,7 +241,7 @@ jobs:
           # Use HTTPS same-origin API route exposed at /api on rensights.com.
           # Do not use the legacy dev-api NodePort host:port here.
           BACKEND_URL="https://rensights.com"
-          STRIPE_KEY="pk_test_51SMUlmCasMqex534KJuqfzLCrTVoMNlUcZAmEXFsGp1nWOTPsFVNDjf4FI6B02t9YLMDS87SPHqcxnPb6Xf53CyI00kXxX7B1l"
+          STRIPE_KEY="pk_live_51SMUlmCasMqex534VTFERx7OC71IihQw4LWRMi4VebjuVVj1TE0R0qHD6MZRP2t3SZ7mwV0FTXElTAvd2JDdcgyX00bvHdKTdB"
           echo "api_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
           echo "stripe_key=${STRIPE_KEY}" >> $GITHUB_OUTPUT
           if [ -n "${VAULT_ESO_TOKEN}" ]; then

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { apiClient, Deal, PaginatedDealResponse } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
@@ -15,6 +15,7 @@ import "./deals.css";
 
 export default function DealsPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const toast = useToast();
   const { user } = useUser();
   const isFreeUser = !user || user.userTier === 'FREE';
@@ -214,6 +215,9 @@ export default function DealsPage() {
   }, [computeStats, getApiFilters, weeklyDealsEnabled]);
 
   useEffect(() => {
+    if (pathname !== "/deals") {
+      return;
+    }
     if (weeklyDealsEnabled === false) {
       router.replace("/dashboard");
       return;
@@ -221,7 +225,16 @@ export default function DealsPage() {
     if (weeklyDealsEnabled === true) {
       loadDeals();
     }
-  }, [loadDeals, weeklyDealsEnabled, router]);
+  }, [pathname, loadDeals, weeklyDealsEnabled, router]);
+
+  useEffect(() => {
+    if (pathname !== "/deals") {
+      return;
+    }
+    if (weeklyDealsEnabled === true) {
+      loadStats();
+    }
+  }, [pathname, loadStats, weeklyDealsEnabled]);
 
   const filteredDeals = useMemo(() => {
     return deals.filter((deal) => {
@@ -238,12 +251,6 @@ export default function DealsPage() {
       return true;
     });
   }, [deals, filters]);
-
-  useEffect(() => {
-    if (weeklyDealsEnabled === true) {
-      loadStats();
-    }
-  }, [loadStats, weeklyDealsEnabled]);
 
   if (weeklyDealsLoading) {
     return (

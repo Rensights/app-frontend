@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient, type UserResponse } from '@/lib/api';
+import { clearWeeklyDealsEnabledCache } from '@/hooks/useWeeklyDealsEnabled';
 
 function normalizeUserFromApi(userData: UserResponse): User {
   return {
@@ -154,6 +155,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     } finally {
       // Clear API client cache completely (including pending requests)
       apiClient.clearCache();
+      clearWeeklyDealsEnabledCache();
       
       // Force a hard navigation to ensure complete state reset
       if (typeof window !== 'undefined') {
