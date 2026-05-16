@@ -252,56 +252,13 @@ html {
   color: #1f2937;
 }
 
-.pdf-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1100;
-  padding: 20px;
-}
-
-.pdf-modal-content {
-  background: #fff;
-  border-radius: 12px;
-  width: min(1100px, 96vw);
-  height: min(90vh, 720px);
-  display: flex;
-  flex-direction: column;
-}
-
-.pdf-modal-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.pdf-modal-header h3 {
-  font-size: 0.95rem;
-}
-
-.pdf-close {
-  background: transparent;
-  border: none;
-  font-size: 1.4rem;
-  cursor: pointer;
-}
-
-.pdf-modal iframe {
-  flex: 1;
-  border: none;
-}
-
-.container,
-.hero,
-.executive-summary,
-.section-card,
-.chart-card,
-.filter-pill {
+/* Hide unused template blocks only on the detailed reports page (not app-wide) */
+.city-analysis-page.detailed-page .container,
+.city-analysis-page.detailed-page .hero,
+.city-analysis-page.detailed-page .executive-summary,
+.city-analysis-page.detailed-page .section-card,
+.city-analysis-page.detailed-page .chart-card,
+.city-analysis-page.detailed-page .filter-pill {
   display: none;
 }
 

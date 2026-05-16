@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { apiClient, ReportDocument, ReportSection } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../../dashboard/dashboard.css";
 import "../city-analysis.css";
+import "../pdf-preview-modal.css";
 
 export default function DetailedCityAnalysisPage() {
   const { language } = useLanguage();
@@ -57,7 +59,7 @@ export default function DetailedCityAnalysisPage() {
         if (section.element) {
           const rect = section.element.getBoundingClientRect();
           if (rect.top <= 140 && rect.bottom > 140) {
-            setActiveSection(section.id);
+            setActiveSection(`section-${section.id}`);
             break;
           }
         }
@@ -137,6 +139,56 @@ export default function DetailedCityAnalysisPage() {
       setPreviewObjectUrl(null);
     }
   }, [previewObjectUrl]);
+
+  useEffect(() => {
+    if (!previewOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.classList.add("pdf-preview-open");
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.classList.remove("pdf-preview-open");
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [previewOpen]);
+
+  const previewModal =
+    previewOpen && previewPdf.url ? (
+      <div className="pdf-modal" onClick={closePreview}>
+        <div
+          className="pdf-modal-content"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="pdf-modal-header">
+            <h3>{previewPdf.title}</h3>
+            <div className="pdf-modal-actions">
+              <a
+                className="pdf-open-external"
+                href={previewPdf.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open in browser
+              </a>
+              <button
+                type="button"
+                className="pdf-close"
+                onClick={closePreview}
+                aria-label="Close preview"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          <div className="pdf-modal-body">
+            <iframe
+              className="pdf-viewer-frame"
+              src={`${previewPdf.url}#toolbar=1&navpanes=0`}
+              title={previewPdf.title}
+            />
+          </div>
+        </div>
+      </div>
+    ) : null;
 
   return (
     <div className="city-analysis-page detailed-page">
@@ -235,19 +287,9 @@ export default function DetailedCityAnalysisPage() {
         ))}
       </div>
 
-      {previewOpen && (
-        <div className="pdf-modal" onClick={closePreview}>
-          <div className="pdf-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="pdf-modal-header">
-              <h3>{previewPdf.title}</h3>
-              <button className="pdf-close" onClick={closePreview}>
-                ×
-              </button>
-            </div>
-            <iframe src={`${previewPdf.url}#toolbar=1&navpanes=0`} title={previewPdf.title} />
-          </div>
-        </div>
-      )}
+      {typeof document !== "undefined" &&
+        previewModal &&
+        createPortal(previewModal, document.body)}
     </div>
   );
 }
