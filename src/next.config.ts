@@ -78,6 +78,12 @@ const nextConfig: NextConfig = {
   
   // Webpack optimizations (only for webpack, not Turbopack)
   webpack: (config, { dev, isServer }) => {
+    // pdfjs-dist references canvas; only used client-side in PdfScrollViewer
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+    };
+
     // Production optimizations
     if (!dev && !isServer) {
       config.optimization = {

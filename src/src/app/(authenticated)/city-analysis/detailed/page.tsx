@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { apiClient, ReportDocument, ReportSection } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { PdfScrollViewer } from "@/components/PdfScrollViewer";
 import "../city-analysis.css";
 import "../pdf-preview-modal.css";
 
@@ -17,6 +18,7 @@ export default function DetailedCityAnalysisPage() {
   const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [useMobilePdfViewer, setUseMobilePdfViewer] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -140,6 +142,14 @@ export default function DetailedCityAnalysisPage() {
   }, [previewObjectUrl]);
 
   useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setUseMobilePdfViewer(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
     if (!previewOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.classList.add("pdf-preview-open");
@@ -150,15 +160,28 @@ export default function DetailedCityAnalysisPage() {
     };
   }, [previewOpen]);
 
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove("pdf-preview-open");
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const previewModal =
     previewOpen && previewPdf.url ? (
-      <div className="pdf-modal" onClick={closePreview}>
+      <div
+        className="pdf-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pdf-preview-title"
+        onClick={closePreview}
+      >
         <div
           className="pdf-modal-content"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="pdf-modal-header">
-            <h3>{previewPdf.title}</h3>
+            <h3 id="pdf-preview-title">{previewPdf.title}</h3>
             <div className="pdf-modal-actions">
               <a
                 className="pdf-open-external"
@@ -179,11 +202,15 @@ export default function DetailedCityAnalysisPage() {
             </div>
           </div>
           <div className="pdf-modal-body">
-            <iframe
-              className="pdf-viewer-frame"
-              src={`${previewPdf.url}#toolbar=1&navpanes=0`}
-              title={previewPdf.title}
-            />
+            {useMobilePdfViewer ? (
+              <PdfScrollViewer url={previewPdf.url} title={previewPdf.title} />
+            ) : (
+              <iframe
+                className="pdf-viewer-frame pdf-viewer-iframe"
+                src={`${previewPdf.url}#toolbar=1&navpanes=0`}
+                title={previewPdf.title}
+              />
+            )}
           </div>
         </div>
       </div>
