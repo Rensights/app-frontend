@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { apiClient, ReportDocument, ReportSection } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import "../../dashboard/dashboard.css";
 import "../city-analysis.css";
 import "../pdf-preview-modal.css";
 

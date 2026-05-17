@@ -10,7 +10,6 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import { useTranslations } from "@/hooks/useTranslations";
 import { formatListedPriceAed } from "@/lib/formatPrice";
-import "../dashboard/dashboard.css";
 import "./deals.css";
 
 export default function DealsPage() {
@@ -253,19 +252,11 @@ export default function DealsPage() {
   }, [deals, filters]);
 
   if (weeklyDealsLoading) {
-    return (
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Loading..." />
-      </div>
-    );
+    return <LoadingSpinner fullPage message="Loading..." />;
   }
 
   if (weeklyDealsEnabled === false) {
-    return (
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Redirecting..." />
-      </div>
-    );
+    return <LoadingSpinner fullPage message="Redirecting..." />;
   }
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import "../dashboard/dashboard.css";
 import "./city-analysis.css";
 import { useTranslations } from "@/hooks/useTranslations";
 

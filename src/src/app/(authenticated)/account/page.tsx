@@ -6,7 +6,6 @@ import { apiClient } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import "../dashboard/dashboard.css";
 import "./account.css";
 
 function AccountPageContent() {

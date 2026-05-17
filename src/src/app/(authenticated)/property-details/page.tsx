@@ -9,7 +9,6 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import { useTranslations } from "@/hooks/useTranslations";
 import { formatListedPriceAed } from "@/lib/formatPrice";
-import "../dashboard/dashboard.css";
 import "./property-details.css";
 
 type TabId = "listed" | "transactions";
@@ -118,19 +117,11 @@ function PropertyDetailsPageContent() {
   }, [propertyId, loadDeal, weeklyDealsEnabled, router]);
 
   if (weeklyDealsLoading) {
-    return (
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Loading..." />
-      </div>
-    );
+    return <LoadingSpinner fullPage message="Loading..." />;
   }
 
   if (weeklyDealsEnabled === false) {
-    return (
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Redirecting..." />
-      </div>
-    );
+    return <LoadingSpinner fullPage message="Redirecting..." />;
   }
 
   const handleGoBack = () => router.push("/deals");

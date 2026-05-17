@@ -7,7 +7,6 @@ import { apiClient } from "@/lib/api";
 import { formatListedPriceAed } from "@/lib/formatPrice";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import "../dashboard/dashboard.css";
 import "../property-details/property-details.css";
 import "./analysis-request.css";
 

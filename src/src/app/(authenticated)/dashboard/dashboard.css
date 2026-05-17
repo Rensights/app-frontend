@@ -1,6 +1,6 @@
-* {
-  margin: 0;
-  padding: 0;
+/* Shell + nav styles scoped to app layout — avoid global * so other route CSS cannot restyle the sidebar */
+.dashboard-page,
+.dashboard-page * {
   box-sizing: border-box;
 }
 

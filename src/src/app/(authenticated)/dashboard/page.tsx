@@ -6,7 +6,6 @@ import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import "./dashboard.css";
 import { useTranslations } from "@/hooks/useTranslations";
 
 export default function DashboardPage() {

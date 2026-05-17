@@ -7,7 +7,6 @@ import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
-import "../dashboard/dashboard.css";
 import "../deals/deals.css";
 import { useTranslations } from "@/hooks/useTranslations";
 
@@ -83,19 +82,11 @@ export default function WeeklyDealsPage() {
   }, [weeklyDealsEnabled, router]);
 
   if (weeklyDealsLoading) {
-    return (
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Loading..." />
-      </div>
-    );
+    return <LoadingSpinner fullPage message="Loading..." />;
   }
 
   if (weeklyDealsEnabled === false) {
-    return (
-      <div className="dashboard-page">
-        <LoadingSpinner fullPage={true} message="Redirecting..." />
-      </div>
-    );
+    return <LoadingSpinner fullPage message="Redirecting..." />;
   }
 
   return (
