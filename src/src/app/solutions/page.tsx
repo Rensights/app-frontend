@@ -211,22 +211,22 @@ export default function SolutionsPage() {
         youtubeId={videoIds[2]}
       />
 
-      {videoIds[3] && (
-        <SolutionSection
-          id="monitor-optimize"
-          badge={t("solutions.step4.badge")}
-          icon={TrendingUp}
-          title={t("solutions.step4.title")}
-          subtitle={t("solutions.step4.subtitle")}
-          description={t("solutions.step4.description")}
-          features={[
-            { icon: CheckCircle2, text: t("solutions.step4.feature1") },
-            { icon: Shield, text: t("solutions.step4.feature2") }
-          ]}
-          youtubeId={videoIds[3]}
-          reverse
-        />
-      )}
+      {/* Solution 4: Monitor & Optimize — always render so admin-managed text/translations are visible
+          even when no 4th video is configured. */}
+      <SolutionSection
+        id="monitor-optimize"
+        badge={t("solutions.step4.badge")}
+        icon={TrendingUp}
+        title={t("solutions.step4.title")}
+        subtitle={t("solutions.step4.subtitle")}
+        description={t("solutions.step4.description")}
+        features={[
+          { icon: CheckCircle2, text: t("solutions.step4.feature1") },
+          { icon: Shield, text: t("solutions.step4.feature2") }
+        ]}
+        youtubeId={videoIds[3] || DEFAULT_VIDEO_IDS[3]}
+        reverse
+      />
 
       {/* Bottom CTA */}
       <section className="py-12 bg-gradient-to-b from-muted/30 to-background">
