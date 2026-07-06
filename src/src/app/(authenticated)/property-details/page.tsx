@@ -178,9 +178,11 @@ function PropertyDetailsPageContent() {
   const savingsMax = deal.estimateMax && deal.priceValue 
     ? Math.max(0, deal.estimateMax - deal.priceValue) 
     : 0;
-  const discountPercent = deal.discount 
-    ? parseFloat(deal.discount.replace("%", "").replace(/,/g, "")) || 0 
+  const discountPercent = deal.marketGapPercentage
+    ? parseFloat(deal.marketGapPercentage.replace("%", "").replace(/,/g, "")) || 0
     : 0;
+  const isAboveMarket = deal.marketDirection === "above";
+  const discountPercentAbs = Math.abs(discountPercent);
 
   return (
     <div className="property-page" style={{ position: 'relative' }}>
@@ -234,9 +236,9 @@ function PropertyDetailsPageContent() {
             <div className="property-header">
               <h1 className="property-title">{deal.name || "Property"}</h1>
               <p className="property-location">{deal.location || "Location not available"}, {deal.city || "City not available"}</p>
-              {deal.discount && (
+              {deal.marketGapPercentage && (
                 <div className="discount-highlight">
-                  {deal.discount} Below Market Value
+                  {deal.marketGapPercentage} {deal.marketDirectionLabel}
                 </div>
               )}
             </div>
@@ -285,7 +287,7 @@ function PropertyDetailsPageContent() {
                       ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })} /sq ft`
                       : "N/A"}
                   </div>
-                  {deal.discount && <small>{deal.discount} below market avg</small>}
+                  {deal.marketGapPercentage && <small>{deal.marketGapPercentage} {deal.marketDirectionLabel}</small>}
                 </div>
               </div>
             </section>
@@ -337,7 +339,7 @@ function PropertyDetailsPageContent() {
                     : "N/A",
                 },
                 { label: "Listed Price", value: formatListedPriceAed(deal.listedPrice ?? deal.priceValue) },
-                { label: "Market Position", value: deal.discount ? `${deal.discount} Below Average` : "N/A" },
+                { label: "Market Position", value: deal.marketGapPercentage ? `${deal.marketGapPercentage} ${deal.marketDirectionLabel}` : "N/A" },
                 { label: "Rental Yield", value: deal.rentalYield || "N/A" },
                 { label: "Estimate Range", value: deal.estimateRange || "N/A" },
               ].map((row) => (
@@ -494,13 +496,15 @@ function PropertyDetailsPageContent() {
               </div>
 
               <div className="score-section">
-                {deal.discount && (
+                {deal.marketGapPercentage && (
                   <>
                     <div className="score-value">
-                      {discountPercent.toFixed(1)}%<span> Below Market</span>
+                      {discountPercentAbs.toFixed(1)}%<span> {deal.marketDirectionLabel}</span>
                     </div>
                     <div className="score-subtitle">
-                      {discountPercent >= 15 ? "Excellent" : discountPercent >= 10 ? "Good" : "Fair"} Investment Opportunity
+                      {isAboveMarket
+                        ? deal.marketDirectionLabel
+                        : `${discountPercent >= 15 ? "Excellent" : discountPercent >= 10 ? "Good" : "Fair"} Investment Opportunity`}
                     </div>
                     <p>
                       Based on price analysis, market trends, location score, rental
@@ -530,7 +534,10 @@ function PropertyDetailsPageContent() {
                     <ul className="score-components">
                       <li>
                         <span>Price vs Market</span>
-                        <strong>{!isNaN(discountPercent) && isFinite(discountPercent) ? discountPercent.toFixed(1) : "0.0"}%</strong>
+                        <strong>
+                          {!isNaN(discountPercent) && isFinite(discountPercent) ? discountPercentAbs.toFixed(1) : "0.0"}%
+                          {!isNaN(discountPercent) && isFinite(discountPercent) && deal.marketDirectionLabel ? ` ${deal.marketDirectionLabel}` : ""}
+                        </strong>
                       </li>
                       {deal.rentalYield && (
                         <li>
@@ -562,6 +569,12 @@ function PropertyDetailsPageContent() {
                     <span>Location</span>
                   </div>
                 </div>
+              )}
+
+              {deal.marketPosition && (
+                <p className="benefits-text">
+                  <strong>Market Insight:</strong> {deal.marketPosition}
+                </p>
               )}
 
               <p className="benefits-text">

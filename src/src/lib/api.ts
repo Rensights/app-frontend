@@ -897,6 +897,9 @@ export interface Deal {
   buildingStatus: string;
   propertyType?: string;
   priceVsEstimations?: string;
+  marketGapPercentage?: string;
+  marketDirection?: string;
+  marketDirectionLabel?: string;
   pricePerSqft?: number;
   pricePerSqftVsMarket?: string;
   propertyDescription?: string;

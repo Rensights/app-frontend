@@ -308,7 +308,7 @@ export default function DealsPage() {
     if (!bedrooms) return "Studio";
     const bedroomStr = String(bedrooms);
     if (bedroomStr === "0") return "Studio";
-    return bedroomStr === "1" ? "1 Bedroom" : `${bedroomStr} Bedrooms`;
+    return bedroomStr === "1" ? "1 Bedroom" : `${bedroomStr}`;
   };
 
   if (loading && deals.length === 0) {
