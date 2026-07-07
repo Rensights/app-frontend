@@ -14,14 +14,14 @@ function parseListedAmount(value: unknown): number | null {
 }
 
 /**
- * Format AED amounts with dot thousand separators, e.g. 720000000 → "AED 720.000.000".
+ * Format AED amounts with comma thousand separators, e.g. 720000000 → "AED 720,000,000".
  */
 export function formatListedPriceAed(value: unknown): string {
   const n = parseListedAmount(value);
   if (n === null) return "N/A";
   const rounded = Math.round(n);
   const abs = Math.abs(rounded);
-  const body = abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const body = abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   if (rounded < 0) return `AED -${body}`;
   return `AED ${body}`;
 }
