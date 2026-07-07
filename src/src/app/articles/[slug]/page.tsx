@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import DOMPurify from "dompurify";
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import { apiClient } from "@/lib/api";
@@ -63,7 +64,12 @@ export default function ArticleDetailPage() {
               />
             )}
             {article.content ? (
-              <div className="mt-6 whitespace-pre-line text-gray-700">{article.content}</div>
+              <div
+                className="mt-6"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(article.content),
+                }}
+              />
             ) : (
               <p className="mt-6 text-gray-600">Content coming soon.</p>
             )}
