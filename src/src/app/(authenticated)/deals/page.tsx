@@ -58,7 +58,6 @@ export default function DealsPage() {
     avgYield: "N/A",
   });
   const [areaOptions, setAreaOptions] = useState<string[]>([]);
-  const [bedroomOptions, setBedroomOptions] = useState<string[]>([]);
 
   // Debounce filters to avoid excessive API calls (500ms delay)
   const debouncedFilters = useDebounce(filters, 500);
@@ -215,9 +214,9 @@ export default function DealsPage() {
     }
   }, [computeStats, getApiFilters, weeklyDealsEnabled]);
 
-  // Build filter dropdown options from the actual dataset (city-scoped only,
-  // independent of the other filters) so areas/bedrooms shown always match
-  // real data and selecting one is guaranteed to return results.
+  // Build the area filter dropdown from the actual dataset (city-scoped only,
+  // independent of the other filters) so areas shown always match real data
+  // and selecting one is guaranteed to return results.
   const loadFilterOptions = useCallback(async () => {
     try {
       const response = await apiClient.getDeals(0, 5000, debouncedCity);
@@ -231,16 +230,7 @@ export default function DealsPage() {
         )
       ).sort((a, b) => a.localeCompare(b));
 
-      const bedrooms = Array.from(
-        new Set(
-          content
-            .map((d) => String(d.bedroomCount ?? d.bedrooms ?? "").trim())
-            .filter((b) => b && b !== "N/A")
-        )
-      ).sort((a, b) => parseFloat(a) - parseFloat(b));
-
       setAreaOptions(areas);
-      setBedroomOptions(bedrooms);
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
         console.error("Error loading filter options:", err);
@@ -355,12 +345,6 @@ export default function DealsPage() {
     return bedroomStr === "1" ? "1 Bedroom" : `${bedroomStr}`;
   };
 
-  // Longer-form label for the bedroom filter dropdown (vs. the compact badge above)
-  const formatBedroomFilterLabel = (bedrooms: string): string => {
-    if (bedrooms === "0") return "Studio";
-    if (bedrooms === "1") return "1 Bedroom";
-    return `${bedrooms} Bedrooms`;
-  };
 
   if (loading && deals.length === 0) {
     return (
@@ -464,7 +448,12 @@ export default function DealsPage() {
               value={filters.bedroom}
               options={[
                 { value: "all", label: "All Types" },
-                ...bedroomOptions.map((b) => ({ value: b, label: formatBedroomFilterLabel(b) })),
+                { value: "0", label: "Studio" },
+                { value: "1", label: "1 Bedroom" },
+                { value: "2", label: "2 Bedrooms" },
+                { value: "3", label: "3 Bedrooms" },
+                { value: "4", label: "4 Bedrooms" },
+                { value: "5", label: "5+ Bedrooms" },
               ]}
               onChange={(value) => handleFilterChange("bedroom", value)}
             />
