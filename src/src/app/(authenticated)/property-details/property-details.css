@@ -319,7 +319,7 @@
   border: 1px solid #f1d6a2;
   padding: 22px;
   border-radius: 14px;
-  margin: 25px 0 10px;
+  grid-column: 1 / -1;
   color: #5a4b2d;
   font-size: 0.9rem;
   line-height: 1.6;
