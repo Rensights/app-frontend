@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 import { formatListedPriceAed } from "@/lib/formatPrice";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -573,7 +574,8 @@ export default function AnalysisRequestPage() {
       
       // Submit to API
       const response = await apiClient.submitAnalysisRequest(formData);
-      
+      trackEvent("ANALYSIS_REQUEST_SUBMITTED");
+
       toast.showSuccess(response.message + " Thank you for choosing Rensights!");
       router.push("/dashboard");
       

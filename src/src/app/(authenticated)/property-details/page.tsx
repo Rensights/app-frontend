@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient, Deal } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -56,6 +57,7 @@ function PropertyDetailsPageContent() {
         throw new Error("Invalid property data received");
       }
       setDeal(dealData);
+      trackEvent("DEAL_VIEWED", { dealId: dealData.id, city: dealData.city, area: dealData.area });
 
           // Load comparable deals (similar area and bedrooms, excluding current deal)
           if (dealData) {

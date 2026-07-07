@@ -8,6 +8,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import Clarity from "../components/analytics/Clarity";
 import GoogleAnalytics from "../components/analytics/GoogleAnalytics";
 import { ErrorLogger } from "../components/analytics/ErrorLogger";
+import ActivityTracker from "../components/analytics/ActivityTracker";
 
 // Root layout must read K8s env at request time, not at `next build` (otherwise
 // `window.__API_URL__` is stuck with build-time or fallback values).
@@ -87,6 +88,7 @@ export default function RootLayout({
         <LanguageProvider>
           <ToastProvider>
             <UserProvider>
+              <ActivityTracker />
               {children}
             </UserProvider>
           </ToastProvider>

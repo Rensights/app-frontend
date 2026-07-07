@@ -826,6 +826,31 @@ class ApiClient {
     return this.request<{ enabled: boolean }>(`/api/deals/enabled`, {}, false);
   }
 
+  // Presence heartbeat - tells the backend "this user is still here right now".
+  // Best-effort: failures are swallowed, this must never surface to the user.
+  async sendHeartbeat(): Promise<void> {
+    try {
+      await this.request(`/api/analytics/heartbeat`, { method: "POST" });
+    } catch {
+      // ignore - heartbeat is non-critical
+    }
+  }
+
+  // Batched activity-event ingestion (auto page views + manually instrumented
+  // business events). keepalive lets this survive a page unload.
+  async trackEvents(events: { eventType: string; pagePath?: string; metadata?: string }[]): Promise<void> {
+    if (!events.length) return;
+    try {
+      await this.request(`/api/analytics/events`, {
+        method: "POST",
+        body: JSON.stringify(events),
+        keepalive: true,
+      });
+    } catch {
+      // ignore - analytics is non-critical
+    }
+  }
+
   async getDealById(dealId: string): Promise<Deal> {
     return this.request<Deal>(`/api/deals/${dealId}`, {}, true);
   }
