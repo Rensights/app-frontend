@@ -15,6 +15,31 @@ type LandingHeaderProps = {
   availableLanguages?: Language[];
 };
 
+// Persists the last known "are there any articles" result across page
+// navigations/refreshes within the same tab, so pages that don't (or can't)
+// pass prefetchedHasArticles don't hide the nav link for a moment on every
+// mount while the check re-runs in the background.
+const ARTICLES_CACHE_KEY = "rensights:hasArticles";
+
+function readCachedHasArticles(): boolean | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const cached = window.sessionStorage.getItem(ARTICLES_CACHE_KEY);
+    return cached === null ? null : cached === "true";
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedHasArticles(value: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(ARTICLES_CACHE_KEY, String(value));
+  } catch {
+    // sessionStorage unavailable (e.g. private browsing) - non-fatal
+  }
+}
+
 export default function LandingHeader({ initialContent, prefetchedHasArticles, availableLanguages }: LandingHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -22,7 +47,12 @@ export default function LandingHeader({ initialContent, prefetchedHasArticles, a
   const [content, setContent] = useState<any>(initialContent ?? {});
   const [loading, setLoading] = useState(false);
   const hasPrefetchedArticles = typeof prefetchedHasArticles === "boolean";
-  const [hasArticles, setHasArticles] = useState(prefetchedHasArticles ?? false);
+  const [hasArticles, setHasArticles] = useState(() => {
+    if (hasPrefetchedArticles) return prefetchedHasArticles ?? false;
+    // Optimistically reuse the last known value (or assume true) instead of
+    // defaulting to false and flashing the link in once the check resolves.
+    return readCachedHasArticles() ?? true;
+  });
   
   // Get language from context - must be called unconditionally
   // If context throws, React will handle it (component won't render)
@@ -51,7 +81,9 @@ export default function LandingHeader({ initialContent, prefetchedHasArticles, a
   useEffect(() => {
     if (!mounted) return;
     if (hasPrefetchedArticles) {
-      setHasArticles(prefetchedHasArticles ?? false);
+      const value = prefetchedHasArticles ?? false;
+      setHasArticles(value);
+      writeCachedHasArticles(value);
       return;
     }
     loadArticlesStatus();
@@ -91,14 +123,18 @@ export default function LandingHeader({ initialContent, prefetchedHasArticles, a
 
     try {
       const list = await apiClient.getArticles();
-      setHasArticles(Array.isArray(list) && list.length > 0);
+      const result = Array.isArray(list) && list.length > 0;
+      setHasArticles(result);
+      writeCachedHasArticles(result);
     } catch (error) {
+      // Don't overwrite the cache on a transient failure - keep showing
+      // whatever we last confirmed rather than poisoning it with false.
       setHasArticles(false);
     }
   };
 
   const navSolutions = content?.navSolutions || "Solutions";
-  const navArticles = content?.navArticles || "Articles";
+  const navArticles = content?.navArticles || "Insights";
   const navPricing = content?.navPricing || "Pricing";
   const navWhatsNew = content?.navWhatsNew || "What's New";
   const navLogin = content?.navLogin || "Login";

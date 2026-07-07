@@ -54,7 +54,7 @@ export default function ArticlesPage() {
       <LandingHeader />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Articles</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Insights</h1>
         </div>
         {loading ? (
           <div className="mt-6">
