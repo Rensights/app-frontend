@@ -57,7 +57,9 @@ export default function DashboardPage() {
   const [reportCount, setReportCount] = useState<{ used: number; remaining: number; max: number } | null>(null);
 
   const fetchReports = useCallback(async () => {
-    if (userLoading) return;
+    // Auth is via HttpOnly cookie (sent automatically), so reports don't need the
+    // loaded user object — only the cookie, which is already present. Fetching here
+    // in parallel with UserContext avoids an unnecessary serial round-trip on first load.
     try {
       setLoadingReports(true);
       const [requests, countInfo] = await Promise.all([
@@ -73,7 +75,7 @@ export default function DashboardPage() {
     } finally {
       setLoadingReports(false);
     }
-  }, [userLoading]);
+  }, []);
 
   // Fetch user's analysis requests and report count
   useEffect(() => {
