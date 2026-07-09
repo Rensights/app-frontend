@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 
 declare global {
@@ -17,6 +17,34 @@ const API_URL =
 
 export default function GoogleAnalytics() {
   const [measurementId, setMeasurementId] = useState("");
+  // Google Analytics belongs to the "statistics" consent category. We only
+  // configure gtag and inject its <Script> after Cookiebot grants that consent.
+  const [consentGranted, setConsentGranted] = useState(false);
+  // Guards against configuring gtag more than once: CookiebotOnConsentReady
+  // can fire multiple times.
+  const configured = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const syncConsent = () => {
+      // Fail closed: no consent, or Cookiebot absent (script blocked) -> false.
+      if (window.Cookiebot?.consent?.statistics) {
+        setConsentGranted(true);
+      }
+    };
+
+    // Case 1: consent may already have been granted before this component
+    // mounted (Cookiebot loads beforeInteractive).
+    syncConsent();
+
+    // Case 2: catch the first consent response and any later consent changes.
+    window.addEventListener("CookiebotOnConsentReady", syncConsent);
+
+    return () => {
+      window.removeEventListener("CookiebotOnConsentReady", syncConsent);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -44,7 +72,10 @@ export default function GoogleAnalytics() {
 
   useEffect(() => {
     if (!measurementId) return;
+    if (!consentGranted) return;
     if (typeof window === "undefined") return;
+    if (configured.current) return;
+    configured.current = true;
 
     window.dataLayer = window.dataLayer || [];
     window.gtag = function gtag() {
@@ -52,9 +83,9 @@ export default function GoogleAnalytics() {
     };
     window.gtag("js", new Date());
     window.gtag("config", measurementId);
-  }, [measurementId]);
+  }, [measurementId, consentGranted]);
 
-  if (!measurementId) {
+  if (!measurementId || !consentGranted) {
     return null;
   }
 
