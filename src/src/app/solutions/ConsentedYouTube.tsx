@@ -64,15 +64,15 @@ export default function ConsentedYouTube({ youtubeId, title }: ConsentedYouTubeP
         <Youtube className="h-8 w-8 text-primary" />
       </div>
       <p className="max-w-sm text-sm text-muted-foreground">
-        Bu videonu göstərmək üçün marketing kukilərinə icazə verin
+        Please accept marketing cookies to watch this video
       </p>
       <Button
         variant="outline"
         size="sm"
         onClick={() => window.Cookiebot?.renew?.()}
-        aria-label="Kukiləri idarə et"
+        aria-label="Manage cookies"
       >
-        Kukiləri idarə et
+        Manage cookies
       </Button>
     </div>
   );
