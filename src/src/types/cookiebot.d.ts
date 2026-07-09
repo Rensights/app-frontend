@@ -8,6 +8,7 @@ interface CookiebotConsent {
 interface Cookiebot {
   consent: CookiebotConsent;
   hasResponse: boolean;
+  renew?: () => void;
 }
 
 declare global {

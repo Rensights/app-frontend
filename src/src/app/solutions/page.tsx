@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useTranslations } from "@/hooks/useTranslations";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import ConsentedYouTube from "./ConsentedYouTube";
 
 const DEFAULT_VIDEO_IDS = [
   "dQw4w9WgXcQ",
@@ -380,14 +381,8 @@ function SolutionSection({
             style={{ paddingTop: '88px' }}
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-video bg-muted">
-              <iframe
-                className="w-full h-full"
-                src={`https://www.youtube.com/embed/${youtubeId}`}
-                title={`${title} Demo`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-              
+              <ConsentedYouTube youtubeId={youtubeId} title={title} />
+
               {/* Decorative Border */}
               <motion.div
                 className="absolute inset-0 border-4 border-primary/20 rounded-2xl pointer-events-none"
