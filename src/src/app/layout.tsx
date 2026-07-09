@@ -32,7 +32,14 @@ async function getInitialCommon(): Promise<Record<string, string>> {
   const base = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
   if (!base) return {};
   try {
-    const res = await fetch(`${base}/api/translations/en/common`, { next: { revalidate: 3600 } });
+    // Bound the SSR wait: this runs on the critical path of every dynamic
+    // route (portal/authenticated) on a cold data cache. Without a timeout a
+    // slow/unreachable backend would hang the HTML response. On abort we return
+    // {} and the client-side LanguageProvider self-heals by fetching.
+    const res = await fetch(`${base}/api/translations/en/common`, {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(2000),
+    });
     if (!res.ok) return {};
     return (await res.json()).translations ?? {};
   } catch {
