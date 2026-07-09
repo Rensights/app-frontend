@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 
 interface LanguageContextType {
   language: string;
@@ -17,18 +17,31 @@ const API_URL = typeof window !== 'undefined'
   ? (window as any).__API_URL__ || process.env.NEXT_PUBLIC_API_URL || ''
   : process.env.NEXT_PUBLIC_API_URL || '';
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<string>('en');
-  const [translations, setTranslations] = useState<Record<string, Record<string, string>>>({});
+export function LanguageProvider({
+  children,
+  initialLanguage = 'en',
+  initialTranslations = {},
+}: {
+  children: ReactNode;
+  initialLanguage?: string;
+  initialTranslations?: Record<string, Record<string, string>>;
+}) {
+  const [language, setLanguageState] = useState<string>(initialLanguage);
+  const [translations, setTranslations] = useState<Record<string, Record<string, string>>>(initialTranslations);
   const [isLoading, setIsLoading] = useState(false);
+  const initialLangRef = useRef(initialLanguage);
 
-  // Load language from localStorage on mount
+  // Read stored language AFTER mount (server can't know localStorage). The first
+  // client render uses initialLanguage so HTML is byte-identical to the server;
+  // this swap is a post-commit update, not a hydration mismatch.
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('language') || 'en';
-      setLanguageState(savedLanguage);
+      const savedLanguage = localStorage.getItem('language') || initialLangRef.current;
+      if (savedLanguage !== language) {
+        setLanguageState(savedLanguage);
+      }
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Save language to localStorage when it changes
   const setLanguage = useCallback((lang: string) => {
@@ -72,8 +85,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return namespaceTranslations[key] || key;
   }, [translations]);
 
-  // Preload common translations on language change
+  // Preload common translations on language change. Skip when we already have
+  // the server-seeded bundle for the initial language (the 'en' fast path does
+  // ZERO client fetches). If the seed is empty (build-time prerender before the
+  // first ISR regen), `have` is false so the client self-heals by fetching.
   useEffect(() => {
+    const have = Object.keys(translations['common'] || {}).length > 0;
+    if (language === initialLangRef.current && have) return;
     loadTranslations('common').catch(console.error);
   }, [language]); // eslint-disable-line react-hooks/exhaustive-deps
 

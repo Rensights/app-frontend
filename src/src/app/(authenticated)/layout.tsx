@@ -1,13 +1,12 @@
-"use client";
+import AuthenticatedShell from "./AuthenticatedShell";
 
-import { AppLayout } from "@/components/layout/AppLayout";
-import "./dashboard/dashboard.css";
+// Authenticated pages use useSearchParams and must not be statically prerendered.
+export const dynamic = "force-dynamic";
 
 export default function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AppLayout requireAuth={true}>{children}</AppLayout>;
+  return <AuthenticatedShell>{children}</AuthenticatedShell>;
 }
-

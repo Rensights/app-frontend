@@ -42,6 +42,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: '/env.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
     ];
   },
 
