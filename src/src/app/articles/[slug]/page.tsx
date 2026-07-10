@@ -58,7 +58,7 @@ export default function ArticleDetailPage() {
             {article.coverImage && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={article.coverImage}
+                src={apiClient.resolveApiUrl(article.coverImage)}
                 alt={article.title}
                 className="mt-6 h-72 w-full rounded-2xl object-cover"
               />

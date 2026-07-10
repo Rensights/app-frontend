@@ -186,6 +186,21 @@ class ApiClient {
     return this.baseUrl || this.getApiUrl();
   }
 
+  /**
+   * Resolve a possibly-relative API path (e.g. "/api/articles/cover/foo?v=1")
+   * to an absolute URL for use in <img src>. Absolute (http/https) or data:
+   * URLs are returned unchanged. SSR-safe (base may be empty on the server).
+   */
+  resolveApiUrl(path: string): string {
+    if (!path) return path;
+    if (/^(https?:)?\/\//i.test(path) || path.startsWith("data:")) {
+      return path;
+    }
+    const base = this.baseUrl || this.getApiUrl();
+    if (!base) return path;
+    return `${base}${path}`;
+  }
+
   // Optimized: Request deduplication and caching
   private async request<T>(
     endpoint: string,
@@ -866,6 +881,20 @@ class ApiClient {
 
   async getArticles(): Promise<any[]> {
     return this.request<any[]>('/api/articles', {}, false);
+  }
+
+  /**
+   * Lightweight check for whether any articles exist, used only to gate the
+   * "Insights" nav link. Public (no auth). Never throws - returns false on any
+   * error or non-ok response so callers can safely decide the nav visibility.
+   */
+  async getArticlesExists(): Promise<boolean> {
+    try {
+      const data = await this.request<{ hasArticles?: boolean }>('/api/articles/exists', {}, false);
+      return !!data?.hasArticles;
+    } catch {
+      return false;
+    }
   }
 
   async getArticleBySlug(slug: string): Promise<any> {

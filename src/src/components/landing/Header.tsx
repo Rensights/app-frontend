@@ -116,14 +116,13 @@ export default function LandingHeader({ initialContent, prefetchedHasArticles, a
 
   const loadArticlesStatus = async () => {
     if (!mounted || typeof window === 'undefined') return;
-    if (!apiClient || typeof apiClient.getArticles !== 'function') {
+    if (!apiClient || typeof apiClient.getArticlesExists !== 'function') {
       setHasArticles(false);
       return;
     }
 
     try {
-      const list = await apiClient.getArticles();
-      const result = Array.isArray(list) && list.length > 0;
+      const result = await apiClient.getArticlesExists();
       setHasArticles(result);
       writeCachedHasArticles(result);
     } catch (error) {

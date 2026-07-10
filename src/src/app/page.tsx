@@ -68,7 +68,6 @@ export default function LandingPage() {
         solutions,
         howItWorks,
         footer,
-        articles,
         languages,
       ] = await Promise.all([
         safeSection("header"),
@@ -77,21 +76,20 @@ export default function LandingPage() {
         safeSection("solutions"),
         safeSection("how-it-works"),
         safeSection("footer"),
-        apiClient.getArticles().catch(() => []),
         languagesPromise,
       ]);
 
       if (!isMounted) return;
-      setLandingData({
+      setLandingData((prev) => ({
+        ...prev,
         header,
         hero,
         whyInvest,
         solutions,
         howItWorks,
         footer,
-        hasArticles: Array.isArray(articles) && articles.length > 0,
         languages: Array.isArray(languages) ? languages : [],
-      });
+      }));
       setLoading(false);
     };
 
@@ -100,6 +98,23 @@ export default function LandingPage() {
       isMounted = false;
     };
   }, [language]);
+
+  // Resolve whether any articles exist without blocking the initial render.
+  // Only gates the "Insights" nav link; the header tolerates a late update.
+  useEffect(() => {
+    let isMounted = true;
+    apiClient
+      .getArticlesExists()
+      .then((hasArticles) => {
+        if (isMounted) {
+          setLandingData((prev) => ({ ...prev, hasArticles }));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (loading) {
     return <LoadingSpinner fullPage={true} message="Loading..." />;
