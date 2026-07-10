@@ -29,16 +29,25 @@ export const metadata: Metadata = {
 // text (no key-FOUC). Must stay cacheable (revalidate, no no-store) and must NOT
 // touch cookies()/headers(), or the whole route tree turns dynamic.
 async function getInitialCommon(): Promise<Record<string, string>> {
-  const base = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '';
+  // Prefer an in-cluster service URL for the server-side hop. On dynamic routes
+  // (force-dynamic portal/authenticated) this fetch runs per request; routing it
+  // to the public hostname makes the frontend pod hairpin out through the ingress
+  // and back, which hangs until the abort below. INTERNAL_API_URL (e.g.
+  // http://<backend-svc>.<ns>.svc.cluster.local:<port>) resolves in ~5ms instead.
+  const base =
+    process.env.INTERNAL_API_URL ||
+    process.env.API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    '';
   if (!base) return {};
   try {
     // Bound the SSR wait: this runs on the critical path of every dynamic
-    // route (portal/authenticated) on a cold data cache. Without a timeout a
-    // slow/unreachable backend would hang the HTML response. On abort we return
-    // {} and the client-side LanguageProvider self-heals by fetching.
+    // route (portal/authenticated) on a cold data cache. Keep it short — the
+    // client-side LanguageProvider self-heals by fetching, so a miss only costs
+    // a first-paint FOUC, never a multi-second TTFB. On abort we return {}.
     const res = await fetch(`${base}/api/translations/en/common`, {
       next: { revalidate: 3600 },
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(500),
     });
     if (!res.ok) return {};
     return (await res.json()).translations ?? {};
