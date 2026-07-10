@@ -214,29 +214,10 @@ jobs:
             --namespace ${DEV_NAMESPACE} \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Setup frontend-config secret for dev
-        id: frontend-config
-        run: |
-          export KUBECONFIG=/tmp/kubeconfig
-          # Use HTTPS same-origin API route exposed at /api on rensights.com.
-          # Do not use the legacy dev-api NodePort host:port here.
-          BACKEND_URL="https://rensights.com"
-          STRIPE_KEY="pk_live_51SMUlmCasMqex534VTFERx7OC71IihQw4LWRMi4VebjuVVj1TE0R0qHD6MZRP2t3SZ7mwV0FTXElTAvd2JDdcgyX00bvHdKTdB"
-          echo "api_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
-          echo "stripe_key=${STRIPE_KEY}" >> $GITHUB_OUTPUT
-          kubectl create secret generic frontend-config \
-            --from-literal=NEXT_PUBLIC_API_URL="$BACKEND_URL" \
-            --from-literal=NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
-            --from-literal=NEXT_PUBLIC_GOOGLE_CLIENT_ID="227508941583-pc9kse02crsrv2qf8iq917c1ld3dtcdv.apps.googleusercontent.com" \
-            --namespace ${DEV_NAMESPACE} \
-            --dry-run=client -o yaml | kubectl apply -f -
-
       - name: Deploy frontend to dev
         run: |
           export KUBECONFIG=/tmp/kubeconfig
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}"
-          API_URL="${{ steps.frontend-config.outputs.api_url }}"
-          STRIPE_KEY="${{ steps.frontend-config.outputs.stripe_key }}"
           # In-cluster backend service for server-side (SSR) fetches. Avoids the
           # frontend pod hairpinning out through the public ingress (which was
           # timing out and making portal/authenticated pages ~2s slower).
@@ -269,8 +250,10 @@ jobs:
           VALUES_FILES="-f env-values/dev/frontend.yaml"
           [ -f "env-values/dev/global.yaml" ] && VALUES_FILES="-f env-values/dev/global.yaml -f env-values/dev/frontend.yaml"
           
-          printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n  INTERNAL_API_URL: "%s"\n' \
-            "${API_URL}" "${API_URL}" "${STRIPE_KEY}" "${INTERNAL_API_URL}" > /tmp/extra-env-values.yaml
+          # API_URL / NEXT_PUBLIC_* are read from the Portainer-managed `frontend-config`
+          # Secret (the chart wires them via secretKeyRef). Only INTERNAL_API_URL is a
+          # literal deploy-time value injected here.
+          printf 'extraEnv:\n  INTERNAL_API_URL: "%s"\n' "${INTERNAL_API_URL}" > /tmp/extra-env-values.yaml
 
           # These resources were manually patched on-cluster before CI ownership.
           # If they already exist with conflicting field managers, Helm may fail
