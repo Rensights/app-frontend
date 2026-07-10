@@ -59,14 +59,14 @@ spec:
             - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.frontendConfig }}
-                  key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+                  name: {{ .Values.secrets.sharedConfig }}
+                  key: STRIPE_PUBLISHABLE_KEY
                   optional: true
             - name: NEXT_PUBLIC_GOOGLE_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.frontendConfig }}
-                  key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+                  name: {{ .Values.secrets.sharedConfig }}
+                  key: GOOGLE_CLIENT_ID
                   optional: true
             {{- else }}
             {{- if hasKey .Values.extraEnv "API_URL" }}

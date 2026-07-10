@@ -52,8 +52,11 @@ extraEnv: {}
 
 secrets:
   # Secret name containing frontend configuration
-  # Expected keys: NEXT_PUBLIC_API_URL, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  # Expected keys: NEXT_PUBLIC_API_URL
   frontendConfig: frontend-config
+  # Shared, deduplicated cross-app values (GOOGLE_CLIENT_ID, STRIPE_PUBLISHABLE_KEY).
+  # Single source of truth for all apps; managed in Portainer.
+  sharedConfig: dev-shared-config
 
 serviceAccount:
   create: true
