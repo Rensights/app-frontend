@@ -237,7 +237,11 @@ jobs:
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}"
           API_URL="${{ steps.frontend-config.outputs.api_url }}"
           STRIPE_KEY="${{ steps.frontend-config.outputs.stripe_key }}"
-          
+          # In-cluster backend service for server-side (SSR) fetches. Avoids the
+          # frontend pod hairpinning out through the public ingress (which was
+          # timing out and making portal/authenticated pages ~2s slower).
+          INTERNAL_API_URL="http://backend.${DEV_NAMESPACE}.svc.cluster.local:8080"
+
           # Check for stuck Helm releases and clean up release secrets
           if helm list -n ${DEV_NAMESPACE} -q | grep -q "^frontend$"; then
             STATUS=$(helm status frontend -n ${DEV_NAMESPACE} -o json 2>/dev/null | jq -r '.info.status' 2>/dev/null || echo "unknown")
@@ -265,8 +269,8 @@ jobs:
           VALUES_FILES="-f env-values/dev/frontend.yaml"
           [ -f "env-values/dev/global.yaml" ] && VALUES_FILES="-f env-values/dev/global.yaml -f env-values/dev/frontend.yaml"
           
-          printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n' \
-            "${API_URL}" "${API_URL}" "${STRIPE_KEY}" > /tmp/extra-env-values.yaml
+          printf 'extraEnv:\n  API_URL: "%s"\n  NEXT_PUBLIC_API_URL: "%s"\n  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "%s"\n  INTERNAL_API_URL: "%s"\n' \
+            "${API_URL}" "${API_URL}" "${STRIPE_KEY}" "${INTERNAL_API_URL}" > /tmp/extra-env-values.yaml
 
           # These resources were manually patched on-cluster before CI ownership.
           # If they already exist with conflicting field managers, Helm may fail
