@@ -185,6 +185,7 @@ function PropertyDetailsPageContent() {
     : 0;
   const isAboveMarket = deal.marketDirection === "above";
   const discountPercentAbs = Math.abs(discountPercent);
+  const marketDirectionWord = isAboveMarket ? "above" : "below";
 
   return (
     <div className="property-page" style={{ position: 'relative' }}>
@@ -355,10 +356,10 @@ function PropertyDetailsPageContent() {
             <section className="investment-insights">
               <h3>Investment Insights</h3>
               {[
-                "Property is priced 18.2% below similar 1BR units in Dubai Marina, indicating strong value opportunity.",
-                "Dubai Marina consistently shows strong rental demand from expatriate professionals and tourists.",
-                "Marina views command premium rental rates of AED 85,000-95,000 annually.",
-                "Building amenities and proximity to Metro, beaches, and shopping centers score 9.3/10 for rental appeal.",
+                `Property is priced ${!isNaN(discountPercentAbs) && isFinite(discountPercentAbs) && discountPercentAbs > 0 ? `${discountPercentAbs.toFixed(1)}% ` : ""}${marketDirectionWord} similar ${deal.bedrooms ? `${deal.bedrooms} ` : ""}units in ${deal.area || deal.location || deal.city || "this area"}${isAboveMarket ? "." : ", indicating strong value opportunity."}`,
+                deal.marketPosition || "This unit holds a strong market position based on current pricing and demand.",
+                deal.investmentAppeal || "Investment appeal is favorable based on current market conditions.",
+                deal.propertyDescription || "Nearby amenities and connectivity support solid rental appeal.",
               ].map((text, index) => (
                 <div key={index} className="insight-item">
                   <div className="insight-icon">✓</div>

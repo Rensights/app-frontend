@@ -647,10 +647,23 @@ export default function AnalysisRequestPage() {
     const pricePerSqft = pricePerSqftNum || (listedPriceNum && sizeNum ? listedPriceNum / sizeNum : 0);
     const estimateRange = getAnalysisValue(["our_price_estimate", "ourPriceEstimate"]);
     const priceVsEstimations = getAnalysisValue(["price_vs_estimations", "priceVsEstimations"]);
+    // Potential savings comes directly from the analysis API.
     const potentialSavings = getAnalysisValue(["potential_savings", "potentialSavings"]);
     const savingsNumbers = potentialSavings ? String(potentialSavings).match(/[\d,.]+/g) : null;
     const savingsMin = savingsNumbers && savingsNumbers.length >= 1 ? parseNumber(savingsNumbers[0]) : null;
     const savingsMax = savingsNumbers && savingsNumbers.length >= 2 ? parseNumber(savingsNumbers[1]) : null;
+    // Handles every min/max combo: both, min-only, max-only, or neither.
+    const savingsVals = [savingsMin, savingsMax].filter((v): v is number => v != null && v > 0);
+    const savingsLo = savingsVals.length ? Math.min(...savingsVals) : null;
+    const savingsHi = savingsVals.length ? Math.max(...savingsVals) : null;
+    const savingsDisplay =
+      savingsLo != null && savingsHi != null
+        ? savingsLo !== savingsHi
+          ? `AED ${Math.round(savingsLo).toLocaleString()} - ${Math.round(savingsHi).toLocaleString()}`
+          : `AED ${Math.round(savingsLo).toLocaleString()}`
+        : potentialSavings
+          ? String(potentialSavings)
+          : "N/A";
     const discountPercent = parsePercent(getAnalysisValue(["price_per_sqft_vs_market", "pricePerSqftVsMarket", "price_vs_estimations", "priceVsEstimations"]));
     // Market direction ("Below Market" / "Above Market" / ...) from the analysis API.
     const marketDirectionLabel = (getAnalysisValue(["market_direction_label", "marketDirectionLabel"]) as string | null) || null;
@@ -726,16 +739,12 @@ export default function AnalysisRequestPage() {
                       {estimateRange || "N/A"}
                     </div>
                   </div>
-                  {savingsMin && savingsMax && (
-                    <div className="price-section">
-                      <div className="price-label">Potential Savings</div>
-                      <div className="price-value">
-                        <span className="savings-amount">
-                          AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
-                        </span>
-                      </div>
+                  <div className="price-section">
+                    <div className="price-label">Potential Savings</div>
+                    <div className="price-value">
+                      <span className="savings-amount">{savingsDisplay}</span>
                     </div>
-                  )}
+                  </div>
                   <div className="price-section">
                     <div className="price-label">Price per sq ft</div>
                     <div className="price-value">
@@ -923,11 +932,9 @@ export default function AnalysisRequestPage() {
                             <strong>Market Estimate:</strong> {estimateRange}
                           </p>
                         )}
-                        {savingsMin && savingsMax && (
-                          <p>
-                            <strong>Potential Savings:</strong> AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
-                          </p>
-                        )}
+                        <p>
+                          <strong>Potential Savings:</strong> {savingsDisplay}
+                        </p>
                         {rentalYield && (
                           <p>
                             <strong>Rental Yield:</strong> {rentalYield}
