@@ -61,7 +61,7 @@ export default function ArticleDetailPage() {
                 <img
                   src={apiClient.resolveApiUrl(article.coverImage)}
                   alt={article.title}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               </div>
             )}
