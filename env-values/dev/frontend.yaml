@@ -27,9 +27,6 @@ ingress:
     konghq.com/read-timeout: "60000"
     konghq.com/retries: "5"
 
-secrets:
-  frontendConfig: frontend-config
-
-# API_URL / NEXT_PUBLIC_* come from Secret `frontend-config` (synced from Vault via ESO).
-# Add NEXT_PUBLIC_GOOGLE_CLIENT_ID there (or patch the Secret); see infra/k8s/frontend-config-google.placeholder.txt
+# API_URL / NEXT_PUBLIC_* come from the single Portainer-managed `dev-shared-config`
+# secret (APP_API_URL, STRIPE_PUBLISHABLE_KEY, GOOGLE_CLIENT_ID); see chart secrets.sharedConfig.
 extraEnv: {}

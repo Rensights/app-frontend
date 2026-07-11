@@ -51,11 +51,8 @@ readinessProbe:
 extraEnv: {}
 
 secrets:
-  # Secret name containing frontend configuration
-  # Expected keys: NEXT_PUBLIC_API_URL
-  frontendConfig: frontend-config
-  # Shared, deduplicated cross-app values (GOOGLE_CLIENT_ID, STRIPE_PUBLISHABLE_KEY).
-  # Single source of truth for all apps; managed in Portainer.
+  # Single secret holding ALL app config for every app. Managed in Portainer.
+  # Frontend reads: APP_API_URL, STRIPE_PUBLISHABLE_KEY, GOOGLE_CLIENT_ID.
   sharedConfig: dev-shared-config
 
 serviceAccount:

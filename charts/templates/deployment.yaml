@@ -43,18 +43,18 @@ spec:
               literal `value` from extraEnv). Mixing breaks server-side apply / rollback merges and
               violates the Deployment schema (value + valueFrom together).
             */}}
-            {{- if .Values.secrets.frontendConfig }}
+            {{- if .Values.secrets.sharedConfig }}
             - name: API_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.frontendConfig }}
-                  key: NEXT_PUBLIC_API_URL
+                  name: {{ .Values.secrets.sharedConfig }}
+                  key: APP_API_URL
                   optional: false
             - name: NEXT_PUBLIC_API_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.frontendConfig }}
-                  key: NEXT_PUBLIC_API_URL
+                  name: {{ .Values.secrets.sharedConfig }}
+                  key: APP_API_URL
                   optional: false
             - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
               valueFrom:
