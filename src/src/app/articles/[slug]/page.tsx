@@ -56,12 +56,12 @@ export default function ArticleDetailPage() {
             </div>
             <h1 className="mt-2 text-4xl font-bold text-gray-900">{article.title}</h1>
             {article.coverImage && (
-              <div className="mt-6 aspect-video w-full overflow-hidden rounded-2xl">
+              <div className="mt-4 overflow-hidden rounded-2xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={apiClient.resolveApiUrl(article.coverImage)}
                   alt={article.title}
-                  className="h-full w-full object-contain"
+                  className="block w-full h-auto"
                 />
               </div>
             )}
