@@ -250,7 +250,7 @@ jobs:
           VALUES_FILES="-f env-values/dev/frontend.yaml"
           [ -f "env-values/dev/global.yaml" ] && VALUES_FILES="-f env-values/dev/global.yaml -f env-values/dev/frontend.yaml"
           
-          # API_URL / NEXT_PUBLIC_* are read from the Portainer-managed `frontend-config`
+          # API_URL / NEXT_PUBLIC_* are read from the Portainer-managed `dev-shared-config`
           # Secret (the chart wires them via secretKeyRef). Only INTERNAL_API_URL is a
           # literal deploy-time value injected here.
           printf 'extraEnv:\n  INTERNAL_API_URL: "%s"\n' "${INTERNAL_API_URL}" > /tmp/extra-env-values.yaml
