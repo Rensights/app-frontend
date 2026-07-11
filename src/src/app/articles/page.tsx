@@ -71,12 +71,12 @@ export default function ArticlesPage() {
                 className="group rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
               >
                 {article.coverImage && (
-                  <div className="mb-4 overflow-hidden rounded-xl">
+                  <div className="mb-4 aspect-video w-full overflow-hidden rounded-xl">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={apiClient.resolveApiUrl(article.coverImage)}
                       alt={article.title}
-                      className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                 )}
