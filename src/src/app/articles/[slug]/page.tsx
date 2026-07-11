@@ -60,7 +60,7 @@ export default function ArticleDetailPage() {
               <img
                 src={apiClient.resolveApiUrl(article.coverImage)}
                 alt={article.title}
-                className="mt-6 h-72 w-full rounded-2xl object-cover"
+                className="mt-6 aspect-video w-full rounded-2xl object-cover"
               />
             )}
             {article.content ? (
