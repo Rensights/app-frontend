@@ -3,6 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   output: 'standalone',
+
+  // Heavy "use client" landing pages (/, /solutions, /pricing, /privacy-terms) can
+  // exceed the default 60s per-page prerender budget under Turbopack + reactCompiler
+  // on constrained CI runners, which fails the build. Raise the ceiling; these pages
+  // fetch all real data client-side, so a slower build-time prerender is harmless.
+  staticPageGenerationTimeout: 180,
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
   assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
   
