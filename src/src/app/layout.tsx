@@ -8,6 +8,7 @@ import Clarity from "../components/analytics/Clarity";
 import GoogleAnalytics from "../components/analytics/GoogleAnalytics";
 import { ErrorLogger } from "../components/analytics/ErrorLogger";
 import ActivityTracker from "../components/analytics/ActivityTracker";
+import Faro from "../components/analytics/Faro";
 
 // Root layout is Static/ISR. Runtime K8s env is injected client-side via the
 // blocking /env.js script (written at container startup), NOT at render time.
@@ -84,6 +85,7 @@ export default async function RootLayout({
       <body>
         <Clarity />
         <GoogleAnalytics />
+        <Faro />
         <ErrorLogger />
         <LanguageProvider initialLanguage="en" initialTranslations={{ common: initialCommon }}>
           <ToastProvider>

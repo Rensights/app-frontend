@@ -68,6 +68,14 @@ spec:
                   name: {{ .Values.secrets.sharedConfig }}
                   key: GOOGLE_CLIENT_ID
                   optional: true
+            # Grafana Faro RUM collector URL (incl. public app key). docker-entrypoint.sh
+            # writes it to window.__FARO_URL__ at startup. optional: RUM is a no-op if unset.
+            - name: FARO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.sharedConfig }}
+                  key: FARO_URL
+                  optional: true
             {{- else }}
             {{- if hasKey .Values.extraEnv "API_URL" }}
             - name: API_URL
