@@ -652,6 +652,10 @@ export default function AnalysisRequestPage() {
     const savingsMin = savingsNumbers && savingsNumbers.length >= 1 ? parseNumber(savingsNumbers[0]) : null;
     const savingsMax = savingsNumbers && savingsNumbers.length >= 2 ? parseNumber(savingsNumbers[1]) : null;
     const discountPercent = parsePercent(getAnalysisValue(["price_per_sqft_vs_market", "pricePerSqftVsMarket", "price_vs_estimations", "priceVsEstimations"]));
+    // Market direction ("Below Market" / "Above Market" / ...) from the analysis API.
+    const marketDirectionLabel = (getAnalysisValue(["market_direction_label", "marketDirectionLabel"]) as string | null) || null;
+    const isAboveMarket = (marketDirectionLabel || "").toLowerCase().includes("above");
+    const marketDirectionWord = isAboveMarket ? "above" : "below";
     const rentalYield = getAnalysisValue(["rental_yield_estimate", "rentalYieldEstimate", "gross_rental_yield", "grossRentalYield"]);
     const buildingStatusRaw = getAnalysisValue(["building_status", "buildingStatus"]) || report?.buildingStatus || "";
     const buildingStatus = /ready|completed/i.test(String(buildingStatusRaw)) ? "READY" : "OFFPLAN";
@@ -690,7 +694,7 @@ export default function AnalysisRequestPage() {
                 </p>
                 {discountPercent !== null && (
                   <div className="discount-highlight">
-                    {discountPercent}% Below Market Value
+                    {discountPercent}% {marketDirectionLabel || "Below Market Value"}
                   </div>
                 )}
               </div>
@@ -739,7 +743,7 @@ export default function AnalysisRequestPage() {
                         ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })} /sq ft`
                         : "N/A"}
                     </div>
-                    {discountPercent !== null && <small>{discountPercent}% below market avg</small>}
+                    {discountPercent !== null && <small>{discountPercent}% {marketDirectionLabel || "below market avg"}</small>}
                   </div>
                 </div>
               </section>
@@ -786,7 +790,7 @@ export default function AnalysisRequestPage() {
                       : "N/A",
                   },
                   { label: "Listed Price", value: listedPrice },
-                  { label: "Market Position", value: analysis.market_position || (discountPercent !== null ? `${discountPercent}% Below Average` : "N/A") },
+                  { label: "Market Position", value: analysis.market_position || (discountPercent !== null ? `${discountPercent}% ${marketDirectionLabel || "Below Average"}` : "N/A") },
                   { label: "Rental Yield", value: rentalYield || "N/A" },
                   { label: "Estimate Range", value: estimateRange || "N/A" },
                 ].map((row) => (
@@ -800,7 +804,7 @@ export default function AnalysisRequestPage() {
               <section className="investment-insights">
                 <h3>Investment Insights</h3>
                 {[
-                  `Property is priced ${discountPercent !== null ? `${discountPercent}%` : ""} below similar units in ${analysis.area || "the area"}, indicating strong value opportunity.`,
+                  `Property is priced ${discountPercent !== null ? `${discountPercent}%` : ""} ${marketDirectionWord} similar units in ${analysis.area || "the area"}${isAboveMarket ? "." : ", indicating strong value opportunity."}`,
                   `${analysis.market_position || "Strong market position for this unit."}`,
                   `${analysis.investment_appeal || "Investment appeal is favorable based on current market conditions."}`,
                   `${analysis.dubai_comparison || "Market comparison data is still being compiled."}`,
@@ -901,7 +905,7 @@ export default function AnalysisRequestPage() {
                   {discountPercent !== null && (
                     <>
                       <div className="score-value">
-                        {discountPercent.toFixed(1)}%<span> Below Market</span>
+                        {discountPercent.toFixed(1)}%<span> {marketDirectionLabel || "Below Market"}</span>
                       </div>
                       <div className="score-subtitle">
                         {discountPercent >= 15 ? "Excellent" : discountPercent >= 10 ? "Good" : "Fair"} Investment Opportunity
