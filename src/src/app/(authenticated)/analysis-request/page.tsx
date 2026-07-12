@@ -913,10 +913,6 @@ export default function AnalysisRequestPage() {
                     })
                   )}
                 </div>
-
-                <button className="action-btn secondary" type="button">
-                  View All Comparable Properties
-                </button>
               </div>
 
               <div className="sidebar-card">

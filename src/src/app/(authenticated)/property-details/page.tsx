@@ -127,10 +127,6 @@ function PropertyDetailsPageContent() {
   }
 
   const handleGoBack = () => router.push("/deals");
-  const handleViewAll = () => {
-    // This would load all comparable properties
-    // For now, just show info toast
-  };
 
   const handleUpgrade = async () => {
     try {
@@ -457,14 +453,6 @@ function PropertyDetailsPageContent() {
                   })
                 )}
               </div>
-
-              <button
-                className="action-btn secondary"
-                onClick={handleViewAll}
-                type="button"
-              >
-                View All Comparable Properties
-              </button>
             </div>
 
             <div className="sidebar-card">
