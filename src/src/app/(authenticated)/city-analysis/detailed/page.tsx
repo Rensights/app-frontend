@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { apiClient, ReportDocument, ReportSection } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import { useUser } from "@/context/UserContext";
+import { useTranslations } from "@/hooks/useTranslations";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { PdfScrollViewer } from "@/components/PdfScrollViewer";
 import "../city-analysis.css";
@@ -13,8 +15,25 @@ import "../pdf-preview-modal.css";
 const TIER_RANK: Record<string, number> = { FREE: 0, PREMIUM: 1, ENTERPRISE: 2 };
 
 export default function DetailedCityAnalysisPage() {
+  const router = useRouter();
   const { language } = useLanguage();
   const { user } = useUser();
+  // Upgrade-shadow copy — editable in the admin panel → Translations (namespace
+  // "cityAnalysis"); the values below are the built-in English fallbacks.
+  const { t } = useTranslations("cityAnalysis", {
+    "cityAnalysis.shadow.premiumTitle": "Premium report",
+    "cityAnalysis.shadow.premiumBody":
+      "Upgrade to unlock this section and download the full report.",
+    "cityAnalysis.shadow.premiumButton": "Upgrade to unlock",
+    "cityAnalysis.shadow.processing": "Processing…",
+    "cityAnalysis.shadow.enterpriseTitle": "Enterprise report",
+    "cityAnalysis.shadow.enterpriseBody":
+      "Available on request — no payment required. Send us a request and our team will set you up.",
+    "cityAnalysis.shadow.enterpriseButton": "Request access",
+    "cityAnalysis.shadow.teaserTitle": "Premium analysis report",
+    "cityAnalysis.shadow.teaserBody":
+      "Full charts and downloadable PDF available with an upgrade.",
+  });
   // A section is locked (shown behind the upgrade shadow) when its access tier is
   // above the caller's tier. Matches the backend, which returns higher-tier sections
   // as document-less stubs.
@@ -290,6 +309,9 @@ export default function DetailedCityAnalysisPage() {
         )}
         {sections.map((section) => {
           const locked = userTierRank < (TIER_RANK[section.accessTier] ?? 0);
+          // Enterprise is request-only (no payment) — send users to the request form.
+          // Premium is a paid upgrade via Stripe checkout.
+          const requiresEnterprise = section.accessTier === "ENTERPRISE";
           return (
           <section key={section.id} id={`section-${section.id}`} className="document-section">
             <div className="document-card">
@@ -302,16 +324,34 @@ export default function DetailedCityAnalysisPage() {
                   <div className="section-upgrade-shadow">
                     <div className="upgrade-shadow-card">
                       <div className="upgrade-shadow-icon">🔒</div>
-                      <h4>Premium report</h4>
-                      <p>Upgrade to unlock this section and download the full report.</p>
-                      <button
-                        type="button"
-                        className="upgrade-shadow-btn"
-                        onClick={handleUpgrade}
-                        disabled={isUpgrading}
-                      >
-                        {isUpgrading ? "Processing…" : "Upgrade to unlock"}
-                      </button>
+                      {requiresEnterprise ? (
+                        <>
+                          <h4>{t("cityAnalysis.shadow.enterpriseTitle")}</h4>
+                          <p>{t("cityAnalysis.shadow.enterpriseBody")}</p>
+                          <button
+                            type="button"
+                            className="upgrade-shadow-btn"
+                            onClick={() => router.push("/portal/early-access")}
+                          >
+                            {t("cityAnalysis.shadow.enterpriseButton")}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <h4>{t("cityAnalysis.shadow.premiumTitle")}</h4>
+                          <p>{t("cityAnalysis.shadow.premiumBody")}</p>
+                          <button
+                            type="button"
+                            className="upgrade-shadow-btn"
+                            onClick={handleUpgrade}
+                            disabled={isUpgrading}
+                          >
+                            {isUpgrading
+                              ? t("cityAnalysis.shadow.processing")
+                              : t("cityAnalysis.shadow.premiumButton")}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -325,10 +365,10 @@ export default function DetailedCityAnalysisPage() {
                       <div className="document-file-icon">📄</div>
                       <div className="document-file-body">
                         <div className="document-file-title">
-                          <span>Premium analysis report</span>
+                          <span>{t("cityAnalysis.shadow.teaserTitle")}</span>
                         </div>
                         <p className="document-file-subtitle">
-                          Full charts and downloadable PDF available with an upgrade.
+                          {t("cityAnalysis.shadow.teaserBody")}
                         </p>
                         <div className="document-meta">
                           <span>PDF</span>
