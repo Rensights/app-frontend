@@ -26,7 +26,12 @@ export default function WeeklyDealsPage() {
     "weeklyDeals.alert.area3": "🏢 Business Bay:",
     "weeklyDeals.alert.area4": "🌴 Jumeirah Beach:",
     "weeklyDeals.alert.deals": "deals",
+    "weeklyDeals.alert.count1": "3",
+    "weeklyDeals.alert.count2": "4",
+    "weeklyDeals.alert.count3": "3",
+    "weeklyDeals.alert.count4": "3",
     "weeklyDeals.alert.total": "Total active alerts:",
+    "weeklyDeals.alert.totalCount": "13",
     "weeklyDeals.alert.view": "View This Week's Alerts",
     "weeklyDeals.highlights.title": "This Week's Highlights",
     "weeklyDeals.highlights.market": "🔥 Hottest market:",
@@ -136,10 +141,10 @@ export default function WeeklyDealsPage() {
 
             <div className="alert-list">
               {[
-                { label: t("weeklyDeals.alert.area1"), count: 3 },
-                { label: t("weeklyDeals.alert.area2"), count: 4 },
-                { label: t("weeklyDeals.alert.area3"), count: 3 },
-                { label: t("weeklyDeals.alert.area4"), count: 3 },
+                { label: t("weeklyDeals.alert.area1"), count: t("weeklyDeals.alert.count1") },
+                { label: t("weeklyDeals.alert.area2"), count: t("weeklyDeals.alert.count2") },
+                { label: t("weeklyDeals.alert.area3"), count: t("weeklyDeals.alert.count3") },
+                { label: t("weeklyDeals.alert.area4"), count: t("weeklyDeals.alert.count4") },
               ].map((alert) => (
                 <div key={alert.label} className="alert-row">
                   <span>{alert.label}</span>
@@ -150,7 +155,7 @@ export default function WeeklyDealsPage() {
 
             <div className="alert-stats">
               <span>{t("weeklyDeals.alert.total")}</span>
-              <span className="alert-number">13</span>
+              <span className="alert-number">{t("weeklyDeals.alert.totalCount")}</span>
             </div>
           </div>
 
