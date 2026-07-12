@@ -854,3 +854,89 @@ html {
     padding: 4px 12px;
   }
 }
+
+/* ── Free-tier upgrade shadow over paid (non-FREE) report sections ───────── */
+.document-files-wrap {
+  position: relative;
+}
+
+/* Blur + disable the real documents so the section reads as a locked teaser. */
+.document-files-locked {
+  filter: blur(6px);
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}
+
+.section-upgrade-shadow {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+}
+
+.upgrade-shadow-card {
+  background: #fff;
+  border: 2px solid rgba(243, 156, 18, 0.3);
+  border-radius: 16px;
+  padding: 24px 22px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.upgrade-shadow-icon {
+  font-size: 2.4rem;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.upgrade-shadow-card h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #d97706;
+  margin-bottom: 8px;
+}
+
+.upgrade-shadow-card p {
+  font-size: 0.92rem;
+  color: #666;
+  line-height: 1.45;
+  margin-bottom: 16px;
+}
+
+.upgrade-shadow-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.upgrade-shadow-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
+}
+
+.upgrade-shadow-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.nav-lock {
+  font-size: 0.85em;
+  opacity: 0.8;
+}

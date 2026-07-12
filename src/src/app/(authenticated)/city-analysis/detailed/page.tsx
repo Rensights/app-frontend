@@ -4,13 +4,22 @@ import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { apiClient, ReportDocument, ReportSection } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
+import { useUser } from "@/context/UserContext";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { PdfScrollViewer } from "@/components/PdfScrollViewer";
 import "../city-analysis.css";
 import "../pdf-preview-modal.css";
 
+const TIER_RANK: Record<string, number> = { FREE: 0, PREMIUM: 1, ENTERPRISE: 2 };
+
 export default function DetailedCityAnalysisPage() {
   const { language } = useLanguage();
+  const { user } = useUser();
+  // A section is locked (shown behind the upgrade shadow) when its access tier is
+  // above the caller's tier. Matches the backend, which returns higher-tier sections
+  // as document-less stubs.
+  const userTierRank = TIER_RANK[user?.userTier ?? "FREE"] ?? 0;
+  const [isUpgrading, setIsUpgrading] = useState(false);
   const [sections, setSections] = useState<ReportSection[]>([]);
   const [activeSection, setActiveSection] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -83,6 +92,21 @@ export default function DetailedCityAnalysisPage() {
         behavior: "smooth",
       });
       setActiveSection(sectionId);
+    }
+  }, []);
+
+  const handleUpgrade = useCallback(async () => {
+    setIsUpgrading(true);
+    setError(null);
+    try {
+      const { url } = await apiClient.createCheckoutSession("PREMIUM", "upsell");
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to start upgrade. Please try again.");
+    } finally {
+      setIsUpgrading(false);
     }
   }, []);
 
@@ -230,17 +254,21 @@ export default function DetailedCityAnalysisPage() {
 
       <nav className="documents-nav">
         <div className="documents-nav-track">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => handleNavigate(`section-${section.id}`)}
-              className={`documents-tab ${
-                activeSection === `section-${section.id}` ? "active" : ""
-              }`}
-            >
-              {section.navTitle}
-            </button>
-          ))}
+          {sections.map((section) => {
+            const locked = userTierRank < (TIER_RANK[section.accessTier] ?? 0);
+            return (
+              <button
+                key={section.id}
+                onClick={() => handleNavigate(`section-${section.id}`)}
+                className={`documents-tab ${
+                  activeSection === `section-${section.id}` ? "active" : ""
+                }`}
+              >
+                {section.navTitle}
+                {locked && <span className="nav-lock" aria-hidden="true"> 🔒</span>}
+              </button>
+            );
+          })}
         </div>
       </nav>
 
@@ -260,18 +288,60 @@ export default function DetailedCityAnalysisPage() {
             <p className="document-description">No reports are available yet.</p>
           </div>
         )}
-        {sections.map((section) => (
+        {sections.map((section) => {
+          const locked = userTierRank < (TIER_RANK[section.accessTier] ?? 0);
+          return (
           <section key={section.id} id={`section-${section.id}`} className="document-section">
             <div className="document-card">
               <h2>{section.title}</h2>
               {section.description && (
                 <p className="document-description">{section.description}</p>
               )}
-              <div className="document-files">
-                {(section.documents || []).length === 0 && (
-                  <p className="document-description">No documents uploaded yet.</p>
+              <div className="document-files-wrap">
+                {locked && (
+                  <div className="section-upgrade-shadow">
+                    <div className="upgrade-shadow-card">
+                      <div className="upgrade-shadow-icon">🔒</div>
+                      <h4>Premium report</h4>
+                      <p>Upgrade to unlock this section and download the full report.</p>
+                      <button
+                        type="button"
+                        className="upgrade-shadow-btn"
+                        onClick={handleUpgrade}
+                        disabled={isUpgrading}
+                      >
+                        {isUpgrading ? "Processing…" : "Upgrade to unlock"}
+                      </button>
+                    </div>
+                  </div>
                 )}
-                {(section.documents || []).map((doc) => (
+              <div
+                className={`document-files${locked ? " document-files-locked" : ""}`}
+                aria-hidden={locked || undefined}
+              >
+                {locked ? (
+                  [0, 1].map((i) => (
+                    <div key={`teaser-${i}`} className="document-file">
+                      <div className="document-file-icon">📄</div>
+                      <div className="document-file-body">
+                        <div className="document-file-title">
+                          <span>Premium analysis report</span>
+                        </div>
+                        <p className="document-file-subtitle">
+                          Full charts and downloadable PDF available with an upgrade.
+                        </p>
+                        <div className="document-meta">
+                          <span>PDF</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {(section.documents || []).length === 0 && (
+                      <p className="document-description">No documents uploaded yet.</p>
+                    )}
+                    {(section.documents || []).map((doc) => (
                   <div key={doc.id} className="document-file">
                     <div className="document-file-icon">📄</div>
                     <div className="document-file-body">
@@ -306,11 +376,15 @@ export default function DetailedCityAnalysisPage() {
                       </a>
                     </div>
                   </div>
-                ))}
+                    ))}
+                  </>
+                )}
+              </div>
               </div>
             </div>
           </section>
-        ))}
+          );
+        })}
       </div>
 
       {typeof document !== "undefined" &&
