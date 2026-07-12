@@ -26,10 +26,10 @@ export default function WeeklyDealsPage() {
     "weeklyDeals.alert.area3": "🏢 Business Bay:",
     "weeklyDeals.alert.area4": "🌴 Jumeirah Beach:",
     "weeklyDeals.alert.deals": "deals",
-    "weeklyDeals.alert.count1": "3",
-    "weeklyDeals.alert.count2": "4",
-    "weeklyDeals.alert.count3": "3",
-    "weeklyDeals.alert.count4": "3",
+    "weeklyDeals.alert.count1": "3 deals",
+    "weeklyDeals.alert.count2": "4 deals",
+    "weeklyDeals.alert.count3": "3 deals",
+    "weeklyDeals.alert.count4": "3 deals",
     "weeklyDeals.alert.total": "Total active alerts:",
     "weeklyDeals.alert.totalCount": "13",
     "weeklyDeals.alert.view": "View This Week's Alerts",
@@ -148,7 +148,7 @@ export default function WeeklyDealsPage() {
               ].map((alert) => (
                 <div key={alert.label} className="alert-row">
                   <span>{alert.label}</span>
-                  <span className="alert-number">{alert.count} {t("weeklyDeals.alert.deals")}</span>
+                  <span className="alert-number">{alert.count}</span>
                 </div>
               ))}
             </div>
