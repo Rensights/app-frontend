@@ -1,0 +1,43 @@
+/* Responsive guards for rich-text (Quill) article HTML rendered via
+   dangerouslySetInnerHTML. Pasted content often uses non-breaking spaces and
+   can contain wide images/code/tables that blow out the mobile viewport. */
+.article-content {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Code blocks (Quill .ql-syntax / <pre>) must wrap or scroll, not push the page. */
+.article-content pre,
+.article-content code {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+.article-content pre {
+  overflow-x: auto;
+}
+
+/* Tables scroll horizontally within their own box instead of the page. */
+.article-content table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.article-content iframe,
+.article-content video {
+  max-width: 100%;
+}
+
+/* Quill alignment classes (Quill's own CSS isn't loaded on the public site). */
+.article-content .ql-align-center { text-align: center; }
+.article-content .ql-align-right { text-align: right; }
+.article-content .ql-align-justify { text-align: justify; }

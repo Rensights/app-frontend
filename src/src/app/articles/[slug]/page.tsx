@@ -7,6 +7,7 @@ import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import { apiClient } from "@/lib/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import "./article-content.css";
 
 type Article = {
   title: string;
@@ -67,9 +68,16 @@ export default function ArticleDetailPage() {
             )}
             {article.content ? (
               <div
-                className="mt-6"
+                className="mt-6 article-content"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(article.content),
+                  // Pasted rich text often uses non-breaking spaces between every
+                  // word, which stops the browser wrapping the line and overflows
+                  // the mobile viewport. Normalise them to regular spaces so the
+                  // text wraps at word boundaries (CSS break-word is the fallback).
+                  __html: DOMPurify.sanitize(article.content).replace(
+                    /\u00A0|&nbsp;/g,
+                    " "
+                  ),
                 }}
               />
             ) : (
