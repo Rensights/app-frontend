@@ -634,6 +634,14 @@ export default function AnalysisRequestPage() {
     };
 
     const analysis = report?.analysisResult || {};
+    // The property listing the scan was run against. Prefer the URL the user
+    // submitted (report.listingUrl); fall back to any link the AI result
+    // carries. Only accept http(s) so the "View the Property" link is safe.
+    const listingUrlCandidate = (
+      (typeof report?.listingUrl === "string" && report.listingUrl.trim()) ||
+      String(getAnalysisValue(["link_for_property", "listing_url", "listingUrl", "property_url", "url"]) || "").trim()
+    );
+    const propertyListingUrl = /^https?:\/\//i.test(listingUrlCandidate) ? listingUrlCandidate : "";
     const listedPriceRaw = getAnalysisValue(["listed_price_aed", "listedPriceAed", "listed_price"]);
     const listedPriceNum = parseNumber(listedPriceRaw);
     const listedPrice =
@@ -781,11 +789,18 @@ export default function AnalysisRequestPage() {
                     />
                     <DescriptionStat label="Rental Yield:" value={rentalYield || "N/A"} />
                   </div>
-                  <div className="description-footer">
-                    <button className="inline-link" type="button">
-                      View the Property
-                    </button>
-                  </div>
+                  {propertyListingUrl && (
+                    <div className="description-footer">
+                      <a
+                        className="inline-link"
+                        href={propertyListingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        View the Property
+                      </a>
+                    </div>
+                  )}
                 </div>
               </section>
 
