@@ -99,7 +99,25 @@ html {
   border-top: none;
   margin: 0 24px;
   padding: 10px 12px;
-  overflow-x: hidden;
+  /* Horizontal scroll so all tabs stay reachable when they overflow the width. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #d8c9a8 transparent;
+}
+
+.documents-nav::-webkit-scrollbar {
+  height: 6px;
+}
+
+.documents-nav::-webkit-scrollbar-thumb {
+  background: #d8c9a8;
+  border-radius: 999px;
+}
+
+.documents-nav::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .documents-nav-track {
@@ -117,6 +135,7 @@ html {
   color: #6b7280;
   border-radius: 999px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .documents-tab.active {
