@@ -127,10 +127,6 @@ function PropertyDetailsPageContent() {
   }
 
   const handleGoBack = () => router.push("/deals");
-  const handleViewProperty = () => {
-    // This would open the property listing page
-    // For now, just show info toast
-  };
   const handleViewAll = () => {
     // This would load all comparable properties
     // For now, just show info toast
@@ -321,14 +317,18 @@ function PropertyDetailsPageContent() {
                   />
                   <DescriptionStat label="Rental Yield:" value={deal.rentalYield || "N/A"} />
                 </div>
-                <div className="description-footer">
-                  <button
-                    className="inline-link"
-                    onClick={handleViewProperty}
-                  >
-                    View the Property
-                  </button>
-                </div>
+                {/^https?:\/\//i.test((deal.propertyLink || "").trim()) && (
+                  <div className="description-footer">
+                    <a
+                      className="inline-link"
+                      href={(deal.propertyLink || "").trim()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View the Property
+                    </a>
+                  </div>
+                )}
               </div>
             </section>
 
