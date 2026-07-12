@@ -42,9 +42,13 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
     // Check if script is already loading
     if (scriptLoaded.current) return;
 
-    // Use API key from environment or fallback to the one from the HTML file
-    const apiKey = 'AIzaSyBIsfSpvVTK_C692hxTzkv3dj1ViozBcXU';
-    
+    // Runtime-injected key (window.__GOOGLE_MAPS_API_KEY__ from the K8s secret via
+    // docker-entrypoint.sh), falling back to the build-time public env var.
+    const apiKey =
+      (typeof window !== 'undefined' && (window as { __GOOGLE_MAPS_API_KEY__?: string }).__GOOGLE_MAPS_API_KEY__) ||
+      process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+      '';
+
     // Store reference to component's initMap in closure
     const componentInitMap = () => {
       initMap();
@@ -62,6 +66,11 @@ export default function MapComponent({ mapRef, center, onLocationSelect, coordin
       }, 100);
       
       return () => clearInterval(checkGoogle);
+    }
+
+    if (!apiKey) {
+      console.warn('Google Maps API key is not configured');
+      return;
     }
 
     scriptLoaded.current = true;

@@ -76,6 +76,14 @@ spec:
                   name: {{ .Values.secrets.sharedConfig }}
                   key: FARO_URL
                   optional: true
+            # Google Maps JS API key. docker-entrypoint.sh writes it to
+            # window.__GOOGLE_MAPS_API_KEY__ at startup. optional: map is a no-op if unset.
+            - name: GOOGLE_MAPS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.sharedConfig }}
+                  key: GOOGLE_MAPS_API_KEY
+                  optional: true
             {{- else }}
             {{- if hasKey .Values.extraEnv "API_URL" }}
             - name: API_URL
