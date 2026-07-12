@@ -259,6 +259,13 @@ export default function DetailedCityAnalysisPage() {
       </div>
     ) : null;
 
+  // Enterprise sections stay fully hidden until the user is Enterprise (no shadow,
+  // no nav entry). Premium sections remain visible but locked (shadow) for lower tiers.
+  const canSeeEnterprise = userTierRank >= TIER_RANK.ENTERPRISE;
+  const visibleSections = sections.filter(
+    (section) => section.accessTier !== "ENTERPRISE" || canSeeEnterprise
+  );
+
   return (
     <div className="city-analysis-page detailed-page">
       <div className="documents-hero">
@@ -273,7 +280,7 @@ export default function DetailedCityAnalysisPage() {
 
       <nav className="documents-nav">
         <div className="documents-nav-track">
-          {sections.map((section) => {
+          {visibleSections.map((section) => {
             const locked = userTierRank < (TIER_RANK[section.accessTier] ?? 0);
             return (
               <button
@@ -302,15 +309,16 @@ export default function DetailedCityAnalysisPage() {
             <p className="document-description">{error}</p>
           </div>
         )}
-        {!loading && !error && sections.length === 0 && (
+        {!loading && !error && visibleSections.length === 0 && (
           <div className="document-card">
             <p className="document-description">No reports are available yet.</p>
           </div>
         )}
-        {sections.map((section) => {
+        {visibleSections.map((section) => {
           const locked = userTierRank < (TIER_RANK[section.accessTier] ?? 0);
           // Enterprise is request-only (no payment) — send users to the request form.
-          // Premium is a paid upgrade via Stripe checkout.
+          // (Enterprise sections are hidden for non-Enterprise users via visibleSections,
+          // so this branch only guards the edge case of one slipping through.)
           const requiresEnterprise = section.accessTier === "ENTERPRISE";
           return (
           <section key={section.id} id={`section-${section.id}`} className="document-section">
