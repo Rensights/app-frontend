@@ -51,7 +51,7 @@ export default function ArticleDetailPage() {
             <p className="mt-4 text-gray-600">This article is unavailable.</p>
           </div>
         ) : (
-          <article className="prose max-w-none">
+          <article className="max-w-none">
             <div className="text-sm uppercase tracking-wide text-gray-500">
               {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : "Draft"}
             </div>

@@ -1,29 +1,157 @@
-/* Responsive guards for rich-text (Quill) article HTML rendered via
-   dangerouslySetInnerHTML. Pasted content often uses non-breaking spaces and
-   can contain wide images/code/tables that blow out the mobile viewport. */
+/* Faithful renderer for rich-text (Quill "snow") article HTML.
+ *
+ * The admin composes articles in react-quill-new (snow theme). We must render
+ * the saved HTML exactly as the editor showed it — the editor's formatting is
+ * the source of truth, so we deliberately do NOT wrap it in Tailwind's `prose`
+ * (which imposes its own opinionated typography). Instead these rules mirror
+ * Quill's own `.ql-editor` content CSS, and undo the parts of Tailwind's
+ * Preflight reset (headings, lists, blockquote) that would strip the editor's
+ * intended look. Values are copied from react-quill-new/dist/quill.snow.css.
+ */
 .article-content {
+  line-height: 1.42;
+  text-align: left;
   overflow-wrap: break-word;
   word-break: break-word;
+  color: inherit;
 }
 
+/* Quill zeroes block margins; blank <p> lines are what create vertical rhythm,
+   so give every paragraph at least one line of height (matching the editor,
+   where an empty paragraph shows as a blank line). */
+.article-content p,
+.article-content ol,
+.article-content ul,
+.article-content pre,
+.article-content blockquote,
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+  margin: 0;
+  padding: 0;
+}
+.article-content p {
+  min-height: 1.42em;
+}
+
+/* Headings — Tailwind Preflight resets these to inherit, so restore Quill's
+   sizes and a bold weight. */
+.article-content h1 { font-size: 2em; }
+.article-content h2 { font-size: 1.5em; }
+.article-content h3 { font-size: 1.17em; }
+.article-content h4 { font-size: 1em; }
+.article-content h5 { font-size: 0.83em; }
+.article-content h6 { font-size: 0.67em; }
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+/* Inline marks */
+.article-content strong,
+.article-content b { font-weight: bold; }
+.article-content em,
+.article-content i { font-style: italic; }
+.article-content u { text-decoration: underline; }
+.article-content s { text-decoration: line-through; }
+.article-content a {
+  color: #06c;
+  text-decoration: underline;
+}
+
+/* Alignment (Quill classes) */
+.article-content .ql-align-center { text-align: center; }
+.article-content .ql-align-right { text-align: right; }
+.article-content .ql-align-justify { text-align: justify; }
+
+/* Font sizes (Quill classes) */
+.article-content .ql-size-small { font-size: 0.75em; }
+.article-content .ql-size-large { font-size: 1.5em; }
+.article-content .ql-size-huge { font-size: 2.5em; }
+
+/* Named color / background classes (custom picks arrive as inline styles,
+   which already win over these rules). */
+.article-content .ql-color-white { color: #fff; }
+.article-content .ql-color-red { color: #e60000; }
+.article-content .ql-color-orange { color: #f90; }
+.article-content .ql-color-yellow { color: #ff0; }
+.article-content .ql-color-green { color: #008a00; }
+.article-content .ql-color-blue { color: #06c; }
+.article-content .ql-color-purple { color: #93f; }
+.article-content .ql-bg-black { background-color: #000; }
+.article-content .ql-bg-red { background-color: #e60000; }
+.article-content .ql-bg-orange { background-color: #f90; }
+.article-content .ql-bg-yellow { background-color: #ff0; }
+.article-content .ql-bg-green { background-color: #008a00; }
+.article-content .ql-bg-blue { background-color: #06c; }
+.article-content .ql-bg-purple { background-color: #93f; }
+
+/* Blockquote */
+.article-content blockquote {
+  border-left: 4px solid #ccc;
+  padding-left: 16px;
+  margin: 5px 0;
+}
+
+/* Inline code + code blocks */
+.article-content code {
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  font-size: 85%;
+  padding: 2px 4px;
+}
+.article-content pre,
+.article-content .ql-syntax {
+  background-color: #23241f;
+  color: #f8f8f2;
+  border-radius: 3px;
+  margin: 5px 0;
+  padding: 5px 10px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+.article-content pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Lists — Preflight strips markers; Quill also serialises bullet AND ordered
+   lists as <ol> with a data-list attribute (and a runtime .ql-ui marker span
+   that is meaningless once saved). Hide that span and drive markers off the
+   list type / data-list value so both bullets and numbers always render. */
+.article-content ol,
+.article-content ul {
+  padding-left: 1.5em;
+}
+.article-content li {
+  list-style-position: outside;
+}
+.article-content ul > li { list-style-type: disc; }
+.article-content ol > li { list-style-type: decimal; }
+.article-content li[data-list="bullet"] { list-style-type: disc; }
+.article-content li[data-list="ordered"] { list-style-type: decimal; }
+.article-content .ql-ui { display: none; }
+
+/* Media / responsive guards */
 .article-content img {
   max-width: 100%;
   height: auto;
 }
-
-/* Code blocks (Quill .ql-syntax / <pre>) must wrap or scroll, not push the page. */
-.article-content pre,
-.article-content code {
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  word-break: break-word;
+.article-content iframe,
+.article-content video {
   max-width: 100%;
 }
-.article-content pre {
-  overflow-x: auto;
-}
-
-/* Tables scroll horizontally within their own box instead of the page. */
 .article-content table {
   display: block;
   width: 100%;
@@ -31,13 +159,8 @@
   overflow-x: auto;
   border-collapse: collapse;
 }
-
-.article-content iframe,
-.article-content video {
-  max-width: 100%;
+.article-content table td,
+.article-content table th {
+  border: 1px solid #ccc;
+  padding: 4px 8px;
 }
-
-/* Quill alignment classes (Quill's own CSS isn't loaded on the public site). */
-.article-content .ql-align-center { text-align: center; }
-.article-content .ql-align-right { text-align: right; }
-.article-content .ql-align-justify { text-align: justify; }
