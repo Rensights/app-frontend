@@ -7,7 +7,7 @@ export function useTranslations(
   namespace: string,
   fallbacks: Record<string, string> = {}
 ) {
-  const { t, loadTranslations } = useLanguage();
+  const { t, loadTranslations, translationsMeta } = useLanguage();
 
   useEffect(() => {
     loadTranslations(namespace).catch(() => {});
@@ -24,5 +24,5 @@ export function useTranslations(
     [t, namespace, fallbacks]
   );
 
-  return { t: translate };
+  return { t: translate, updatedAt: translationsMeta[namespace]?.updatedAt };
 }

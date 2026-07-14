@@ -6,6 +6,7 @@ interface LanguageContextType {
   language: string;
   setLanguage: (lang: string) => void;
   translations: Record<string, Record<string, string>>;
+  translationsMeta: Record<string, { updatedAt?: string }>;
   loadTranslations: (namespace: string) => Promise<void>;
   t: (key: string, namespace?: string) => string;
   isLoading: boolean;
@@ -28,6 +29,7 @@ export function LanguageProvider({
 }) {
   const [language, setLanguageState] = useState<string>(initialLanguage);
   const [translations, setTranslations] = useState<Record<string, Record<string, string>>>(initialTranslations);
+  const [translationsMeta, setTranslationsMeta] = useState<Record<string, { updatedAt?: string }>>({});
   const [isLoading, setIsLoading] = useState(false);
   const initialLangRef = useRef(initialLanguage);
 
@@ -50,6 +52,7 @@ export function LanguageProvider({
       localStorage.setItem('language', lang);
       // Clear translations cache when language changes
       setTranslations({});
+      setTranslationsMeta({});
     }
   }, []);
 
@@ -66,6 +69,10 @@ export function LanguageProvider({
       setTranslations(prev => ({
         ...prev,
         [namespace]: data.translations || {},
+      }));
+      setTranslationsMeta(prev => ({
+        ...prev,
+        [namespace]: { updatedAt: data.updatedAt },
       }));
     } catch (error) {
       console.error(`Error loading translations for ${namespace}:`, error);
@@ -101,6 +108,7 @@ export function LanguageProvider({
         language,
         setLanguage,
         translations,
+        translationsMeta,
         loadTranslations,
         t,
         isLoading,
@@ -121,6 +129,7 @@ export function useLanguage() {
       language: 'en',
       setLanguage: () => {},
       translations: {},
+      translationsMeta: {},
       loadTranslations: async () => {},
       t: (key: string) => key,
       isLoading: false,

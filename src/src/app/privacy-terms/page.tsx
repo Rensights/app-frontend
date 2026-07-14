@@ -5,7 +5,7 @@ import LandingFooter from "@/components/landing/Footer";
 import { useTranslations } from "@/hooks/useTranslations";
 
 export default function PrivacyTermsPage() {
-  const { t } = useTranslations("privacyTerms", {
+  const { t, updatedAt } = useTranslations("privacyTerms", {
     "privacyTerms.title": "Privacy Policy & Terms of Service",
     "privacyTerms.fullContent": "",
     "privacyTerms.privacy.title": "Privacy Policy",
@@ -36,6 +36,9 @@ export default function PrivacyTermsPage() {
   });
   const fullContent = t("privacyTerms.fullContent").trim();
   const hasFullContent = fullContent.length > 0;
+  // Real last-updated date = when the admin last saved this page's content
+  // (translations.updated_at). Falls back to nothing until it has loaded.
+  const lastUpdatedDate = updatedAt ? new Date(updatedAt).toLocaleDateString() : "";
 
   return (
     <div className="min-h-screen">
@@ -50,7 +53,7 @@ export default function PrivacyTermsPage() {
               dangerouslySetInnerHTML={{ __html: fullContent }}
             />
             <p className="mt-6">
-              <strong>{t("privacyTerms.lastUpdated")}</strong> {new Date().toLocaleDateString()}
+              <strong>{t("privacyTerms.lastUpdated")}</strong> {lastUpdatedDate}
             </p>
           </section>
         ) : (
@@ -102,7 +105,7 @@ export default function PrivacyTermsPage() {
                 <p>{t("privacyTerms.disclaimer.changesBody")}</p>
                 
                 <p className="mt-6">
-                  <strong>{t("privacyTerms.lastUpdated")}</strong> {new Date().toLocaleDateString()}
+                  <strong>{t("privacyTerms.lastUpdated")}</strong> {lastUpdatedDate}
                 </p>
               </div>
             </section>
