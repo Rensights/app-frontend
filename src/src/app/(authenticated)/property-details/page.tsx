@@ -34,10 +34,9 @@ function PropertyDetailsPageContent() {
     "pricing.standard.feature3": "Potentially underpriced deals",
   });
   const [deal, setDeal] = useState<Deal | null>(null);
-  const [comparableDeals, setComparableDeals] = useState<Deal[]>([]);
+  const [listedDeals, setListedDeals] = useState<any[]>([]);
   const [recentSales, setRecentSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingComparables, setLoadingComparables] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("listed");
   const propertyId = searchParams.get("id");
@@ -59,37 +58,11 @@ function PropertyDetailsPageContent() {
       setDeal(dealData);
       trackEvent("DEAL_VIEWED", { dealId: dealData.id, city: dealData.city, area: dealData.area });
 
-          // Load comparable deals (similar area and bedrooms, excluding current deal)
+          // Comparable properties come straight from the deal payload
+          // (listedDeals = listing_comparables, recentSales = transaction_comparables).
           if (dealData) {
-            setLoadingComparables(true);
-            try {
-              const comparablesResponse = await apiClient.getDeals(
-                0,
-                10,
-                dealData.city || undefined,
-                dealData.area || undefined,
-                dealData.bedroomCount || undefined,
-                undefined
-              );
-              // Filter out the current deal and limit to 8
-              const filtered = (comparablesResponse?.content || [])
-                .filter(d => d && d.id && d.id !== dealData.id)
-                .slice(0, 8);
-              setComparableDeals(filtered);
-            } catch (err) {
-              if (process.env.NODE_ENV === 'development') {
-                console.error("Error loading comparable deals:", err);
-              }
-              // Don't fail the whole page if comparables fail
-              setComparableDeals([]);
-            } finally {
-              setLoadingComparables(false);
-            }
-
-            // Load recent sales from API response
-            if (dealData.recentSales && Array.isArray(dealData.recentSales)) {
-              setRecentSales(dealData.recentSales);
-            }
+            setListedDeals(Array.isArray(dealData.listedDeals) ? dealData.listedDeals : []);
+            setRecentSales(Array.isArray(dealData.recentSales) ? dealData.recentSales : []);
           }
     } catch (error: any) {
       if (process.env.NODE_ENV === 'development') {
@@ -377,7 +350,7 @@ function PropertyDetailsPageContent() {
                   className={`tab-button ${tab === "listed" ? "active" : ""}`}
                   onClick={() => setTab("listed")}
                 >
-                  Similar Deals ({comparableDeals.length})
+                  Similar Deals ({listedDeals.length})
                 </button>
                 <button
                   className={`tab-button ${tab === "transactions" ? "active" : ""}`}
@@ -392,26 +365,24 @@ function PropertyDetailsPageContent() {
                   tab === "listed" ? "active" : ""
                 }`}
               >
-                {loadingComparables ? (
-                  <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
-                    <LoadingSpinner message="Loading similar properties..." />
-                  </div>
-                ) : comparableDeals.length === 0 ? (
+                {listedDeals.length === 0 ? (
                   <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
                     No similar properties found.
                   </div>
                 ) : (
-                  comparableDeals.map((item) => {
-                    const itemSizeNum = item.size ? (typeof item.size === 'number' ? item.size : parseFloat(String(item.size).replace(/[^0-9.]/g, ""))) : 0;
-                    const psf = itemSizeNum > 0 && item.priceValue > 0 
-                      ? item.priceValue / itemSizeNum 
-                      : 0;
+                  listedDeals.map((item: any, index: number) => {
+                    const itemSize = parseFloat(String(item.size_sqft ?? item.sqft ?? item.size ?? "").replace(/[^0-9.]/g, "")) || 0;
+                    const itemPrice = parseFloat(String(item.listed_price_aed ?? item.price_aed ?? item.price ?? item.listedPrice ?? "").replace(/[^0-9.]/g, "")) || 0;
+                    const psf = itemSize > 0 && itemPrice > 0 ? itemPrice / itemSize : 0;
+                    const priceDisplay = itemPrice > 0
+                      ? formatListedPriceAed(itemPrice)
+                      : (typeof item.price === "string" && item.price ? item.price : "N/A");
                     return (
                       <ComparableCard
-                        key={item.id}
-                        title={item.name || "Property"}
-                        details={`${item.bedrooms || "N/A"} • ${item.size || "N/A"} • ${item.location || "N/A"}`}
-                        price={formatListedPriceAed(item.listedPrice ?? item.priceValue)}
+                        key={`listed-${index}`}
+                        title={item.building_name || item.building || item.name || "Property"}
+                        details={`${item.bedrooms || deal.bedrooms || "N/A"} • ${itemSize ? `${itemSize} sqft` : (item.size || "N/A")} • ${item.area || item.location || deal.area || deal.location || "N/A"}`}
+                        price={priceDisplay}
                         psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
                         status="Available"
                       />
@@ -425,11 +396,7 @@ function PropertyDetailsPageContent() {
                   tab === "transactions" ? "active" : ""
                 }`}
               >
-                {loadingComparables ? (
-                  <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
-                    <LoadingSpinner message="Loading recent sales..." />
-                  </div>
-                ) : recentSales.length === 0 ? (
+                {recentSales.length === 0 ? (
                   <div style={{ padding: "1rem", textAlign: "center", color: "#666" }}>
                     No recent sales found.
                   </div>
