@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient, Deal, PaginatedDealResponse } from "@/lib/api";
@@ -12,6 +12,33 @@ import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import { useTranslations } from "@/hooks/useTranslations";
 import { formatListedPriceAed } from "@/lib/formatPrice";
 import "./deals.css";
+
+// Persist the deals filters/page for this tab session so they survive navigating
+// into a property's details and back (browser back re-mounts this page).
+const DEALS_FILTERS_KEY = "deals:filters";
+const DEALS_PAGE_KEY = "deals:page";
+
+type DealsFilters = { status: string; area: string; bedroom: string; price: string };
+const DEFAULT_FILTERS: DealsFilters = { status: "all", area: "all", bedroom: "all", price: "all" };
+
+function readStoredFilters(): DealsFilters | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(DEALS_FILTERS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return { ...DEFAULT_FILTERS, ...parsed };
+  } catch {
+    return null;
+  }
+}
+
+function readStoredPage(): number {
+  if (typeof window === "undefined") return 0;
+  const n = parseInt(window.sessionStorage.getItem(DEALS_PAGE_KEY) || "", 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
 
 export default function DealsPage() {
   const router = useRouter();
@@ -64,6 +91,32 @@ export default function DealsPage() {
   // Debounce filters to avoid excessive API calls (500ms delay)
   const debouncedFilters = useDebounce(filters, 500);
   const debouncedCity = useDebounce(city, 300);
+
+  // Restore the last-used filters/page on mount (e.g. after pressing back from a
+  // property's details), then keep them in sync. Done in an effect (not a lazy
+  // initializer) to avoid a server/client hydration mismatch.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    const storedFilters = readStoredFilters();
+    if (storedFilters) {
+      setFilters(storedFilters);
+    }
+    const storedPage = readStoredPage();
+    if (storedPage > 0) {
+      setCurrentPage(storedPage);
+    }
+    restoredRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!restoredRef.current || typeof window === "undefined") return;
+    try {
+      window.sessionStorage.setItem(DEALS_FILTERS_KEY, JSON.stringify(filters));
+      window.sessionStorage.setItem(DEALS_PAGE_KEY, String(currentPage));
+    } catch {
+      /* sessionStorage unavailable (private mode / quota) — non-fatal */
+    }
+  }, [filters, currentPage]);
 
   const getApiFilters = useCallback(() => {
     // Pass the selected building status through verbatim. The options are built
