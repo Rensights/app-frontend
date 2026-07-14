@@ -59,21 +59,18 @@ export default function DealsPage() {
     avgYield: "N/A",
   });
   const [areaOptions, setAreaOptions] = useState<string[]>([]);
+  const [statusOptions, setStatusOptions] = useState<string[]>([]);
 
   // Debounce filters to avoid excessive API calls (500ms delay)
   const debouncedFilters = useDebounce(filters, 500);
   const debouncedCity = useDebounce(city, 300);
 
   const getApiFilters = useCallback(() => {
-    let buildingStatus = undefined;
-    if (debouncedFilters.status !== "all") {
-      // Map "ready" to "completed" and "off-plan" to "under-construction"
-      buildingStatus = debouncedFilters.status === "ready"
-        ? "completed"
-        : debouncedFilters.status === "off-plan"
-        ? "under-construction"
-        : debouncedFilters.status;
-    }
+    // Pass the selected building status through verbatim. The options are built
+    // from the dataset's own buildingStatus values (see loadFilterOptions), and
+    // the backend matches case-insensitively, so an exact value always hits.
+    const buildingStatus =
+      debouncedFilters.status !== "all" ? debouncedFilters.status : undefined;
 
     const area = debouncedFilters.area !== "all" ? debouncedFilters.area : undefined;
     const bedroomCount = debouncedFilters.bedroom !== "all" ? debouncedFilters.bedroom : undefined;
@@ -232,6 +229,16 @@ export default function DealsPage() {
       ).sort((a, b) => a.localeCompare(b));
 
       setAreaOptions(areas);
+
+      const statuses = Array.from(
+        new Set(
+          content
+            .map((d) => (d.buildingStatus || "").trim())
+            .filter((s) => s && s !== "N/A")
+        )
+      ).sort((a, b) => a.localeCompare(b));
+
+      setStatusOptions(statuses);
     } catch (err) {
       if (process.env.NODE_ENV === "development") {
         console.error("Error loading filter options:", err);
@@ -430,8 +437,7 @@ export default function DealsPage() {
               value={filters.status}
               options={[
                 { value: "all", label: "All Properties" },
-                { value: "ready", label: "Ready" },
-                { value: "off-plan", label: "Off-Plan" },
+                ...statusOptions.map((s) => ({ value: s, label: s })),
               ]}
               onChange={(value) => handleFilterChange("status", value)}
             />
