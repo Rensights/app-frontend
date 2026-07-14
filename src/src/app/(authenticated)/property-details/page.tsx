@@ -219,11 +219,12 @@ function PropertyDetailsPageContent() {
               {[
                 { value: deal.bedrooms || "N/A", label: "Bedrooms" },
                 { value: deal.size || "N/A", label: "Size" },
+                { value: buildingStatusLabel, label: "" },
                 { value: deal.rentalYield || "N/A", label: "Rental Yield" },
-              ].map((metric) => (
-                <div key={metric.label} className="metric-card">
+              ].map((metric, index) => (
+                <div key={index} className="metric-card">
                   <div className="metric-value">{metric.value}</div>
-                  <div className="metric-label">{metric.label}</div>
+                  {metric.label && <div className="metric-label">{metric.label}</div>}
                 </div>
               ))}
             </section>
