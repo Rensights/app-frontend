@@ -151,6 +151,10 @@ function PropertyDetailsPageContent() {
   const isAboveMarket = deal.marketDirection === "above";
   const discountPercentAbs = Math.abs(discountPercent);
   const marketDirectionWord = isAboveMarket ? "above" : "below";
+  // Show the real building status from the API (e.g. "Ready", "Off-Plan",
+  // "Under Construction", a handover quarter) instead of collapsing everything
+  // that isn't READY into "Off-Plan".
+  const buildingStatusLabel = (deal.buildingStatus || "").trim() || "N/A";
 
   return (
     <div className="property-page" style={{ position: 'relative' }}>
@@ -215,7 +219,7 @@ function PropertyDetailsPageContent() {
               {[
                 { value: deal.bedrooms || "N/A", label: "Bedrooms" },
                 { value: deal.size || "N/A", label: "Size" },
-                { value: deal.buildingStatus === "READY" || deal.buildingStatus === "ready" ? "Ready" : "Off-Plan", label: "Handover" },
+                { value: buildingStatusLabel, label: "Building Status" },
                 { value: deal.rentalYield || "N/A", label: "Rental Yield" },
               ].map((metric) => (
                 <div key={metric.label} className="metric-card">
@@ -278,7 +282,7 @@ function PropertyDetailsPageContent() {
                   />
                   <DescriptionStat
                     label="Building Status:"
-                    value={deal.buildingStatus === "READY" || deal.buildingStatus === "ready" ? "Ready" : "Off-Plan"}
+                    value={buildingStatusLabel}
                   />
                   <DescriptionStat
                     label="Listed Price:"
@@ -480,7 +484,7 @@ function PropertyDetailsPageContent() {
                       )}
                       <li>
                         <span>Building Status</span>
-                        <strong>{deal.buildingStatus === "READY" || deal.buildingStatus === "ready" ? "Ready" : "Off-Plan"}</strong>
+                        <strong>{buildingStatusLabel}</strong>
                       </li>
                     </ul>
                   </>
