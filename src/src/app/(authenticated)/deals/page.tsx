@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient, Deal, PaginatedDealResponse } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
@@ -530,15 +531,13 @@ export default function DealsPage() {
                     <span className="yield-info">{deal.rentalYield || deal.grossRentalYield || "N/A"}</span>
                 </td>
                 <td data-label="">
-                  <button
+                  <Link
                     className="details-btn"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleViewDetails(deal.id);
-                    }}
+                    href={`/property-details?id=${deal.id}`}
+                    onClick={(event) => event.stopPropagation()}
                   >
                     View Details
-                  </button>
+                  </Link>
                 </td>
               </tr>
               ))
