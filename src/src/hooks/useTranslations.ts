@@ -7,11 +7,17 @@ export function useTranslations(
   namespace: string,
   fallbacks: Record<string, string> = {}
 ) {
-  const { t, loadTranslations, translationsMeta } = useLanguage();
+  const { t, loadTranslations, translationsMeta, translations } = useLanguage();
 
   useEffect(() => {
     loadTranslations(namespace).catch(() => {});
   }, [namespace, loadTranslations]);
+
+  // True once this namespace's translations have been fetched (or seeded) for
+  // the current language. Pages can gate on it to show a loader instead of the
+  // default/fallback text and then re-rendering (translation FOUC). Set even on
+  // fetch error (context stores {}), so a failure never leaves the page loading.
+  const ready = translations[namespace] !== undefined;
 
   const translate = useCallback(
     (key: string) => {
@@ -24,5 +30,5 @@ export function useTranslations(
     [t, namespace, fallbacks]
   );
 
-  return { t: translate, updatedAt: translationsMeta[namespace]?.updatedAt };
+  return { t: translate, updatedAt: translationsMeta[namespace]?.updatedAt, ready };
 }
