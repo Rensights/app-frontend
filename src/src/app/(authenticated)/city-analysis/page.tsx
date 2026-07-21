@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import "./city-analysis.css";
 import { useTranslations } from "@/hooks/useTranslations";
+import TranslationGate from "@/components/ui/TranslationGate";
 
 export default function CityAnalysisPage() {
   const router = useRouter();
-  const { t } = useTranslations("cityAnalysis", {
+  const { t, ready, error } = useTranslations("cityAnalysis", {
     "cityAnalysis.title": "🏙️ Dubai City Analysis",
     "cityAnalysis.subtitle": "Data-Driven Investment Intelligence for Smart Investors",
     "cityAnalysis.summaryTitle": "City Market Summary",
@@ -37,6 +38,7 @@ export default function CityAnalysisPage() {
 
   return (
     <section className="content-section active">
+      <TranslationGate ready={ready} error={error}>
       <div className="city-analysis-container">
         {/* Header Section */}
         <div className="city-analysis-header">
@@ -109,6 +111,7 @@ export default function CityAnalysisPage() {
           </button>
         </div>
       </div>
+      </TranslationGate>
     </section>
   );
 }

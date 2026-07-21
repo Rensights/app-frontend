@@ -17,7 +17,7 @@ export default function WeeklyDealsPage() {
   const isFreeUser = !user || user.userTier === 'FREE';
   const [isUpgrading, setIsUpgrading] = useState(false);
   const { enabled: weeklyDealsEnabled, loading: weeklyDealsLoading } = useWeeklyDealsEnabled();
-  const { t } = useTranslations("weeklyDeals", {
+  const { t, ready, error } = useTranslations("weeklyDeals", {
     "weeklyDeals.section.title": "Weekly Property Deals",
     "weeklyDeals.alert.title": "Latest Alert",
     "weeklyDeals.alert.subtitle": "Hot deals discovered across Dubai areas this week!",
@@ -86,7 +86,16 @@ export default function WeeklyDealsPage() {
     }
   }, [weeklyDealsEnabled, router]);
 
-  if (weeklyDealsLoading) {
+  if (error) {
+    return (
+      <div className="py-24 text-center text-muted-foreground">
+        <p>Something went wrong loading this page. Please refresh and try again.</p>
+      </div>
+    );
+  }
+
+  // Hold until translations arrive so we never flash the default text.
+  if (weeklyDealsLoading || !ready) {
     return <LoadingSpinner fullPage message="Loading..." />;
   }
 
