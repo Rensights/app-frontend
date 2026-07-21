@@ -9,6 +9,7 @@ import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import { useTranslations } from "@/hooks/useTranslations";
+import TranslationGate from "@/components/ui/TranslationGate";
 
 export default function PricingPage() {
   // Get toast
@@ -16,7 +17,7 @@ export default function PricingPage() {
   
   // Get user info to check tier
   const { user, subscription } = useUser();
-  const { t } = useTranslations("pricing", {
+  const { t, ready, error } = useTranslations("pricing", {
     "pricing.title": "Pricing",
     "pricing.subtitle": "Transparent pricing for every stage of your investment journey",
     "pricing.annualNote": "Save 20% with annual billing",
@@ -106,7 +107,8 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />
-      
+
+      <TranslationGate ready={ready} error={error}>
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -295,6 +297,7 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+      </TranslationGate>
 
       <LandingFooter />
     </div>

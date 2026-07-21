@@ -7,6 +7,7 @@ interface LanguageContextType {
   setLanguage: (lang: string) => void;
   translations: Record<string, Record<string, string>>;
   translationsMeta: Record<string, { updatedAt?: string }>;
+  translationErrors: Record<string, boolean>;
   loadTranslations: (namespace: string) => Promise<void>;
   t: (key: string, namespace?: string) => string;
   isLoading: boolean;
@@ -30,6 +31,7 @@ export function LanguageProvider({
   const [language, setLanguageState] = useState<string>(initialLanguage);
   const [translations, setTranslations] = useState<Record<string, Record<string, string>>>(initialTranslations);
   const [translationsMeta, setTranslationsMeta] = useState<Record<string, { updatedAt?: string }>>({});
+  const [translationErrors, setTranslationErrors] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
   const initialLangRef = useRef(initialLanguage);
 
@@ -53,6 +55,7 @@ export function LanguageProvider({
       // Clear translations cache when language changes
       setTranslations({});
       setTranslationsMeta({});
+      setTranslationErrors({});
     }
   }, []);
 
@@ -74,6 +77,7 @@ export function LanguageProvider({
         ...prev,
         [namespace]: { updatedAt: data.updatedAt },
       }));
+      setTranslationErrors(prev => ({ ...prev, [namespace]: false }));
     } catch (error) {
       console.error(`Error loading translations for ${namespace}:`, error);
       // Set empty translations on error to prevent infinite retries
@@ -81,6 +85,7 @@ export function LanguageProvider({
         ...prev,
         [namespace]: {},
       }));
+      setTranslationErrors(prev => ({ ...prev, [namespace]: true }));
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +114,7 @@ export function LanguageProvider({
         setLanguage,
         translations,
         translationsMeta,
+        translationErrors,
         loadTranslations,
         t,
         isLoading,
@@ -130,6 +136,7 @@ export function useLanguage() {
       setLanguage: () => {},
       translations: {},
       translationsMeta: {},
+      translationErrors: {},
       loadTranslations: async () => {},
       t: (key: string) => key,
       isLoading: false,

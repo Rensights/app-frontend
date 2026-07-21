@@ -2,11 +2,11 @@
 
 import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import TranslationGate from "@/components/ui/TranslationGate";
 import { useTranslations } from "@/hooks/useTranslations";
 
 export default function PrivacyTermsPage() {
-  const { t, updatedAt, ready } = useTranslations("privacyTerms", {
+  const { t, updatedAt, ready, error } = useTranslations("privacyTerms", {
     "privacyTerms.title": "Privacy Policy & Terms of Service",
     "privacyTerms.fullContent": "",
     "privacyTerms.privacy.title": "Privacy Policy",
@@ -46,13 +46,9 @@ export default function PrivacyTermsPage() {
     <div className="min-h-screen">
       <LandingHeader />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Hold the page until translations arrive, so we never show the default
-            text and then swap it for the real (or translated) content. */}
-        {!ready ? (
-          <div className="py-24">
-            <LoadingSpinner message="Loading..." />
-          </div>
-        ) : (
+        {/* Hold the page until translations arrive (loader), or show an error if
+            the fetch fails, so we never flash the default text. */}
+        <TranslationGate ready={ready} error={error}>
           <>
             <h1 className="text-4xl font-bold mb-8">{t("privacyTerms.title")}</h1>
 
@@ -122,7 +118,7 @@ export default function PrivacyTermsPage() {
               </>
             )}
           </>
-        )}
+        </TranslationGate>
       </main>
       <LandingFooter />
     </div>

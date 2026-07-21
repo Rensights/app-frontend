@@ -8,6 +8,7 @@ import LandingHeader from "@/components/landing/Header";
 import LandingFooter from "@/components/landing/Footer";
 import Link from "next/link";
 import { useTranslations } from "@/hooks/useTranslations";
+import TranslationGate from "@/components/ui/TranslationGate";
 import { apiClient } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import ConsentedYouTube from "./ConsentedYouTube";
@@ -96,7 +97,7 @@ const extractVideoIds = (content: Record<string, any>): string[] => {
 
 export default function SolutionsPage() {
   const { language } = useLanguage();
-  const { t } = useTranslations("solutions", {
+  const { t, ready, error } = useTranslations("solutions", {
     "solutions.title": "Solutions",
     "solutions.subtitle": "Data-driven tools to find potentially underpriced properties before everyone else",
     "solutions.step1.badge": "Step 1",
@@ -151,7 +152,8 @@ export default function SolutionsPage() {
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />
-      
+
+      <TranslationGate ready={ready} error={error}>
       {/* Page Title Section */}
       <section className="pt-32 pb-8 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -267,6 +269,7 @@ export default function SolutionsPage() {
           </div>
         </div>
       </section>
+      </TranslationGate>
 
       <LandingFooter />
     </div>
