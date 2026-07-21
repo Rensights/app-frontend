@@ -59,36 +59,48 @@ export function LanguageProvider({
     }
   }, []);
 
-  // Load translations for a namespace
+  // Load translations for a namespace. Retries a few times before giving up, so a
+  // transient hiccup (a deploy rollout window, a network blip) self-heals instead
+  // of surfacing the "Something went wrong" error to the user.
   const loadTranslations = useCallback(async (namespace: string = 'common') => {
     setIsLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/api/translations/${language}/${namespace}`);
-      if (!response.ok) {
-        throw new Error(`Failed to load translations: ${response.status}`);
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await fetch(`${API_URL}/api/translations/${language}/${namespace}`);
+        if (!response.ok) {
+          throw new Error(`Failed to load translations: ${response.status}`);
+        }
+        const data = await response.json();
+
+        setTranslations(prev => ({
+          ...prev,
+          [namespace]: data.translations || {},
+        }));
+        setTranslationsMeta(prev => ({
+          ...prev,
+          [namespace]: { updatedAt: data.updatedAt },
+        }));
+        setTranslationErrors(prev => ({ ...prev, [namespace]: false }));
+        setIsLoading(false);
+        return;
+      } catch (error) {
+        // Retry transient failures with a short backoff (400ms, 800ms) before
+        // marking the namespace as errored.
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 400 * attempt));
+          continue;
+        }
+        console.error(`Error loading translations for ${namespace} after ${maxAttempts} attempts:`, error);
+        // Set empty translations on error to prevent infinite retries
+        setTranslations(prev => ({
+          ...prev,
+          [namespace]: {},
+        }));
+        setTranslationErrors(prev => ({ ...prev, [namespace]: true }));
       }
-      const data = await response.json();
-      
-      setTranslations(prev => ({
-        ...prev,
-        [namespace]: data.translations || {},
-      }));
-      setTranslationsMeta(prev => ({
-        ...prev,
-        [namespace]: { updatedAt: data.updatedAt },
-      }));
-      setTranslationErrors(prev => ({ ...prev, [namespace]: false }));
-    } catch (error) {
-      console.error(`Error loading translations for ${namespace}:`, error);
-      // Set empty translations on error to prevent infinite retries
-      setTranslations(prev => ({
-        ...prev,
-        [namespace]: {},
-      }));
-      setTranslationErrors(prev => ({ ...prev, [namespace]: true }));
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   }, [language]);
 
   // Translation function
