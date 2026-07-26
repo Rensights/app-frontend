@@ -57,7 +57,7 @@ export default function WeeklyDealsPage() {
     "pricing.standard.upgradeSubtitle": "Access exclusive deals and premium features with Standard Package.",
     "pricing.standard.upgradeFeature4": "Full access to property analytics",
     "pricing.standard.upgradeButton": "Upgrade to Standard Package",
-    "pricing.standard.price": "$20",
+    "pricing.standard.price": "$59",
     "pricing.standard.period": "/month",
     "pricing.standard.feature1": "5 tailored pricing analysis of properties selected by you",
     "pricing.standard.feature2": "Advanced city analysis",

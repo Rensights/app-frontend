@@ -128,7 +128,7 @@ function SignUpPageContent() {
     "pricing.standard.feature1": "5 tailored pricing analysis of properties selected by you",
     "pricing.standard.feature2": "Advanced city analysis",
     "pricing.standard.feature3": "Potentially underpriced deals",
-    "pricing.standard.price": "$20",
+    "pricing.standard.price": "$59",
     "pricing.standard.period": "/mo",
   });
   const [step, setStep] = useState<Step>("form");

@@ -43,7 +43,7 @@ export default function PricingPage() {
     "pricing.annualPriceNote": "/month billed annually",
     "pricing.free.price": "$0",
     "pricing.free.period": "/month",
-    "pricing.standard.price": "$20",
+    "pricing.standard.price": "$59",
     "pricing.standard.period": "/month",
     "pricing.standard.annualPrice": "$16",
     "pricing.trusted.price": "$2,000",
