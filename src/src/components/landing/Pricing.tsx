@@ -189,7 +189,7 @@ export default function LandingPricing() {
                 
                     if (!user) {
                       return (
-                        <Link href="/portal/signup">
+                        <Link href="/portal/signup?plan=premium">
                           <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
                             {t("pricing.button.getStarted")}
                           </Button>

@@ -215,9 +215,10 @@ export default function PricingPage() {
                       }
                       
                       // If not logged in, show "Get Started" button that links to signup
+                      // with the Standard plan preselected.
                       if (!user) {
                         return (
-                          <Link href="/portal/signup">
+                          <Link href="/portal/signup?plan=premium">
                             <Button className="w-full h-12" variant={plan.popular ? "default" : "outline"}>
                               {t("pricing.button.getStarted")}
                             </Button>

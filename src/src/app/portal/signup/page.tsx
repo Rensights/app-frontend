@@ -199,12 +199,36 @@ function SignUpPageContent() {
   }, [resendTimer]);
 
   const handleChange = (field: keyof FormState, value: string | string[]) => {
+    let nextValue = value;
+    // Names can't contain digits — strip them so the field never accepts numbers.
+    if ((field === "firstName" || field === "lastName") && typeof nextValue === "string") {
+      nextValue = nextValue.replace(/[0-9]/g, "");
+    }
     setFormState((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: nextValue,
     }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
+
+  // Preselect the plan from the URL (?plan=premium|standard|free) so arriving from
+  // a pricing "Get Started" button highlights the plan the user actually picked.
+  const planHydratedFromQuery = useRef(false);
+  useEffect(() => {
+    if (planHydratedFromQuery.current) return;
+    const planParam = searchParams?.get("plan");
+    if (!planParam) return;
+    const mapped: Plan | null =
+      planParam === "premium" || planParam === "standard"
+        ? "premium"
+        : planParam === "free"
+        ? "free"
+        : null;
+    if (mapped) {
+      planHydratedFromQuery.current = true;
+      setFormState((prev) => ({ ...prev, plan: mapped }));
+    }
+  }, [searchParams]);
 
   const toggleGoal = (value: string) => {
     handleChange(
