@@ -660,15 +660,8 @@
   border-radius: 12px;
   border-left: 4px solid #fbbf24;
   box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.city-analysis-card:hover {
-  transform: translateX(5px);
-  box-shadow: 0 6px 25px rgba(245, 158, 11, 0.3);
-  border-left-width: 6px;
-  background: #fffbeb;
+  /* Static informational cards — not clickable, so no pointer cursor or
+     button-like hover movement. */
 }
 
 .city-analysis-card h4 {
