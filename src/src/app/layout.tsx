@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { UserProvider } from "../context/UserContext";
 import { ToastProvider } from "../components/ui/Toast";
@@ -72,12 +71,18 @@ export default async function RootLayout({
             script that reads window.__API_URL__. Not next/script, not async. */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts -- intentional: env.js must block before any script reads window.__API_URL__ */}
         <script src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/env.js`} />
-        <Script
+        {/* Cookiebot consent — the official async snippet, loaded once per document
+            in <head>. Using next/script's beforeInteractive here re-injected the
+            widget on client navigations, which re-showed the banner on every page
+            even after the user had already chosen. A plain async script runs once
+            and Cookiebot then honours its own CookieConsent cookie. */}
+        <script
           id="Cookiebot"
           src="https://consent.cookiebot.com/uc.js"
-          strategy="beforeInteractive"
           data-cbid="dc13aae5-c69f-42aa-85b3-a0809f605ec3"
           data-blockingmode="auto"
+          type="text/javascript"
+          async
         />
         {/* Optimized: DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="https://js.stripe.com" />
