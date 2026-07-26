@@ -68,32 +68,32 @@ export default function CityAnalysisPage() {
           <div className="city-analysis-right">
             <h3>{t("cityAnalysis.modulesTitle")}</h3>
             <div className="city-analysis-cards">
-              <div className="city-analysis-card">
+              <div className="city-analysis-card" role="button" tabIndex={0} onClick={() => router.push('/city-analysis/detailed')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/city-analysis/detailed'); } }}>
                 <h4>{t("cityAnalysis.module1.title")}</h4>
                 <p>{t("cityAnalysis.module1.body")}</p>
               </div>
 
-              <div className="city-analysis-card">
+              <div className="city-analysis-card" role="button" tabIndex={0} onClick={() => router.push('/city-analysis/detailed')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/city-analysis/detailed'); } }}>
                 <h4>{t("cityAnalysis.module2.title")}</h4>
                 <p>{t("cityAnalysis.module2.body")}</p>
               </div>
 
-              <div className="city-analysis-card">
+              <div className="city-analysis-card" role="button" tabIndex={0} onClick={() => router.push('/city-analysis/detailed')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/city-analysis/detailed'); } }}>
                 <h4>{t("cityAnalysis.module3.title")}</h4>
                 <p>{t("cityAnalysis.module3.body")}</p>
               </div>
 
-              <div className="city-analysis-card">
+              <div className="city-analysis-card" role="button" tabIndex={0} onClick={() => router.push('/city-analysis/detailed')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/city-analysis/detailed'); } }}>
                 <h4>{t("cityAnalysis.module4.title")}</h4>
                 <p>{t("cityAnalysis.module4.body")}</p>
               </div>
 
-              <div className="city-analysis-card">
+              <div className="city-analysis-card" role="button" tabIndex={0} onClick={() => router.push('/city-analysis/detailed')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/city-analysis/detailed'); } }}>
                 <h4>{t("cityAnalysis.module5.title")}</h4>
                 <p>{t("cityAnalysis.module5.body")}</p>
               </div>
 
-              <div className="city-analysis-card">
+              <div className="city-analysis-card" role="button" tabIndex={0} onClick={() => router.push('/city-analysis/detailed')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/city-analysis/detailed'); } }}>
                 <h4>{t("cityAnalysis.module6.title")}</h4>
                 <p>{t("cityAnalysis.module6.body")}</p>
               </div>

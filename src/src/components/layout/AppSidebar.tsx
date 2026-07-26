@@ -70,7 +70,9 @@ export const AppSidebar = memo(function AppSidebar({ isOpen, onClose, onLogout }
     <>
       <aside className={`sidebar ${isOpen ? "open" : ""}`}>
         <div className="logo-section">
-          <div className="logo">Rensights</div>
+          <LinkWithPrefetch href="/" className="logo" style={{ textDecoration: "none", color: "inherit" }}>
+            Rensights
+          </LinkWithPrefetch>
           <div className="logo-subtitle">Dubai Property Intelligence</div>
           <button
             className="sidebar-close"
