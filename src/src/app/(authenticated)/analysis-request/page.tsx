@@ -1042,7 +1042,13 @@ export default function AnalysisRequestPage() {
                   value={formState.area}
                   options={[
                     { value: "", label: "Select Area" },
-                    ...areaOptions.map((area) => ({ value: area, label: area })),
+                    // "Marsa Dubai" is the official DLD community name (kept as the
+                    // submitted value so downstream data lookups still match); it is
+                    // shown to users under its common name, "Dubai Marina".
+                    ...areaOptions.map((area) => ({
+                      value: area,
+                      label: area === "Marsa Dubai" ? "Dubai Marina" : area,
+                    })),
                   ]}
                   onChange={(value) => handleInputChange("area", value)}
                 />
