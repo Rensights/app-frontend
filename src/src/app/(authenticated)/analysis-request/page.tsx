@@ -63,7 +63,6 @@ const initialFormState: FormState = {
 const featureOptions = [
   { id: "balcony", label: "Balcony/Terrace" },
   { id: "parking", label: "Parking Space" },
-  { id: "furnished", label: "Furnished" },
   { id: "pool", label: "Swimming Pool" },
   { id: "gym", label: "Gym/Fitness Center" },
   { id: "concierge", label: "Concierge/Security" },
