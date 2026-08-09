@@ -714,7 +714,7 @@ export default function AnalysisRequestPage() {
               <section className="key-metrics">
                 {[
                   { value: analysis.bedrooms || report.bedrooms || "N/A", label: "Bedrooms" },
-                  { value: sizeSqft || report.size || "N/A", label: "Size" },
+                  { value: sizeSqft || report.size || "N/A", label: "Size, sq ft" },
                   { value: buildingStatus === "READY" ? "Ready" : "Off-Plan", label: "Handover" },
                   { value: rentalYield || "N/A", label: "Rental Yield" },
                 ].map((metric) => (

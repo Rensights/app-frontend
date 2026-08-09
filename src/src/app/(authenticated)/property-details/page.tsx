@@ -218,8 +218,8 @@ function PropertyDetailsPageContent() {
             <section className="key-metrics">
               {[
                 { value: deal.bedrooms || "N/A", label: "Bedrooms" },
-                { value: deal.size || "N/A", label: "Size" },
-                { value: buildingStatusLabel, label: "" },
+                { value: deal.size || "N/A", label: "Size, sq ft" },
+                { value: buildingStatusLabel, label: "Handover" },
                 { value: deal.rentalYield || "N/A", label: "Rental Yield" },
               ].map((metric, index) => (
                 <div key={index} className="metric-card">
