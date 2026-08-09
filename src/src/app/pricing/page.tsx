@@ -45,7 +45,7 @@ export default function PricingPage() {
     "pricing.free.period": "/month",
     "pricing.standard.price": "$59",
     "pricing.standard.period": "/month",
-    "pricing.standard.annualPrice": "$16",
+    "pricing.standard.annualPrice": "$48",
     "pricing.trusted.price": "$2,000",
     "pricing.trusted.period": "/year",
     "pricing.why.title": "Why Choose Rensights?",
