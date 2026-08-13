@@ -529,6 +529,7 @@ export default function DealsPage() {
           </div>
         </div>
 
+        <div className="deals-table-wrap">
         <table className="deals-table">
           <thead>
             <tr>
@@ -565,8 +566,12 @@ export default function DealsPage() {
               filteredDeals.map((deal) => (
               <tr key={deal.id} onClick={() => handleViewDetails(deal.id)}>
                 <td data-label="Property">
-                  <div className="property-name">{deal.name || "Unnamed Property"}</div>
-                  <div className="property-location">{deal.location || deal.area || "N/A"}</div>
+                  <div className="property-name" title={deal.name || "Unnamed Property"}>
+                    {deal.name || "Unnamed Property"}
+                  </div>
+                  <div className="property-location" title={deal.location || deal.area || "N/A"}>
+                    {deal.location || deal.area || "N/A"}
+                  </div>
                 </td>
                 <td data-label="Bedrooms">
                   <span className="bedroom-badge">{formatBedrooms(deal.bedrooms || deal.bedroomCount)}</span>
@@ -603,6 +608,7 @@ export default function DealsPage() {
             )}
           </tbody>
         </table>
+        </div>
 
         <div className="pagination">
           <button

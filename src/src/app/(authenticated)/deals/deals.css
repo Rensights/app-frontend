@@ -497,10 +497,20 @@
   cursor: pointer;
 }
 
+/* Values like "AED 830k - 920k" and "27.2% Below Market" must stay on one line, so the
+   table is allowed to exceed the container and scroll sideways instead of squashing a
+   column until its value wraps. */
+.deals-table-wrap {
+  margin-top: 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .deals-table {
   width: 100%;
+  min-width: 960px;
   border-collapse: collapse;
-  margin-top: 20px;
+  table-layout: auto;
 }
 
 .deals-table th {
@@ -510,16 +520,28 @@
   text-align: left;
   font-weight: 600;
   font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .deals-table td {
   padding: 15px 12px;
   border-bottom: 1px solid #e1e5e9;
+  white-space: nowrap;
 }
 
 .deals-table tr:hover {
   background-color: #f8f9fa;
   cursor: pointer;
+}
+
+/* Building name and area each keep their own single line; a rare very long one is
+   truncated rather than allowed to stretch the column (full text is in the title). */
+.property-name,
+.property-location {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .property-name {
@@ -652,10 +674,26 @@
     padding: 20px;
   }
 
+  /* Rows become full-width cards here, so the desktop min-width and the one-line rule
+     are dropped — there is no column to squash and text may wrap freely. */
+  .deals-table-wrap {
+    overflow-x: visible;
+  }
+
   .deals-table {
     display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    min-width: 0;
+  }
+
+  .deals-table td {
+    white-space: normal;
+  }
+
+  .property-name,
+  .property-location {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
   }
 
   .deals-table thead {
