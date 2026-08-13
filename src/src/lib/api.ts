@@ -973,21 +973,21 @@ export interface Deal {
   recentSales?: any[];
 }
 
-export interface DealsSizeRange {
-  minSqft: number;
-  maxSqft: number;
-}
-
 /**
- * Headline stats for the deals page, served by the backend from the valuation API's
- * `GET /deals -> summary`. Values are numbers (percentages without the `%`) so the UI owns
- * formatting; a field is `null` when upstream cannot supply it.
+ * Headline stats for the deals page, mapped by the backend from the valuation module's
+ * `GET /deals -> summary` (`available_deals`, `avg_price_vs_market`,
+ * `most_liquid_size_range`, `avg_gross_rental_yield`).
+ *
+ * Values arrive display-ready, exactly as the module sends them — `454`, `"19.9%"`,
+ * `"600-909 sq ft"`, `"6.9%"` — so the UI renders them rather than reformatting. A field is
+ * `null` when the module omits it. The percentage fields are typed loosely because the module
+ * may send a bare number instead of a `%` string.
  */
 export interface DealsSummary {
   availableDeals: number | null;
-  avgPriceVsMarket: number | null;
-  mostLiquidSizeRange: DealsSizeRange | null;
-  avgGrossRentalYield: number | null;
+  avgPriceVsMarket: string | number | null;
+  mostLiquidSizeRange: string | null;
+  avgGrossRentalYield: string | number | null;
 }
 
 export interface PaginatedDealResponse {

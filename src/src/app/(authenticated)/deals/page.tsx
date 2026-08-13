@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { apiClient, Deal, DealsSizeRange, DealsSummary, PaginatedDealResponse } from "@/lib/api";
+import { apiClient, Deal, DealsSummary, PaginatedDealResponse } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -21,20 +21,20 @@ const DEALS_PAGE_KEY = "deals:page";
 type DealsFilters = { status: string; area: string; bedroom: string; price: string };
 const DEFAULT_FILTERS: DealsFilters = { status: "all", area: "all", bedroom: "all", price: "all" };
 
-// The four headline stat cards. Percentages are kept as numbers (null = upstream had no
-// usable value) and formatted only at render time.
+// The four headline stat cards. The backend serves these display-ready from the valuation
+// module's summary ("19.9%", "600-909 sq ft"), so they are held as strings.
 type DealsStats = {
   total: number;
-  avgPriceVsMarket: number | null;
-  sizeRange: DealsSizeRange | null;
-  avgYield: number | null;
+  avgPriceVsMarket: string;
+  sizeRange: string;
+  avgYield: string;
 };
 
 const EMPTY_STATS: DealsStats = {
   total: 0,
-  avgPriceVsMarket: null,
-  sizeRange: null,
-  avgYield: null,
+  avgPriceVsMarket: "N/A",
+  sizeRange: "N/A",
+  avgYield: "N/A",
 };
 
 /** Percentage out of a per-deal string ("12.4%", "-3.1% vs market", "N/A"), sign preserved. */
@@ -43,17 +43,20 @@ function parsePercent(raw?: string | null): number | null {
   return match ? parseFloat(match[0]) : null;
 }
 
-function averagePercent(values: (number | null)[]): number | null {
+function averagePercent(values: (number | null)[]): string {
   const nums = values.filter((v): v is number => v !== null);
-  if (!nums.length) return null;
-  return Math.round((nums.reduce((sum, v) => sum + v, 0) / nums.length) * 10) / 10;
+  if (!nums.length) return "N/A";
+  return `${(nums.reduce((sum, v) => sum + v, 0) / nums.length).toFixed(1)}%`;
 }
 
-const formatPercent = (value: number | null): string =>
-  value === null || value === undefined ? "N/A" : `${value.toFixed(1)}%`;
+/** Render a summary value as-is; a bare number from the module gets its "%" back. */
+const displayPercent = (value: string | number | null | undefined): string => {
+  if (value === null || value === undefined || value === "") return "N/A";
+  return typeof value === "number" ? `${value.toFixed(1)}%` : value;
+};
 
-const formatSizeRange = (range: DealsSizeRange | null): string =>
-  range ? `${range.minSqft.toLocaleString()}-${range.maxSqft.toLocaleString()} sq ft` : "N/A";
+const displayText = (value: string | null | undefined): string =>
+  value === null || value === undefined || value === "" ? "N/A" : value;
 
 function readStoredFilters(): DealsFilters | null {
   if (typeof window === "undefined") return null;
@@ -187,7 +190,7 @@ export default function DealsPage() {
     return {
       total: base.length,
       avgPriceVsMarket: averagePercent(base.map((deal) => parsePercent(deal.priceVsEstimations))),
-      sizeRange: summary?.mostLiquidSizeRange ?? null,
+      sizeRange: displayText(summary?.mostLiquidSizeRange),
       avgYield: averagePercent(base.map((deal) => parsePercent(deal.rentalYield))),
     };
   }, [applyPriceFilter]);
@@ -236,9 +239,9 @@ export default function DealsPage() {
         const summary = totalsResponse.summary;
         setStats({
           total: summary?.availableDeals ?? totalsResponse.totalElements ?? 0,
-          avgPriceVsMarket: summary?.avgPriceVsMarket ?? null,
-          sizeRange: summary?.mostLiquidSizeRange ?? null,
-          avgYield: summary?.avgGrossRentalYield ?? null,
+          avgPriceVsMarket: displayPercent(summary?.avgPriceVsMarket),
+          sizeRange: displayText(summary?.mostLiquidSizeRange),
+          avgYield: displayPercent(summary?.avgGrossRentalYield),
         });
         return;
       }
@@ -459,15 +462,15 @@ export default function DealsPage() {
             label={tWeeklyDeals("weeklyDeals.stats.availableDeals")}
           />
           <StatCard
-            value={formatPercent(stats.avgPriceVsMarket)}
+            value={stats.avgPriceVsMarket}
             label={tWeeklyDeals("weeklyDeals.stats.avgPriceVsMarket")}
           />
           <StatCard
-            value={formatSizeRange(stats.sizeRange)}
+            value={stats.sizeRange}
             label={tWeeklyDeals("weeklyDeals.stats.liquidSizeRange")}
           />
           <StatCard
-            value={formatPercent(stats.avgYield)}
+            value={stats.avgYield}
             label={tWeeklyDeals("weeklyDeals.stats.avgGrossYield")}
           />
         </div>
