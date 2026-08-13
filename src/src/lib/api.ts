@@ -983,8 +983,42 @@ export interface Deal {
   /** "Only 947 studio units..." */
   dubaiComparison?: string;
   nearestLandmark?: string;
-  listedDeals?: any[];
-  recentSales?: any[];
+  listedDeals?: ComparableListing[];
+  recentSales?: ComparableSale[];
+}
+
+/**
+ * One "Similar Deals" card, mapped by the backend from an entry of the module's
+ * `listing_comparables`. Values arrive display-ready — render them, do not recompute.
+ */
+export interface ComparableListing {
+  id?: string;
+  name?: string;
+  area?: string;
+  bedrooms?: string;
+  /** "466 sq ft" */
+  sizeDisplay?: string;
+  /** "AED 650k" */
+  listedPrice?: string;
+  /** "AED 1,394/sq ft" */
+  pricePerSqft?: string;
+  /** listing_date */
+  date?: string;
+  url?: string;
+}
+
+/** One "Recent Sales" card, from an entry of the module's `transaction_comparables`. */
+export interface ComparableSale {
+  id?: string;
+  name?: string;
+  area?: string;
+  bedrooms?: string;
+  sizeDisplay?: string;
+  /** "AED 650k" */
+  salePrice?: string;
+  pricePerSqft?: string;
+  /** transaction_date */
+  date?: string;
 }
 
 /**

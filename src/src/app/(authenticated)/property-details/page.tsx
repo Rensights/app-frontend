@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { apiClient, Deal } from "@/lib/api";
+import { apiClient, ComparableListing, ComparableSale, Deal } from "@/lib/api";
 import { trackEvent } from "@/lib/analytics";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
@@ -34,8 +34,8 @@ function PropertyDetailsPageContent() {
     "pricing.standard.feature3": "Potentially underpriced deals",
   });
   const [deal, setDeal] = useState<Deal | null>(null);
-  const [listedDeals, setListedDeals] = useState<any[]>([]);
-  const [recentSales, setRecentSales] = useState<any[]>([]);
+  const [listedDeals, setListedDeals] = useState<ComparableListing[]>([]);
+  const [recentSales, setRecentSales] = useState<ComparableSale[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("listed");
@@ -376,24 +376,19 @@ function PropertyDetailsPageContent() {
                     No similar properties found.
                   </div>
                 ) : (
-                  listedDeals.map((item: any, index: number) => {
-                    const itemSize = parseFloat(String(item.size_sqft ?? item.sqft ?? item.size ?? "").replace(/[^0-9.]/g, "")) || 0;
-                    const itemPrice = parseFloat(String(item.listed_price_aed ?? item.price_aed ?? item.price ?? item.listedPrice ?? "").replace(/[^0-9.]/g, "")) || 0;
-                    const psf = itemSize > 0 && itemPrice > 0 ? itemPrice / itemSize : 0;
-                    const priceDisplay = itemPrice > 0
-                      ? formatListedPriceAed(itemPrice)
-                      : (typeof item.price === "string" && item.price ? item.price : "N/A");
-                    return (
-                      <ComparableCard
-                        key={`listed-${index}`}
-                        title={item.building_name || item.building || item.name || "Property"}
-                        details={`${item.bedrooms || deal.bedrooms || "N/A"} • ${itemSize ? `${itemSize} sqft` : (item.size || "N/A")} • ${item.area || item.location || deal.area || deal.location || "N/A"}`}
-                        price={priceDisplay}
-                        psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
-                        status="Available"
-                      />
-                    );
-                  })
+                  // The module supplies these display-ready (size_display,
+                  // listed_price_display, price_per_sqft_display); nothing is recomputed here.
+                  listedDeals.map((item, index) => (
+                    <ComparableCard
+                      key={item.id ?? `listed-${index}`}
+                      title={item.name || "Property"}
+                      details={comparableDetails(item.bedrooms, item.sizeDisplay, item.area)}
+                      price={item.listedPrice || "N/A"}
+                      psf={item.pricePerSqft || "N/A"}
+                      status={item.date ? `Listed ${item.date}` : "Available"}
+                      url={item.url}
+                    />
+                  ))
                 )}
               </div>
 
@@ -407,23 +402,17 @@ function PropertyDetailsPageContent() {
                     No recent sales found.
                   </div>
                 ) : (
-                  recentSales.map((sale, index) => {
-                    const saleSize = sale.size_sqft || sale.size || 0;
-                    const salePrice = sale.transaction_price_aed || sale.price || 0;
-                    const psf = saleSize > 0 && salePrice > 0 ? salePrice / saleSize : 0;
-                    const saleDate = sale.transaction_date || sale.date || "N/A";
-
-                    return (
-                      <ComparableCard
-                        key={`sale-${index}`}
-                        title={sale.building_name || sale.name || "Property"}
-                        details={`${sale.bedrooms || "N/A"} • ${saleSize ? `${saleSize} sqft` : "N/A"} • ${sale.area || sale.location || "N/A"}`}
-                        price={salePrice > 0 ? formatListedPriceAed(salePrice) : "N/A"}
-                        psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
-                        status={`Sold ${saleDate}`}
-                      />
-                    );
-                  })
+                  recentSales.map((sale, index) => (
+                    <ComparableCard
+                      key={sale.id ?? `sale-${index}`}
+                      title={sale.name || "Property"}
+                      details={comparableDetails(sale.bedrooms, sale.sizeDisplay, sale.area)}
+                      price={sale.salePrice || "N/A"}
+                      psf={sale.pricePerSqft || "N/A"}
+                      status={sale.date ? `Sold ${sale.date}` : "Sold"}
+                      sold
+                    />
+                  ))
                 )}
               </div>
             </div>
@@ -578,6 +567,12 @@ const DescriptionStat = ({
   </div>
 );
 
+/** "1 BR • 466 sq ft • Business Bay", skipping whatever the module did not supply. */
+const comparableDetails = (...parts: (string | undefined)[]): string => {
+  const present = parts.filter((part): part is string => Boolean(part && part.trim()));
+  return present.length ? present.join(" • ") : "N/A";
+};
+
 const ComparableCard = ({
   title,
   details,
@@ -585,6 +580,7 @@ const ComparableCard = ({
   psf,
   status,
   sold,
+  url,
 }: {
   title: string;
   details: string;
@@ -592,9 +588,18 @@ const ComparableCard = ({
   psf: string;
   status: string;
   sold?: boolean;
+  url?: string;
 }) => (
   <div className="similar-property">
-    <div className="similar-title">{title}</div>
+    <div className="similar-title">
+      {url ? (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          {title}
+        </a>
+      ) : (
+        title
+      )}
+    </div>
     <div className="similar-details">{details}</div>
     <div className="similar-price-row">
       <div className="similar-price">{price}</div>
