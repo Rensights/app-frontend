@@ -983,11 +983,23 @@ export interface Deal {
  * `null` when the module omits it. The percentage fields are typed loosely because the module
  * may send a bare number instead of a `%` string.
  */
+export interface DealsTopArea {
+  area: string;
+  count: number;
+}
+
 export interface DealsSummary {
+  // /deals stat cards
   availableDeals: number | null;
   avgPriceVsMarket: string | number | null;
   mostLiquidSizeRange: string | null;
   avgGrossRentalYield: string | number | null;
+  // /weekly-deals highlights
+  totalActiveDeals: number | null;
+  topAreas: DealsTopArea[] | null;
+  hottestArea: string | null;
+  bestDiscountDisplay: string | null;
+  bestPerformingArea: string | null;
 }
 
 export interface PaginatedDealResponse {

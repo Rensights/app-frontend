@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { apiClient } from "@/lib/api";
+import { apiClient, DealsSummary } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useWeeklyDealsEnabled } from "@/hooks/useWeeklyDealsEnabled";
 import "../deals/deals.css";
 import { useTranslations } from "@/hooks/useTranslations";
+
+/** Summary values arrive display-ready from the module; an absent one must not be faked. */
+const displayValue = (value: string | number | null | undefined): string =>
+  value === null || value === undefined || value === "" ? "N/A" : String(value);
 
 export default function WeeklyDealsPage() {
   const router = useRouter();
@@ -17,29 +21,22 @@ export default function WeeklyDealsPage() {
   const isFreeUser = !user || user.userTier === 'FREE';
   const [isUpgrading, setIsUpgrading] = useState(false);
   const { enabled: weeklyDealsEnabled, loading: weeklyDealsLoading } = useWeeklyDealsEnabled();
+  // Weekly highlights come from the valuation module's GET /deals -> summary, mapped by the
+  // backend. One 1-row request: the page needs the summary block, not the deals themselves.
+  const [summary, setSummary] = useState<DealsSummary | null>(null);
   const { t, ready, error } = useTranslations("weeklyDeals", {
     "weeklyDeals.section.title": "Weekly Property Deals",
     "weeklyDeals.alert.title": "Latest Alert",
     "weeklyDeals.alert.subtitle": "Hot deals discovered across Dubai areas this week!",
-    "weeklyDeals.alert.area1": "🏙️ Downtown Dubai:",
-    "weeklyDeals.alert.area2": "⚓ Dubai Marina:",
-    "weeklyDeals.alert.area3": "🏢 Business Bay:",
-    "weeklyDeals.alert.area4": "🌴 Jumeirah Beach:",
+    // The area rows, the total and the three highlight values are no longer copy — they come
+    // from the valuation module's summary, so only the labels are translated here.
     "weeklyDeals.alert.deals": "deals",
-    "weeklyDeals.alert.count1": "3 deals",
-    "weeklyDeals.alert.count2": "4 deals",
-    "weeklyDeals.alert.count3": "3 deals",
-    "weeklyDeals.alert.count4": "3 deals",
     "weeklyDeals.alert.total": "Total active alerts:",
-    "weeklyDeals.alert.totalCount": "13",
     "weeklyDeals.alert.view": "View This Week's Alerts",
     "weeklyDeals.highlights.title": "This Week's Highlights",
     "weeklyDeals.highlights.market": "🔥 Hottest market:",
-    "weeklyDeals.highlights.marketValue": "Dubai Marina (4 deals)",
     "weeklyDeals.highlights.discount": "💎 Best discount found:",
-    "weeklyDeals.highlights.discountValue": "22% below market",
     "weeklyDeals.highlights.performing": "🏆 Best performing area:",
-    "weeklyDeals.highlights.performingValue": "Downtown Dubai",
     "weeklyDeals.about.title": "About Deal Alerts",
     "weeklyDeals.about.p1": "Our AI-powered system analyzes thousands of properties daily to identify underpriced opportunities across Dubai.",
     "weeklyDeals.about.p2": "Each deal is verified by expert analysts to ensure accuracy and potential value. Get notified weekly about properties priced significantly below market value in prime locations.",
@@ -85,6 +82,24 @@ export default function WeeklyDealsPage() {
       router.replace("/dashboard");
     }
   }, [weeklyDealsEnabled, router]);
+
+  useEffect(() => {
+    // FREE users get a 403 from /api/deals and only ever see the blurred upgrade overlay,
+    // so there is nothing to load for them.
+    if (weeklyDealsEnabled !== true || isFreeUser) return;
+    let cancelled = false;
+    apiClient
+      .getDeals(0, 1)
+      .then((response) => {
+        if (!cancelled) setSummary(response.summary ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setSummary(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [weeklyDealsEnabled, isFreeUser]);
 
   if (error) {
     return (
@@ -149,22 +164,19 @@ export default function WeeklyDealsPage() {
             </div>
 
             <div className="alert-list">
-              {[
-                { label: t("weeklyDeals.alert.area1"), count: t("weeklyDeals.alert.count1") },
-                { label: t("weeklyDeals.alert.area2"), count: t("weeklyDeals.alert.count2") },
-                { label: t("weeklyDeals.alert.area3"), count: t("weeklyDeals.alert.count3") },
-                { label: t("weeklyDeals.alert.area4"), count: t("weeklyDeals.alert.count4") },
-              ].map((alert) => (
-                <div key={alert.label} className="alert-row">
-                  <span>{alert.label}</span>
-                  <span className="alert-number">{alert.count}</span>
+              {(summary?.topAreas ?? []).map((topArea) => (
+                <div key={topArea.area} className="alert-row">
+                  <span>{topArea.area}</span>
+                  <span className="alert-number">
+                    {topArea.count} {t("weeklyDeals.alert.deals")}
+                  </span>
                 </div>
               ))}
             </div>
 
             <div className="alert-stats">
               <span>{t("weeklyDeals.alert.total")}</span>
-              <span className="alert-number">{t("weeklyDeals.alert.totalCount")}</span>
+              <span className="alert-number">{displayValue(summary?.totalActiveDeals)}</span>
             </div>
           </div>
 
@@ -176,17 +188,15 @@ export default function WeeklyDealsPage() {
           <div className="highlights">
             <div>
               <span>{t("weeklyDeals.highlights.market")}</span>
-              <span className="alert-performance">
-                {t("weeklyDeals.highlights.marketValue")}
-              </span>
+              <span className="alert-performance">{displayValue(summary?.hottestArea)}</span>
             </div>
             <div>
               <span>{t("weeklyDeals.highlights.discount")}</span>
-              <span className="alert-performance">{t("weeklyDeals.highlights.discountValue")}</span>
+              <span className="alert-performance">{displayValue(summary?.bestDiscountDisplay)}</span>
             </div>
             <div>
               <span>{t("weeklyDeals.highlights.performing")}</span>
-              <span className="alert-performance">{t("weeklyDeals.highlights.performingValue")}</span>
+              <span className="alert-performance">{displayValue(summary?.bestPerformingArea)}</span>
             </div>
           </div>
         </div>
