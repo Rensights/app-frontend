@@ -973,12 +973,30 @@ export interface Deal {
   recentSales?: any[];
 }
 
+export interface DealsSizeRange {
+  minSqft: number;
+  maxSqft: number;
+}
+
+/**
+ * Headline stats for the deals page, served by the backend from the valuation API's
+ * `GET /deals -> summary`. Values are numbers (percentages without the `%`) so the UI owns
+ * formatting; a field is `null` when upstream cannot supply it.
+ */
+export interface DealsSummary {
+  availableDeals: number | null;
+  avgPriceVsMarket: number | null;
+  mostLiquidSizeRange: DealsSizeRange | null;
+  avgGrossRentalYield: number | null;
+}
+
 export interface PaginatedDealResponse {
   content: Deal[];
   totalElements: number;
   totalPages: number;
   size: number;
   number: number;
+  summary?: DealsSummary;
 }
 
 export interface ReportDocument {

@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { apiClient, Deal, PaginatedDealResponse } from "@/lib/api";
+import { apiClient, Deal, DealsSizeRange, DealsSummary, PaginatedDealResponse } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -20,6 +20,40 @@ const DEALS_PAGE_KEY = "deals:page";
 
 type DealsFilters = { status: string; area: string; bedroom: string; price: string };
 const DEFAULT_FILTERS: DealsFilters = { status: "all", area: "all", bedroom: "all", price: "all" };
+
+// The four headline stat cards. Percentages are kept as numbers (null = upstream had no
+// usable value) and formatted only at render time.
+type DealsStats = {
+  total: number;
+  avgPriceVsMarket: number | null;
+  sizeRange: DealsSizeRange | null;
+  avgYield: number | null;
+};
+
+const EMPTY_STATS: DealsStats = {
+  total: 0,
+  avgPriceVsMarket: null,
+  sizeRange: null,
+  avgYield: null,
+};
+
+/** Percentage out of a per-deal string ("12.4%", "-3.1% vs market", "N/A"), sign preserved. */
+function parsePercent(raw?: string | null): number | null {
+  const match = (raw || "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+  return match ? parseFloat(match[0]) : null;
+}
+
+function averagePercent(values: (number | null)[]): number | null {
+  const nums = values.filter((v): v is number => v !== null);
+  if (!nums.length) return null;
+  return Math.round((nums.reduce((sum, v) => sum + v, 0) / nums.length) * 10) / 10;
+}
+
+const formatPercent = (value: number | null): string =>
+  value === null || value === undefined ? "N/A" : `${value.toFixed(1)}%`;
+
+const formatSizeRange = (range: DealsSizeRange | null): string =>
+  range ? `${range.minSqft.toLocaleString()}-${range.maxSqft.toLocaleString()} sq ft` : "N/A";
 
 function readStoredFilters(): DealsFilters | null {
   if (typeof window === "undefined") return null;
@@ -79,12 +113,7 @@ export default function DealsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState({
-    total: 0,
-    avgDiscount: "N/A",
-    sizeRange: "N/A",
-    avgYield: "N/A",
-  });
+  const [stats, setStats] = useState<DealsStats>(EMPTY_STATS);
   const [areaOptions, setAreaOptions] = useState<string[]>([]);
   const [statusOptions, setStatusOptions] = useState<string[]>([]);
 
@@ -150,54 +179,18 @@ export default function DealsPage() {
     });
   }, [debouncedFilters.price]);
 
-  const computeStats = useCallback((items: Deal[], totalCount: number) => {
-    const filteredByPrice = applyPriceFilter(items);
-    const base = filteredByPrice;
-    if (!base.length) {
-      return {
-        total: debouncedFilters.price === "all" ? totalCount : 0,
-        avgDiscount: "N/A",
-        sizeRange: "N/A",
-        avgYield: "N/A",
-      };
-    }
-
-    const priceVsMarketValues = base
-      .map(deal => {
-        const match = (deal.priceVsEstimations || "").match(/(\d+\.?\d*)%/);
-        return match ? parseFloat(match[1]) : 0;
-      })
-      .filter(val => val > 0);
-
-    const avgPriceVsMarket = priceVsMarketValues.length > 0
-      ? priceVsMarketValues.reduce((sum, val) => sum + val, 0) / priceVsMarketValues.length
-      : 0;
-
-    const yieldValues = base
-      .map(deal => {
-        const match = (deal.rentalYield || "").match(/(\d+\.?\d*)%/);
-        return match ? parseFloat(match[1]) : 0;
-      })
-      .filter(val => val > 0);
-
-    const avgYield = yieldValues.length > 0
-      ? yieldValues.reduce((sum, val) => sum + val, 0) / yieldValues.length
-      : 0;
-
-    const sizes = base
-      .map(deal => typeof deal.size === 'number' ? deal.size : parseInt(String(deal.size).replace(/[^0-9]/g, ""), 10))
-      .filter(size => !isNaN(size) && size > 0);
-
-    const minSize = sizes.length > 0 ? Math.min(...sizes) : 0;
-    const maxSize = sizes.length > 0 ? Math.max(...sizes) : 0;
-
+  // Only needed for the price filter, which the API does not support — the two averages have
+  // to be recomputed over the rows that survive it. "Most liquid size range" is a property of
+  // the market, not of the filtered subset, so it still comes from the backend summary.
+  const computeStats = useCallback((items: Deal[], summary?: DealsSummary): DealsStats => {
+    const base = applyPriceFilter(items);
     return {
-      total: debouncedFilters.price === "all" ? totalCount : filteredByPrice.length,
-      avgDiscount: avgPriceVsMarket > 0 ? `${avgPriceVsMarket.toFixed(1)}%` : "N/A",
-      sizeRange: minSize > 0 && maxSize > 0 ? `${minSize.toLocaleString()}-${maxSize.toLocaleString()} sq ft` : "N/A",
-      avgYield: avgYield > 0 ? `${avgYield.toFixed(1)}%` : "N/A",
+      total: base.length,
+      avgPriceVsMarket: averagePercent(base.map((deal) => parsePercent(deal.priceVsEstimations))),
+      sizeRange: summary?.mostLiquidSizeRange ?? null,
+      avgYield: averagePercent(base.map((deal) => parsePercent(deal.rentalYield))),
     };
-  }, [applyPriceFilter, debouncedFilters.price]);
+  }, [applyPriceFilter]);
 
   const loadDeals = useCallback(async () => {
     try {
@@ -229,41 +222,40 @@ export default function DealsPage() {
 
   const loadStats = useCallback(async () => {
     if (weeklyDealsEnabled === false) {
-      setStats({
-        total: 0,
-        avgDiscount: "N/A",
-        sizeRange: "N/A",
-        avgYield: "N/A",
-      });
+      setStats(EMPTY_STATS);
       return;
     }
 
     try {
       const { city, area, bedroomCount, buildingStatus } = getApiFilters();
       const totalsResponse = await apiClient.getDeals(0, 1, city, area, bedroomCount, buildingStatus);
+
+      // Without a price filter the backend's summary already describes exactly the set the
+      // table shows, so one 1-row request is all the stats need.
+      if (debouncedFilters.price === "all") {
+        const summary = totalsResponse.summary;
+        setStats({
+          total: summary?.availableDeals ?? totalsResponse.totalElements ?? 0,
+          avgPriceVsMarket: summary?.avgPriceVsMarket ?? null,
+          sizeRange: summary?.mostLiquidSizeRange ?? null,
+          avgYield: summary?.avgGrossRentalYield ?? null,
+        });
+        return;
+      }
+
       const totalCount = totalsResponse.totalElements || 0;
       if (totalCount === 0) {
-        setStats({
-          total: 0,
-          avgDiscount: "N/A",
-          sizeRange: "N/A",
-          avgYield: "N/A",
-        });
+        setStats(EMPTY_STATS);
         return;
       }
 
       const fetchSize = Math.min(totalCount, 5000);
       const fullResponse = await apiClient.getDeals(0, fetchSize, city, area, bedroomCount, buildingStatus);
-      setStats(computeStats(fullResponse.content || [], totalCount));
+      setStats(computeStats(fullResponse.content || [], fullResponse.summary));
     } catch (err) {
-      setStats({
-        total: 0,
-        avgDiscount: "N/A",
-        sizeRange: "N/A",
-        avgYield: "N/A",
-      });
+      setStats(EMPTY_STATS);
     }
-  }, [computeStats, getApiFilters, weeklyDealsEnabled]);
+  }, [computeStats, getApiFilters, weeklyDealsEnabled, debouncedFilters.price]);
 
   // Build the area filter dropdown from the actual dataset (city-scoped only,
   // independent of the other filters) so areas shown always match real data
@@ -463,19 +455,19 @@ export default function DealsPage() {
       <section className="summary-stats">
         <div className="stats-grid">
           <StatCard
-            value={stats.total.toString()}
+            value={stats.total.toLocaleString()}
             label={tWeeklyDeals("weeklyDeals.stats.availableDeals")}
           />
           <StatCard
-            value={stats.avgDiscount || '0%'}
+            value={formatPercent(stats.avgPriceVsMarket)}
             label={tWeeklyDeals("weeklyDeals.stats.avgPriceVsMarket")}
           />
           <StatCard
-            value={stats.sizeRange || 'N/A'}
+            value={formatSizeRange(stats.sizeRange)}
             label={tWeeklyDeals("weeklyDeals.stats.liquidSizeRange")}
           />
           <StatCard
-            value={stats.avgYield || '0%'}
+            value={formatPercent(stats.avgYield)}
             label={tWeeklyDeals("weeklyDeals.stats.avgGrossYield")}
           />
         </div>
