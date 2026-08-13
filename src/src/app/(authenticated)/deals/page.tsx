@@ -189,7 +189,9 @@ export default function DealsPage() {
     const base = applyPriceFilter(items);
     return {
       total: base.length,
-      avgPriceVsMarket: averagePercent(base.map((deal) => parsePercent(deal.priceVsEstimations))),
+      avgPriceVsMarket: averagePercent(
+        base.map((deal) => parsePercent(deal.marketGapPercentage ?? deal.priceVsEstimations))
+      ),
       sizeRange: displayText(summary?.mostLiquidSizeRange),
       avgYield: averagePercent(base.map((deal) => parsePercent(deal.rentalYield))),
     };
@@ -579,7 +581,10 @@ export default function DealsPage() {
                     <div className="price-estimate">{deal.estimateRange || "N/A"}</div>
                 </td>
                 <td data-label="Price vs. Market">
-                    <span className="delta-positive">{deal.priceVsEstimations || "N/A"}</span>
+                    <span className="delta-positive">
+                      {deal.marketGapPercentage || deal.priceVsEstimations || "N/A"}
+                      {deal.marketDirectionLabel ? ` ${deal.marketDirectionLabel}` : ""}
+                    </span>
                 </td>
                 <td data-label="Yield">
                     <span className="yield-info">{deal.rentalYield || deal.grossRentalYield || "N/A"}</span>

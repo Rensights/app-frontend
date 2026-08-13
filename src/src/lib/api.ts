@@ -954,6 +954,7 @@ export interface Deal {
   marketGapPercentage?: string;
   marketDirection?: string;
   marketDirectionLabel?: string;
+  valuationConfidence?: string;
   pricePerSqft?: number;
   pricePerSqftVsMarket?: string;
   propertyDescription?: string;
