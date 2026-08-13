@@ -945,6 +945,8 @@ export interface Deal {
   estimateMin?: number;
   estimateMax?: number;
   estimateRange?: string;
+  /** Module's potential_savings ("AED 180k - 270k"). `discount` is the legacy alias. */
+  potentialSavings?: string;
   discount?: string;
   rentalYield?: string;
   grossRentalYield?: string;
@@ -954,9 +956,17 @@ export interface Deal {
   marketGapPercentage?: string;
   marketDirection?: string;
   marketDirectionLabel?: string;
+  /** "21.7% - 29.3% Below Estimate Range" */
+  priceVsEstimateRange?: string;
   valuationConfidence?: string;
-  pricePerSqft?: number;
+  /** Display-ready from the module ("AED 1,394/sq ft"); a number only in the computed fallback. */
+  pricePerSqft?: string | number;
+  marketAveragePricePerSqft?: string | number;
   pricePerSqftVsMarket?: string;
+  /** "AED 54,603/year" */
+  annualRentEstimate?: string;
+  /** "6.1%" */
+  averageMarketYield?: string;
   propertyDescription?: string;
   buildingFeatures?: string;
   serviceCharge?: string;
@@ -967,8 +977,11 @@ export interface Deal {
   view?: string;
   furnishing?: string;
   rensightsScore?: string;
-  investmentAppeal?: string;
+  locationTransportScore?: string;
+  liquidityScore?: string;
   marketPosition?: string;
+  /** "Only 947 studio units..." */
+  dubaiComparison?: string;
   nearestLandmark?: string;
   listedDeals?: any[];
   recentSales?: any[];

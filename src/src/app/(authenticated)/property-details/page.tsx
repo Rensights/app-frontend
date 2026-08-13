@@ -331,7 +331,9 @@ function PropertyDetailsPageContent() {
               {[
                 `Property is priced ${!isNaN(discountPercentAbs) && isFinite(discountPercentAbs) && discountPercentAbs > 0 ? `${discountPercentAbs.toFixed(1)}% ` : ""}${marketDirectionWord} similar ${deal.bedrooms ? `${deal.bedrooms} ` : ""}units in ${deal.area || deal.location || deal.city || "this area"}${isAboveMarket ? "." : ", indicating strong value opportunity."}`,
                 deal.marketPosition || "This unit holds a strong market position based on current pricing and demand.",
-                deal.investmentAppeal || "Investment appeal is favorable based on current market conditions.",
+                // investment_appeal is retired in the mapping; the module's Dubai-wide
+                // comparison takes this slot instead.
+                deal.dubaiComparison || "Investment appeal is favorable based on current market conditions.",
                 deal.propertyDescription || "Nearby amenities and connectivity support solid rental appeal.",
               ].map((text, index) => (
                 <div key={index} className="insight-item">
