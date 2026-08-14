@@ -497,36 +497,78 @@
   cursor: pointer;
 }
 
-/* Values like "AED 830k - 920k" and "27.2% Below Market" must stay on one line, so the
-   table is allowed to exceed the container and scroll sideways instead of squashing a
-   column until its value wraps. */
+/* No sideways scrolling, ever. table-layout: fixed makes the column widths come from the
+   percentages below instead of from the content, so the table can never grow past its
+   container no matter how long a value is. Values stay on one line and a value too long
+   for its column is cut with an ellipsis (the full text is in each cell's title). */
 .deals-table-wrap {
   margin-top: 20px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .deals-table {
   width: 100%;
-  min-width: 960px;
+  max-width: 100%;
   border-collapse: collapse;
-  table-layout: auto;
+  table-layout: fixed;
 }
 
+/* Widths measured from real values at a 1100px window, each with a little headroom, so
+   nothing is cut in normal use. Property takes the remainder — an ordinary building name
+   fits; only an unusually long one falls back to the ellipsis. */
+/* 22 + 7 + 8 + 12 + 19 + 15 + 7 + 10 = 100 */
+.deals-table th:nth-child(1),
+.deals-table td:nth-child(1) { width: 22%; }  /* Property        */
+.deals-table th:nth-child(2),
+.deals-table td:nth-child(2) { width: 7%; }   /* Type            */
+.deals-table th:nth-child(3),
+.deals-table td:nth-child(3) { width: 8%; }   /* Size            */
+.deals-table th:nth-child(4),
+.deals-table td:nth-child(4) { width: 12%; }  /* Listed Price    */
+.deals-table th:nth-child(5),
+.deals-table td:nth-child(5) { width: 19%; }  /* Our Estimate    */
+.deals-table th:nth-child(6),
+.deals-table td:nth-child(6) { width: 15%; }  /* Price vs Market */
+.deals-table th:nth-child(7),
+.deals-table td:nth-child(7) { width: 7%; }   /* Rental Yield    */
+.deals-table th:nth-child(8),
+.deals-table td:nth-child(8) { width: 10%; }  /* Action          */
+
+/* Headers wrap ("Price vs. / Market"), which is what keeps the columns narrow enough for
+   the table to fit without scrolling. Only the data below must stay on one line. */
 .deals-table th {
   background: linear-gradient(135deg, #f39c12, #e67e22);
   color: #fff;
-  padding: 15px 12px;
+  padding: 10px 5px;
   text-align: left;
   font-weight: 600;
-  font-size: 0.9rem;
-  white-space: nowrap;
+  font-size: 0.75rem;
+  white-space: normal;
 }
 
 .deals-table td {
-  padding: 15px 12px;
+  padding: 10px 5px;
   border-bottom: 1px solid #e1e5e9;
+  font-size: 0.8rem;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The pills inside a cell are spans, and max-width/overflow do nothing on an inline box —
+   they need inline-block to be clampable, or a long value would paint past the fixed
+   column width. */
+.bedroom-badge,
+.delta-positive,
+.yield-info,
+.size-info,
+.price-current,
+.price-estimate {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .deals-table tr:hover {
@@ -538,7 +580,7 @@
    truncated rather than allowed to stretch the column (full text is in the title). */
 .property-name,
 .property-location {
-  max-width: 260px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -551,15 +593,15 @@
 }
 
 .property-location {
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   color: #666;
 }
 
 .bedroom-badge {
   background: #f8f9fa;
-  padding: 4px 8px;
+  padding: 2px 5px;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   font-weight: 500;
 }
 
@@ -574,7 +616,7 @@
 }
 
 .price-estimate {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #666;
 }
 
@@ -582,28 +624,29 @@
   color: #28a745;
   font-weight: 600;
   background: rgba(40, 167, 69, 0.1);
-  padding: 4px 8px;
+  padding: 2px 5px;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
 }
 
 .yield-info {
   color: #17a2b8;
   font-weight: 600;
   background: rgba(23, 162, 184, 0.1);
-  padding: 4px 8px;
+  padding: 2px 5px;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
 }
 
 .details-btn {
   display: inline-block;
-  padding: 8px 16px;
+  box-sizing: border-box; /* mobile sets width:100%; without this the padding overflows the card */
+  padding: 5px 8px;
   background: linear-gradient(135deg, #f39c12, #e67e22);
   color: #fff;
   border: none;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
@@ -642,6 +685,32 @@
 
 @media (max-width: 1024px) {
   /* Removed incorrect selector - main-content padding is handled by dashboard.css */
+
+  /* Narrow desktop / tablet: one more step down the type scale so the values still fit
+     their columns instead of falling back to the ellipsis. Below 768px the rows become
+     cards and none of this applies. */
+  .deals-table th {
+    padding: 8px 4px;
+    font-size: 0.7rem;
+  }
+
+  .deals-table td {
+    padding: 8px 4px;
+    font-size: 0.72rem;
+  }
+
+  .property-location,
+  .price-estimate {
+    font-size: 0.66rem;
+  }
+
+  .bedroom-badge,
+  .delta-positive,
+  .yield-info,
+  .details-btn {
+    padding: 2px 4px;
+    font-size: 0.66rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -674,26 +743,36 @@
     padding: 20px;
   }
 
-  /* Rows become full-width cards here, so the desktop min-width and the one-line rule
-     are dropped — there is no column to squash and text may wrap freely. */
-  .deals-table-wrap {
-    overflow-x: visible;
-  }
-
+  /* Rows become full-width cards here, so the fixed column widths, the one-line rule and
+     the ellipsis clamps are all dropped — there is no column to squash and text may wrap. */
   .deals-table {
     display: block;
-    min-width: 0;
+    table-layout: auto;
   }
 
-  .deals-table td {
+  /* :nth-child(n) matches every cell at the same specificity as the desktop
+     td:nth-child(N) width rules above, so it actually overrides them — a plain
+     ".deals-table td { width: auto }" loses to them and leaves the Property cell stuck at
+     21% of the card (about 67px), wrapping a building name over seven lines. */
+  .deals-table td:nth-child(n) {
+    width: auto;
     white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   .property-name,
-  .property-location {
+  .property-location,
+  .bedroom-badge,
+  .delta-positive,
+  .yield-info,
+  .size-info,
+  .price-current,
+  .price-estimate {
     max-width: none;
     white-space: normal;
     overflow: visible;
+    text-overflow: clip;
   }
 
   .deals-table thead {

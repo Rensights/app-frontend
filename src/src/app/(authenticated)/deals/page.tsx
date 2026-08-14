@@ -580,16 +580,25 @@ export default function DealsPage() {
                   <span className="size-info">{formatSize(deal.size)}</span>
                 </td>
                 <td data-label="Listed Price">
-                  <div className="price-current">{formatPrice(deal.listedPrice || deal.priceValue)}</div>
+                  <div className="price-current" title={formatPrice(deal.listedPrice || deal.priceValue)}>
+                    {formatPrice(deal.listedPrice || deal.priceValue)}
+                  </div>
                 </td>
                 <td data-label="Estimate">
-                    <div className="price-estimate">{deal.estimateRange || "N/A"}</div>
+                    <div className="price-estimate" title={deal.estimateRange || "N/A"}>
+                      {deal.estimateRange || "N/A"}
+                    </div>
                 </td>
                 <td data-label="Price vs. Market">
-                    <span className="delta-positive">
-                      {deal.marketGapPercentage || deal.priceVsEstimations || "N/A"}
-                      {deal.marketDirectionLabel ? ` ${deal.marketDirectionLabel}` : ""}
-                    </span>
+                    {(() => {
+                      const gap = deal.marketGapPercentage || deal.priceVsEstimations || "N/A";
+                      const label = deal.marketDirectionLabel ? ` ${deal.marketDirectionLabel}` : "";
+                      return (
+                        <span className="delta-positive" title={`${gap}${label}`}>
+                          {gap}{label}
+                        </span>
+                      );
+                    })()}
                 </td>
                 <td data-label="Yield">
                     <span className="yield-info">{deal.rentalYield || deal.grossRentalYield || "N/A"}</span>
