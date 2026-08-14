@@ -652,7 +652,6 @@ export default function AnalysisRequestPage() {
     const pricePerSqft = text(analysis.pricePerSqft);
     const marketPosition = text(analysis.marketPosition);
     const dubaiComparison = text(analysis.dubaiComparison);
-    const valuationWarning = analysis.valuationWarning || null;
 
     // Property details. Fields the module leaves empty are dropped rather than shown blank.
     const propertyDetails = [
@@ -808,17 +807,6 @@ export default function AnalysisRequestPage() {
                       <p className="insight-text">{insight}</p>
                     </div>
                   ))}
-
-                {valuationWarning && (
-                  <div className="valuation-warning">
-                    <div className="valuation-warning-title">
-                      <span aria-hidden="true">⚠️</span> {valuationWarning.title}
-                    </div>
-                    {valuationWarning.message && (
-                      <p className="valuation-warning-message">{valuationWarning.message}</p>
-                    )}
-                  </div>
-                )}
               </section>
 
             </div>
