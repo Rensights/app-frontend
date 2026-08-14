@@ -429,11 +429,6 @@ function PropertyDetailsPageContent() {
                     <div className="score-value">
                       {discountPercentAbs.toFixed(1)}%<span> {deal.marketDirectionLabel}</span>
                     </div>
-                    <div className="score-subtitle">
-                      {isAboveMarket
-                        ? deal.marketDirectionLabel
-                        : `${discountPercent >= 15 ? "Excellent" : discountPercent >= 10 ? "Good" : "Fair"} Investment Opportunity`}
-                    </div>
                     <p>
                       Based on price analysis, market trends, location score, rental
                       potential, and liquidity in {deal.location || "the area"} market.
