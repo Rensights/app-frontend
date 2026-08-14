@@ -169,6 +169,32 @@
   font-size: 0.9rem;
 }
 
+/* valuation_warning from the analysis module, shown under the investment insights. */
+.valuation-warning {
+  margin-top: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid #f59e0b;
+  border-radius: 10px;
+  background: #fffbeb;
+}
+
+.valuation-warning-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #92400e;
+  font-size: 0.95rem;
+}
+
+.valuation-warning-message {
+  margin: 0.4rem 0 0;
+  color: #78350f;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .analysis-page-wrapper {
   width: 100%;
 }

@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/api";
 import { trackEvent } from "@/lib/analytics";
-import { formatListedPriceAed } from "@/lib/formatPrice";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import "../property-details/property-details.css";
@@ -35,6 +34,19 @@ type FormState = {
   view: string;
   furnishing: string;
   additionalNotes: string;
+};
+
+/** A "Similar Deals" / "Recent Sales" entry as the backend maps it for the report screen. */
+type Comparable = {
+  buildingName?: string;
+  area?: string;
+  bedrooms?: string;
+  sizeDisplay?: string;
+  listedPriceDisplay?: string;
+  salePriceDisplay?: string;
+  pricePerSqftDisplay?: string;
+  listingUrl?: string;
+  transactionDate?: string;
 };
 
 const initialFormState: FormState = {
@@ -593,86 +605,72 @@ export default function AnalysisRequestPage() {
   };
 
   if (reportId) {
-    const getAnalysisValue = (keys: string[]) => {
-      if (!report?.analysisResult) return null;
-      for (const key of keys) {
-        const value = report.analysisResult[key];
-        if (value !== undefined && value !== null && value !== "") {
-          return value;
-        }
-      }
-      return null;
+    // `report.analysis` is the analysis module's payload already mapped to camelCase and
+    // display-ready by the backend (AnalysisResultMapper). Render these values as they
+    // arrive — nothing here recomputes a figure the module already sent.
+    const analysis = report?.analysis || {};
+
+    const text = (raw: unknown, fallback = "") => {
+      const value = raw === null || raw === undefined ? "" : String(raw).trim();
+      return value || fallback;
     };
 
-    const parseJsonArray = (value: any) => {
-      if (!value) return [];
-      if (Array.isArray(value)) return value;
-      if (typeof value === "string") {
-        try {
-          const parsed = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed : [];
-        } catch {
-          return [];
-        }
-      }
-      return [];
-    };
-
-    const parseNumber = (value: any) => {
-      if (value === null || value === undefined) return null;
-      const cleaned = String(value).replace(/[^0-9.]/g, "");
-      if (!cleaned) return null;
-      const num = Number(cleaned);
-      return Number.isFinite(num) ? num : null;
-    };
-
-    const parsePercent = (value: any) => {
-      if (!value) return null;
-      const match = String(value).match(/(\d+\.?\d*)/);
+    const parsePercent = (raw: string) => {
+      if (!raw) return null;
+      const match = raw.match(/(\d+\.?\d*)/);
       return match ? parseFloat(match[1]) : null;
     };
 
-    const analysis = report?.analysisResult || {};
-    const listedPriceRaw = getAnalysisValue(["listed_price_aed", "listedPriceAed", "listed_price"]);
-    const listedPriceNum = parseNumber(listedPriceRaw);
-    const listedPrice =
-      listedPriceNum != null
-        ? formatListedPriceAed(listedPriceNum)
-        : formatListedPriceAed(listedPriceRaw);
-    const sizeSqft = getAnalysisValue(["size_sqft", "sizeSqft"]);
-    const sizeNum = parseNumber(sizeSqft);
-    const pricePerSqftRaw = getAnalysisValue(["price_per_sqft", "pricePerSqft"]);
-    const pricePerSqftNum = parseNumber(pricePerSqftRaw);
-    const pricePerSqft = pricePerSqftNum || (listedPriceNum && sizeNum ? listedPriceNum / sizeNum : 0);
-    const estimateRange = getAnalysisValue(["our_price_estimate", "ourPriceEstimate"]);
-    const priceVsEstimations = getAnalysisValue(["price_vs_estimations", "priceVsEstimations"]);
-    // Potential savings comes directly from the analysis API.
-    const potentialSavings = getAnalysisValue(["potential_savings", "potentialSavings"]);
-    const savingsNumbers = potentialSavings ? String(potentialSavings).match(/[\d,.]+/g) : null;
-    const savingsMin = savingsNumbers && savingsNumbers.length >= 1 ? parseNumber(savingsNumbers[0]) : null;
-    const savingsMax = savingsNumbers && savingsNumbers.length >= 2 ? parseNumber(savingsNumbers[1]) : null;
-    // Handles every min/max combo: both, min-only, max-only, or neither.
-    const savingsVals = [savingsMin, savingsMax].filter((v): v is number => v != null && v > 0);
-    const savingsLo = savingsVals.length ? Math.min(...savingsVals) : null;
-    const savingsHi = savingsVals.length ? Math.max(...savingsVals) : null;
-    const savingsDisplay =
-      savingsLo != null && savingsHi != null
-        ? savingsLo !== savingsHi
-          ? `AED ${Math.round(savingsLo).toLocaleString()} - ${Math.round(savingsHi).toLocaleString()}`
-          : `AED ${Math.round(savingsLo).toLocaleString()}`
-        : potentialSavings
-          ? String(potentialSavings)
-          : "N/A";
-    const discountPercent = parsePercent(getAnalysisValue(["price_per_sqft_vs_market", "pricePerSqftVsMarket", "price_vs_estimations", "priceVsEstimations"]));
-    // Market direction ("Below Market" / "Above Market" / ...) from the analysis API.
-    const marketDirectionLabel = (getAnalysisValue(["market_direction_label", "marketDirectionLabel"]) as string | null) || null;
-    const isAboveMarket = (marketDirectionLabel || "").toLowerCase().includes("above");
+    const comparableDetails = (item: Comparable) =>
+      [item.bedrooms, item.sizeDisplay, item.area].map((part) => text(part)).filter(Boolean).join(" • ") ||
+      "N/A";
+
+    // Header + summary. The request's own values stand in until the analysis arrives.
+    const buildingName = text(analysis.buildingName, text(report?.buildingName, "Property"));
+    const area = text(analysis.area, text(report?.area));
+    const city = text(analysis.city, text(report?.city));
+    const bedrooms = text(analysis.bedrooms, text(report?.bedrooms, "N/A"));
+    const size = text(analysis.size, text(report?.size, "N/A"));
+    const buildingStatusLabel = text(analysis.buildingStatus, text(report?.buildingStatus));
+    const isReady = /ready|completed/i.test(buildingStatusLabel);
+    const handoverLabel = buildingStatusLabel || (isReady ? "Ready" : "Off-Plan");
+
+    // Market gap: the percentage and its "Above Market" / "Below Market" wording both come
+    // from the module; the percentage is no longer derived from price-vs-market fields.
+    const marketGapPercentage = text(analysis.marketGapPercentage);
+    const marketGapNumber = parsePercent(marketGapPercentage);
+    const marketDirectionLabel = text(analysis.marketDirectionLabel);
+    const isAboveMarket = marketDirectionLabel.toLowerCase().includes("above");
     const marketDirectionWord = isAboveMarket ? "above" : "below";
-    const rentalYield = getAnalysisValue(["rental_yield_estimate", "rentalYieldEstimate", "gross_rental_yield", "grossRentalYield"]);
-    const buildingStatusRaw = getAnalysisValue(["building_status", "buildingStatus"]) || report?.buildingStatus || "";
-    const buildingStatus = /ready|completed/i.test(String(buildingStatusRaw)) ? "READY" : "OFFPLAN";
-    const listingComparables = parseJsonArray(getAnalysisValue(["listing_comparables", "listingComparables"]));
-    const transactionComparables = parseJsonArray(getAnalysisValue(["transaction_comparables", "transactionComparables"]));
+
+    // Left empty when the module sends nothing, so the sections that only make sense with a
+    // value can hide themselves instead of printing "N/A".
+    const rentalYield = text(analysis.rentalYield);
+    const listedPrice = text(analysis.listedPrice);
+    const estimateRange = text(analysis.estimateRange);
+    const potentialSavings = text(analysis.potentialSavings);
+    const pricePerSqft = text(analysis.pricePerSqft);
+    const marketPosition = text(analysis.marketPosition);
+    const dubaiComparison = text(analysis.dubaiComparison);
+    const valuationWarning = analysis.valuationWarning || null;
+
+    // Property details. Fields the module leaves empty are dropped rather than shown blank.
+    const propertyDetails = [
+      { label: "Building Status:", value: buildingStatusLabel },
+      { label: "Furnishing:", value: text(analysis.furnishing) },
+      { label: "Developer:", value: text(analysis.developer) },
+      { label: "View:", value: text(analysis.view) },
+      { label: "Service Charge:", value: text(analysis.serviceCharge) },
+      { label: "Nearest Landmark:", value: text(analysis.nearestLandmark) },
+      { label: "Building Features:", value: text(analysis.buildingFeatures) },
+    ].filter((row) => row.value !== "");
+
+    const listingComparables: Comparable[] = Array.isArray(analysis.listingComparables)
+      ? analysis.listingComparables
+      : [];
+    const transactionComparables: Comparable[] = Array.isArray(analysis.transactionComparables)
+      ? analysis.transactionComparables
+      : [];
 
     return (
       <div className="property-page">
@@ -700,22 +698,22 @@ export default function AnalysisRequestPage() {
           <div className="property-content-grid">
             <div className="property-overview">
               <div className="property-header">
-                <h1 className="property-title">{analysis.building_name || report.buildingName || "Property"}</h1>
+                <h1 className="property-title">{buildingName}</h1>
                 <p className="property-location">
-                  {analysis.area || report.area || "Location not available"}, {analysis.city || report.city || "City not available"}
+                  {area || "Location not available"}, {city || "City not available"}
                 </p>
-                {discountPercent !== null && (
+                {marketGapPercentage && (
                   <div className="discount-highlight">
-                    {discountPercent}% {marketDirectionLabel || "Below Market Value"}
+                    {marketGapPercentage} {marketDirectionLabel || "Below Market Value"}
                   </div>
                 )}
               </div>
 
               <section className="key-metrics">
                 {[
-                  { value: analysis.bedrooms || report.bedrooms || "N/A", label: "Bedrooms" },
-                  { value: sizeSqft || report.size || "N/A", label: "Size, sq ft" },
-                  { value: buildingStatus === "READY" ? "Ready" : "Off-Plan", label: "Handover" },
+                  { value: bedrooms, label: "Bedrooms" },
+                  { value: size, label: "Size" },
+                  { value: handoverLabel || "N/A", label: "Handover" },
                   { value: rentalYield || "N/A", label: "Rental Yield" },
                 ].map((metric) => (
                   <div key={metric.label} className="metric-card">
@@ -734,66 +732,56 @@ export default function AnalysisRequestPage() {
                   </div>
                   <div className="price-section">
                     <div className="price-label">Our Estimate Range</div>
-                    <div className="price-value price-estimate">
-                      {estimateRange || "N/A"}
-                    </div>
+                    <div className="price-value price-estimate">{estimateRange || "N/A"}</div>
                   </div>
                   <div className="price-section">
                     <div className="price-label">Potential Savings</div>
                     <div className="price-value">
-                      <span className="savings-amount">{savingsDisplay}</span>
+                      <span className="savings-amount">{potentialSavings || "N/A"}</span>
                     </div>
                   </div>
                   <div className="price-section">
                     <div className="price-label">Price per sq ft</div>
-                    <div className="price-value">
-                      {pricePerSqft > 0
-                        ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })} /sq ft`
-                        : "N/A"}
-                    </div>
-                    {discountPercent !== null && <small>{discountPercent}% {marketDirectionLabel || "below market avg"}</small>}
+                    <div className="price-value">{pricePerSqft || "N/A"}</div>
+                    {marketGapPercentage && (
+                      <small>
+                        {marketGapPercentage} {marketDirectionLabel || "below market avg"}
+                      </small>
+                    )}
+                  </div>
+                  <div className="price-section">
+                    <div className="price-label">Estimated Rental Yield</div>
+                    <div className="price-value">{rentalYield || "N/A"}</div>
                   </div>
                 </div>
               </section>
 
-              <section className="property-description">
-                <h3>Property Description</h3>
-                <div className="description-card">
-                  <p>
-                    {analysis.property_description ||
-                      `This ${analysis.bedrooms || "property"} offers living in the heart of ${analysis.area || "the area"}. The unit features an efficient layout that maximizes the ${sizeSqft || "available"} space. The property is located in ${analysis.area || "the"} area of ${analysis.city || "the city"}.`}
-                  </p>
-                  <div className="description-grid">
-                    <DescriptionStat
-                      label="Price per sq ft:"
-                      value={pricePerSqft > 0
-                        ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`
-                        : "N/A"}
-                    />
-                    <DescriptionStat
-                      label="Building Status:"
-                      value={buildingStatus === "READY" ? "Ready" : "Off-Plan"}
-                    />
-                    <DescriptionStat
-                      label="Listed Price:"
-                      value={listedPrice}
-                    />
-                    <DescriptionStat label="Rental Yield:" value={rentalYield || "N/A"} />
+              {propertyDetails.length > 0 && (
+                <section className="property-description">
+                  <h3>Property Details</h3>
+                  <div className="description-card">
+                    <div className="description-grid">
+                      {propertyDetails.map((detail) => (
+                        <DescriptionStat key={detail.label} label={detail.label} value={detail.value} />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              )}
 
               <section className="comparison-table">
                 <h3>Market Comparison</h3>
                 {[
+                  { label: `This Property (${bedrooms})`, value: pricePerSqft || "N/A" },
+                  { label: "Listed Price", value: listedPrice || "N/A" },
                   {
-                    label: `This Property (${analysis.bedrooms || report.bedrooms || "N/A"})`,
-                    value: pricePerSqft > 0
-                      ? `AED ${pricePerSqft.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft`
-                      : "N/A",
+                    label: "Market Position",
+                    value:
+                      marketPosition ||
+                      (marketGapPercentage
+                        ? `${marketGapPercentage} ${marketDirectionLabel || "Below Average"}`
+                        : "N/A"),
                   },
-                  { label: "Listed Price", value: listedPrice },
-                  { label: "Market Position", value: analysis.market_position || (discountPercent !== null ? `${discountPercent}% ${marketDirectionLabel || "Below Average"}` : "N/A") },
                   { label: "Rental Yield", value: rentalYield || "N/A" },
                   { label: "Estimate Range", value: estimateRange || "N/A" },
                 ].map((row) => (
@@ -807,16 +795,30 @@ export default function AnalysisRequestPage() {
               <section className="investment-insights">
                 <h3>Investment Insights</h3>
                 {[
-                  `Property is priced ${discountPercent !== null ? `${discountPercent}%` : ""} ${marketDirectionWord} similar units in ${analysis.area || "the area"}${isAboveMarket ? "." : ", indicating strong value opportunity."}`,
-                  `${analysis.market_position || "Strong market position for this unit."}`,
-                  `${analysis.investment_appeal || "Investment appeal is favorable based on current market conditions."}`,
-                  `${analysis.dubai_comparison || "Market comparison data is still being compiled."}`,
-                ].map((text, index) => (
-                  <div key={index} className="insight-item">
-                    <div className="insight-icon">✓</div>
-                    <p className="insight-text">{text}</p>
+                  marketGapPercentage
+                    ? `Property is priced ${marketGapPercentage} ${marketDirectionWord} similar units in ${area || "the area"}${isAboveMarket ? "." : ", indicating strong value opportunity."}`
+                    : "",
+                  marketPosition,
+                  dubaiComparison,
+                ]
+                  .filter(Boolean)
+                  .map((insight, index) => (
+                    <div key={index} className="insight-item">
+                      <div className="insight-icon">✓</div>
+                      <p className="insight-text">{insight}</p>
+                    </div>
+                  ))}
+
+                {valuationWarning && (
+                  <div className="valuation-warning">
+                    <div className="valuation-warning-title">
+                      <span aria-hidden="true">⚠️</span> {valuationWarning.title}
+                    </div>
+                    {valuationWarning.message && (
+                      <p className="valuation-warning-message">{valuationWarning.message}</p>
+                    )}
                   </div>
-                ))}
+                )}
               </section>
 
             </div>
@@ -849,21 +851,17 @@ export default function AnalysisRequestPage() {
                       No similar properties found.
                     </div>
                   ) : (
-                    listingComparables.map((item: any, index: number) => {
-                      const itemSize = parseNumber(item.sqft || item.size) || 0;
-                      const itemPrice = parseNumber(item.price) || 0;
-                      const psf = itemSize > 0 && itemPrice > 0 ? itemPrice / itemSize : 0;
-                      return (
-                        <ComparableCard
-                          key={`listing-${index}`}
-                          title={item.building || item.name || "Property"}
-                          details={`${analysis.bedrooms || "N/A"} • ${itemSize ? `${itemSize} sqft` : "N/A"} • ${analysis.area || "N/A"}`}
-                          price={item.price || "N/A"}
-                          psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
-                          status="Available"
-                        />
-                      );
-                    })
+                    listingComparables.map((item: Comparable, index: number) => (
+                      <ComparableCard
+                        key={`listing-${index}`}
+                        title={text(item.buildingName, "Property")}
+                        details={comparableDetails(item)}
+                        price={text(item.listedPriceDisplay, "N/A")}
+                        psf={text(item.pricePerSqftDisplay, "N/A")}
+                        status="Available"
+                        url={text(item.listingUrl)}
+                      />
+                    ))
                   )}
                 </div>
 
@@ -873,23 +871,17 @@ export default function AnalysisRequestPage() {
                       No recent sales found.
                     </div>
                   ) : (
-                    transactionComparables.map((sale: any, index: number) => {
-                      const saleSize = parseNumber(sale.sqft || sale.size) || 0;
-                      const salePrice = parseNumber(sale.price) || 0;
-                      const psf = saleSize > 0 && salePrice > 0 ? salePrice / saleSize : 0;
-                      const saleDate = sale.date || "N/A";
-
-                      return (
-                        <ComparableCard
-                          key={`sale-${index}`}
-                          title={sale.building || sale.name || "Property"}
-                          details={`${analysis.bedrooms || "N/A"} • ${saleSize ? `${saleSize} sqft` : "N/A"} • ${analysis.area || "N/A"}`}
-                          price={salePrice > 0 ? `AED ${salePrice.toLocaleString()}` : "N/A"}
-                          psf={psf > 0 ? `AED ${psf.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sq ft` : "N/A"}
-                          status={`Sold ${saleDate}`}
-                        />
-                      );
-                    })
+                    transactionComparables.map((sale: Comparable, index: number) => (
+                      <ComparableCard
+                        key={`sale-${index}`}
+                        title={text(sale.buildingName, "Property")}
+                        details={comparableDetails(sale)}
+                        price={text(sale.salePriceDisplay, "N/A")}
+                        psf={text(sale.pricePerSqftDisplay, "N/A")}
+                        status={text(sale.transactionDate) ? `Sold ${sale.transactionDate}` : "Sold"}
+                        sold
+                      />
+                    ))
                   )}
                 </div>
               </div>
@@ -901,30 +893,37 @@ export default function AnalysisRequestPage() {
                 </div>
 
                 <div className="score-section">
-                  {discountPercent !== null && (
+                  {marketGapPercentage && (
                     <>
                       <div className="score-value">
-                        {discountPercent.toFixed(1)}%<span> {marketDirectionLabel || "Below Market"}</span>
+                        {marketGapPercentage}<span> {marketDirectionLabel || "Below Market"}</span>
                       </div>
-                      <div className="score-subtitle">
-                        {discountPercent >= 15 ? "Excellent" : discountPercent >= 10 ? "Good" : "Fair"} Investment Opportunity
-                      </div>
+                      {marketGapNumber !== null && !isAboveMarket && (
+                        <div className="score-subtitle">
+                          {marketGapNumber >= 15 ? "Excellent" : marketGapNumber >= 10 ? "Good" : "Fair"} Investment
+                          Opportunity
+                        </div>
+                      )}
                       <p>
                         Based on price analysis, market trends, location score, rental
-                        potential, and liquidity in {analysis.area || "the area"} market.
+                        potential, and liquidity in {area || "the area"} market.
                       </p>
                       <div className="score-breakdown">
-                        <p>
-                          <strong>Listed Price:</strong> {listedPrice}
-                        </p>
+                        {listedPrice && (
+                          <p>
+                            <strong>Listed Price:</strong> {listedPrice}
+                          </p>
+                        )}
                         {estimateRange && (
                           <p>
                             <strong>Market Estimate:</strong> {estimateRange}
                           </p>
                         )}
-                        <p>
-                          <strong>Potential Savings:</strong> {savingsDisplay}
-                        </p>
+                        {potentialSavings && (
+                          <p>
+                            <strong>Potential Savings:</strong> {potentialSavings}
+                          </p>
+                        )}
                         {rentalYield && (
                           <p>
                             <strong>Rental Yield:</strong> {rentalYield}
@@ -935,7 +934,7 @@ export default function AnalysisRequestPage() {
                       <ul className="score-components">
                         <li>
                           <span>Price vs Market</span>
-                          <strong>{discountPercent.toFixed(1)}%</strong>
+                          <strong>{marketGapPercentage}</strong>
                         </li>
                         {rentalYield && (
                           <li>
@@ -943,10 +942,12 @@ export default function AnalysisRequestPage() {
                             <strong>{rentalYield}</strong>
                           </li>
                         )}
-                        <li>
-                          <span>Building Status</span>
-                          <strong>{buildingStatus === "READY" ? "Ready" : "Off-Plan"}</strong>
-                        </li>
+                        {handoverLabel && (
+                          <li>
+                            <span>Building Status</span>
+                            <strong>{handoverLabel}</strong>
+                          </li>
+                        )}
                       </ul>
                     </>
                   )}
@@ -959,19 +960,19 @@ export default function AnalysisRequestPage() {
                       <span>Rental Yield</span>
                     </div>
                     <div className="metric-box">
-                      <div>{listedPrice}</div>
+                      <div>{listedPrice || "N/A"}</div>
                       <span>Listed Price</span>
                     </div>
                     <div className="metric-box wide">
-                      <div>{analysis.area || "N/A"}</div>
+                      <div>{area || "N/A"}</div>
                       <span>Location</span>
                     </div>
                   </div>
                 )}
 
                 <p className="benefits-text">
-                  <strong>Key Benefits:</strong> Property located in {analysis.area || "the area"}, {analysis.city || "the city"}.
-                  {buildingStatus === "READY" ? " Ready property allows immediate occupancy and rental income." : " Off-plan property offers potential for capital appreciation."}
+                  <strong>Key Benefits:</strong> Property located in {area || "the area"}, {city || "the city"}.
+                  {isReady ? " Ready property allows immediate occupancy and rental income." : " Off-plan property offers potential for capital appreciation."}
                   {rentalYield && ` Rental yield of ${rentalYield} provides attractive returns for investors.`}
                 </p>
               </div>
@@ -1541,6 +1542,7 @@ const ComparableCard = ({
   psf,
   status,
   sold,
+  url,
 }: {
   title: string;
   details: string;
@@ -1548,9 +1550,19 @@ const ComparableCard = ({
   psf: string;
   status: string;
   sold?: boolean;
+  /** Listing link, when the comparable carries one (listing comparables only). */
+  url?: string;
 }) => (
   <div className="similar-property">
-    <div className="similar-title">{title}</div>
+    <div className="similar-title">
+      {url ? (
+        <a className="inline-link" href={url} target="_blank" rel="noopener noreferrer">
+          {title}
+        </a>
+      ) : (
+        title
+      )}
+    </div>
     <div className="similar-details">{details}</div>
     <div className="similar-price-row">
       <div className="similar-price">{typeof price === "number" ? price.toLocaleString() : price}</div>
