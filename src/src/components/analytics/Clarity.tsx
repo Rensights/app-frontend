@@ -3,6 +3,13 @@
 import { useEffect, useRef } from "react";
 import clarity from "@microsoft/clarity";
 
+declare global {
+  interface Window {
+    // Injected at container startup by docker-entrypoint.sh (see window.__API_URL__).
+    __CLARITY_PROJECT_ID__?: string;
+  }
+}
+
 /**
  * Microsoft Clarity Analytics Component
  * Initializes Clarity tracking on the client side
@@ -14,8 +21,14 @@ import clarity from "@microsoft/clarity";
  *
  * Usage: Add <Clarity /> to your root layout
  *
- * Environment Variable Required:
- * NEXT_PUBLIC_CLARITY_PROJECT_ID - Your Clarity project ID from https://clarity.microsoft.com
+ * Project ID, from https://clarity.microsoft.com, resolved in this order:
+ *   1. window.__CLARITY_PROJECT_ID__ - runtime config written by docker-entrypoint.sh from
+ *      the CLARITY_PROJECT_ID env var, the same way __API_URL__ and __FARO_URL__ work.
+ *   2. NEXT_PUBLIC_CLARITY_PROJECT_ID - build-time fallback, for local dev via .env.local.
+ *
+ * The runtime path matters: NEXT_PUBLIC_* values are inlined when the image is built, so a
+ * value set only in the Kubernetes deployment never reaches the browser bundle. The project
+ * ID is a public, browser-exposed value, so injecting it at runtime is safe.
  */
 export default function Clarity() {
   // Guards against double initialization: the CookiebotOnConsentReady event
@@ -26,13 +39,14 @@ export default function Clarity() {
     // Only initialize on client side
     if (typeof window === "undefined") return;
 
-    // Get Clarity project ID from environment variable
-    const projectId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
+    // Runtime config first, build-time env as the local-dev fallback.
+    const projectId =
+      window.__CLARITY_PROJECT_ID__ || process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
 
     if (!projectId) {
       if (process.env.NODE_ENV === "development") {
         console.warn(
-          "Microsoft Clarity: NEXT_PUBLIC_CLARITY_PROJECT_ID is not set. Clarity will not be initialized."
+          "Microsoft Clarity: no project ID (CLARITY_PROJECT_ID / NEXT_PUBLIC_CLARITY_PROJECT_ID). Clarity will not be initialized."
         );
       }
       return;

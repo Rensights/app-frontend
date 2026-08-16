@@ -84,6 +84,14 @@ spec:
                   name: {{ .Values.secrets.sharedConfig }}
                   key: GOOGLE_MAPS_API_KEY
                   optional: true
+            # Microsoft Clarity project ID. docker-entrypoint.sh writes it to
+            # window.__CLARITY_PROJECT_ID__ at startup. optional: analytics is a no-op if unset.
+            - name: CLARITY_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.sharedConfig }}
+                  key: CLARITY_PROJECT_ID
+                  optional: true
             {{- else }}
             {{- if hasKey .Values.extraEnv "API_URL" }}
             - name: API_URL
