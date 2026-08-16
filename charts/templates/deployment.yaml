@@ -86,12 +86,17 @@ spec:
                   optional: true
             # Microsoft Clarity project ID. docker-entrypoint.sh writes it to
             # window.__CLARITY_PROJECT_ID__ at startup. optional: analytics is a no-op if unset.
+            # Skipped when extraEnv sets it, so a value in env-values wins and no duplicate
+            # env entry is emitted. The ID is public (it ships to the browser), so keeping it
+            # in extraEnv instead of the shared secret is fine.
+            {{- if not (hasKey .Values.extraEnv "CLARITY_PROJECT_ID") }}
             - name: CLARITY_PROJECT_ID
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.sharedConfig }}
                   key: CLARITY_PROJECT_ID
                   optional: true
+            {{- end }}
             {{- else }}
             {{- if hasKey .Values.extraEnv "API_URL" }}
             - name: API_URL

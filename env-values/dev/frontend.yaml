@@ -29,4 +29,9 @@ ingress:
 
 # API_URL / NEXT_PUBLIC_* come from the single Portainer-managed `dev-shared-config`
 # secret (APP_API_URL, STRIPE_PUBLISHABLE_KEY, GOOGLE_CLIENT_ID); see chart secrets.sharedConfig.
-extraEnv: {}
+#
+# CLARITY_PROJECT_ID lives here rather than in that secret: it is a public value that ships to
+# the browser anyway. docker-entrypoint.sh writes it to window.__CLARITY_PROJECT_ID__ at
+# startup, and the chart skips its secret lookup while this key is set here.
+extraEnv:
+  CLARITY_PROJECT_ID: "uv5wch1e5b"
