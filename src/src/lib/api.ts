@@ -668,6 +668,20 @@ class ApiClient {
     return this.request<SubscriptionResponse[]>('/users/me/payment-history', {}, false);
   }
 
+  /**
+   * Permanently erase the signed-in account (GDPR right to erasure). Irreversible.
+   *
+   * Any subscription is cancelled immediately with no refund for the remainder of the paid
+   * period. `confirmEmail` must match the account's own address — the backend rejects it
+   * otherwise, so a stray click cannot delete an account.
+   */
+  async deleteAccount(confirmEmail: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/users/me', {
+      method: 'DELETE',
+      body: JSON.stringify({ confirmEmail }),
+    });
+  }
+
   // Invoice endpoints
   async getInvoices(): Promise<InvoiceResponse[]> {
     return this.request<InvoiceResponse[]>('/api/invoices', {}, false);

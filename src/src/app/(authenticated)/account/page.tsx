@@ -22,6 +22,12 @@ function AccountPageContent() {
   const [processedSessionId, setProcessedSessionId] = useState<string | null>(null);
   const [handledCancel, setHandledCancel] = useState(false);
   const [openingPortal, setOpeningPortal] = useState(false);
+  // Account deletion: the modal spells out the consequences, and the typed email is the guard
+  // against a mis-click on something irreversible.
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -131,6 +137,28 @@ function AccountPageContent() {
       toast.showError(err?.message || "Failed to open Stripe portal");
     } finally {
       setOpeningPortal(false);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setShowDeleteModal(false);
+    setDeleteConfirmEmail("");
+    setDeleteError("");
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await apiClient.deleteAccount(deleteConfirmEmail.trim());
+      // The account is gone, so there is no session left to keep. Clear it and send them out
+      // to the public site rather than back into an authenticated shell that will 401.
+      await apiClient.logout().catch(() => undefined);
+      window.location.href = "/";
+    } catch (err: any) {
+      setDeleteError(err?.message || "Could not delete your account. Please try again.");
+      setDeleting(false);
     }
   };
 
@@ -285,6 +313,74 @@ function AccountPageContent() {
             </div>
           )}
         </div>
+
+      {/* Danger zone — separated from the rest of the page so it is never mistaken for a
+          routine setting. */}
+      <div className="account-card danger-zone">
+        <h2 className="card-title">Delete Account</h2>
+        <p className="danger-text">
+          Permanently delete your Rensights account and personal data. This cannot be undone.
+        </p>
+        <button className="btn btn-danger" onClick={() => setShowDeleteModal(true)}>
+          Delete Account
+        </button>
+      </div>
+
+      {showDeleteModal && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+          <div className="modal-card">
+            <h3 id="delete-title" className="modal-title">Delete your account?</h3>
+
+            <p className="modal-text">Before you continue, please read what happens:</p>
+            <ul className="modal-list">
+              {canManageStripe && (
+                <li>
+                  <strong>Your subscription is cancelled immediately, and the remaining days of
+                  your current paid period are not refunded.</strong>
+                </li>
+              )}
+              <li>Your profile, saved reports, uploaded documents and activity are permanently deleted.</li>
+              <li>You will be signed out and will not be able to sign back in.</li>
+              <li>
+                Past invoices are kept, without your personal details, because accounting records
+                must be retained by law.
+              </li>
+            </ul>
+
+            <label className="modal-label" htmlFor="deleteConfirmEmail">
+              Type <strong>{user?.email}</strong> to confirm:
+            </label>
+            <input
+              id="deleteConfirmEmail"
+              type="email"
+              className="modal-input"
+              value={deleteConfirmEmail}
+              onChange={(e) => setDeleteConfirmEmail(e.target.value)}
+              placeholder={user?.email || "your email"}
+              autoComplete="off"
+              disabled={deleting}
+            />
+
+            {deleteError && <div className="modal-error">{deleteError}</div>}
+
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={closeDeleteModal} disabled={deleting}>
+                Keep my account
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleDeleteAccount}
+                disabled={
+                  deleting ||
+                  deleteConfirmEmail.trim().toLowerCase() !== (user?.email || "").toLowerCase()
+                }
+              >
+                {deleting ? "Deleting..." : "Delete permanently"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
