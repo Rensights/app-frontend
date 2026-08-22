@@ -817,6 +817,16 @@ class ApiClient {
   }
 
   /**
+   * Every area / district offered in the analysis request form's dropdown.
+   *
+   * Admin-managed, so the list can be corrected without a frontend deploy. Returns names only,
+   * alphabetical. An empty result means the catalogue has not been populated yet.
+   */
+  async getAreas(): Promise<string[]> {
+    return this.request<string[]>('/api/areas', {}, true);
+  }
+
+  /**
    * Building name suggestions for the analysis request form.
    *
    * The catalogue holds names and nothing else. Returns at most 10, ranked with prefix matches

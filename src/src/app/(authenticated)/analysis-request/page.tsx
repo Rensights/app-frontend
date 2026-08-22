@@ -87,7 +87,15 @@ const defaultCenters = {
   abudhabi: { lat: 24.4539, lng: 54.3773 },
 };
 
-const areaOptions = [
+/**
+ * Fallback area list.
+ *
+ * Areas are maintained in the admin app now (GET /api/areas). This copy of the original
+ * hardcoded list is kept only so the form still works if that call fails or the catalogue has
+ * not been populated yet — an empty dropdown would make the form unusable. Once the admin list
+ * is in place and proven, this can go.
+ */
+const fallbackAreaOptions = [
   "Abu Hail",
   "Al Asbaq",
   "AL Athbah",
@@ -408,6 +416,19 @@ export default function AnalysisRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: string; lng: string } | null>(null);
+  const [areaOptions, setAreaOptions] = useState<string[]>(fallbackAreaOptions);
+
+  useEffect(() => {
+    // Admin-managed list; the hardcoded fallback stands in if it is empty or unreachable.
+    apiClient
+      .getAreas()
+      .then((areas) => {
+        if (areas && areas.length > 0) {
+          setAreaOptions(areas);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   const loadReport = useCallback(async () => {
     if (!reportId) {
