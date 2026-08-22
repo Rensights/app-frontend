@@ -95,6 +95,14 @@ const defaultCenters = {
  * not been populated yet — an empty dropdown would make the form unusable. Once the admin list
  * is in place and proven, this can go.
  */
+/**
+ * A-Z, ignoring case and accents. The backend already orders the list, but sorting here as well
+ * keeps the fallback list tidy too and makes the dropdown's order independent of where the names
+ * came from.
+ */
+const sortAreas = (areas: string[]) =>
+  [...areas].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
 const fallbackAreaOptions = [
   "Abu Hail",
   "Al Asbaq",
@@ -416,7 +424,7 @@ export default function AnalysisRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [coordinates, setCoordinates] = useState<{ lat: string; lng: string } | null>(null);
-  const [areaOptions, setAreaOptions] = useState<string[]>(fallbackAreaOptions);
+  const [areaOptions, setAreaOptions] = useState<string[]>(() => sortAreas(fallbackAreaOptions));
 
   useEffect(() => {
     // Admin-managed list; the hardcoded fallback stands in if it is empty or unreachable.
@@ -424,7 +432,7 @@ export default function AnalysisRequestPage() {
       .getAreas()
       .then((areas) => {
         if (areas && areas.length > 0) {
-          setAreaOptions(areas);
+          setAreaOptions(sortAreas(areas));
         }
       })
       .catch(() => undefined);
