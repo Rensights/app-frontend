@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { apiClient } from "@/lib/api";
@@ -56,12 +56,23 @@ export default function DashboardPage() {
   const [loadingReports, setLoadingReports] = useState(true);
   const [reportCount, setReportCount] = useState<{ used: number; remaining: number; max: number } | null>(null);
 
-  const fetchReports = useCallback(async () => {
+  // When the last fetch finished. Focus fires on every window switch — including the one a
+  // screenshot shortcut causes — so a refresh that just ran is not worth repeating.
+  const lastFetchedAtRef = useRef(0);
+
+  /**
+   * @param background true for refreshes triggered by regaining focus. Those must not raise the
+   *   loading flag: swapping the page for a spinner every time the window is re-focused makes it
+   *   impossible to screenshot, and there is nothing to wait for — the content is already there.
+   */
+  const fetchReports = useCallback(async (background = false) => {
     // Auth is via HttpOnly cookie (sent automatically), so reports don't need the
     // loaded user object — only the cookie, which is already present. Fetching here
     // in parallel with UserContext avoids an unnecessary serial round-trip on first load.
     try {
-      setLoadingReports(true);
+      if (!background) {
+        setLoadingReports(true);
+      }
       const [requests, countInfo] = await Promise.all([
         apiClient.getMyAnalysisRequests(),
         apiClient.getReportCount()
@@ -73,7 +84,10 @@ export default function DashboardPage() {
       setAnalysisRequests([]);
       setReportCount(null);
     } finally {
-      setLoadingReports(false);
+      lastFetchedAtRef.current = Date.now();
+      if (!background) {
+        setLoadingReports(false);
+      }
     }
   }, []);
 
@@ -84,14 +98,20 @@ export default function DashboardPage() {
 
   // Refresh when returning to the dashboard (tab focus or visibility)
   useEffect(() => {
-    const handleFocus = () => {
+    const refreshInBackground = () => {
       if (userLoading) return;
-      fetchReports();
+      // Focus and visibilitychange both fire for a single window switch, and a screenshot
+      // causes one within seconds of the page load. Once every 30s is plenty for catching a
+      // report an admin approved while the tab sat in the background.
+      if (Date.now() - lastFetchedAtRef.current < 30_000) return;
+      fetchReports(true);
     };
 
+    const handleFocus = refreshInBackground;
+
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && !userLoading) {
-        fetchReports();
+      if (document.visibilityState === "visible") {
+        refreshInBackground();
       }
     };
 

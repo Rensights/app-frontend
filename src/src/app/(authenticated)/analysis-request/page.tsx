@@ -414,6 +414,8 @@ export default function AnalysisRequestPage() {
   const toast = useToast();
   const reportId = searchParams?.get("id");
   const [reportLoading, setReportLoading] = useState(false);
+  // When the report was last fetched, so a re-focus seconds later does not refetch.
+  const lastReportFetchRef = useRef(0);
   const [reportError, setReportError] = useState("");
   const [report, setReport] = useState<any | null>(null);
   const [tab, setTab] = useState<"listed" | "transactions">("listed");
@@ -438,22 +440,37 @@ export default function AnalysisRequestPage() {
       .catch(() => undefined);
   }, []);
 
-  const loadReport = useCallback(async () => {
+  /**
+   * @param background true for refreshes triggered by regaining focus. Those keep the report on
+   *   screen instead of replacing it with a spinner — a screenshot shortcut blurs and re-focuses
+   *   the window, and wiping the report at that moment is exactly what makes it un-screenshottable.
+   */
+  const loadReport = useCallback(async (background = false) => {
     if (!reportId) {
       setReport(null);
       setReportError("");
       setReportLoading(false);
       return;
     }
-    setReportLoading(true);
-    setReportError("");
+    if (!background) {
+      setReportLoading(true);
+      setReportError("");
+    }
     try {
       const data = await apiClient.getAnalysisRequestById(reportId);
       setReport(data);
+      setReportError("");
     } catch (error: any) {
-      setReportError(error?.message || "Failed to load analysis result");
+      // A failed background refresh leaves the report that is already on screen alone; only a
+      // foreground load has nothing to fall back to.
+      if (!background) {
+        setReportError(error?.message || "Failed to load analysis result");
+      }
     } finally {
-      setReportLoading(false);
+      lastReportFetchRef.current = Date.now();
+      if (!background) {
+        setReportLoading(false);
+      }
     }
   }, [reportId]);
 
@@ -465,14 +482,18 @@ export default function AnalysisRequestPage() {
 
   // Refresh when returning to the report (tab focus or visibility)
   useEffect(() => {
-    const handleFocus = () => {
-      if (pathname === "/analysis-request") {
-        loadReport();
-      }
+    const refreshInBackground = () => {
+      if (pathname !== "/analysis-request") return;
+      // Focus and visibilitychange both fire for one window switch; 30s is often enough to
+      // pick up a newly approved report without reloading on every alt-tab.
+      if (Date.now() - lastReportFetchRef.current < 30_000) return;
+      loadReport(true);
     };
+
+    const handleFocus = refreshInBackground;
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && pathname === "/analysis-request") {
-        loadReport();
+      if (document.visibilityState === "visible") {
+        refreshInBackground();
       }
     };
     window.addEventListener("focus", handleFocus);
