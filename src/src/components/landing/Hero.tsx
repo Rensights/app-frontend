@@ -40,7 +40,7 @@ export default function LandingHero({ initialContent }: LandingHeroProps) {
       console.error("Error loading hero content:", error);
       // Fallback to default content
       setContent({
-        title: "Discover <span class='text-primary'>Underpriced</span> Dubai Properties",
+        title: "Explore Dubai Property <span class='text-primary'>Opportunities</span>",
         subtitle: "Data-driven insights for retail investors seeking exceptional real estate opportunities in Dubai's dynamic market",
         imageUrl: "/landing-assets/dubai-skyline.jpg",
         ctaPrimary: "Get Started",
@@ -64,7 +64,7 @@ export default function LandingHero({ initialContent }: LandingHeroProps) {
     );
   }
 
-  const title = content?.title || "Discover <span class='text-primary'>Underpriced</span> Dubai Properties";
+  const title = content?.title || "Explore Dubai Property <span class='text-primary'>Opportunities</span>";
   const subtitle = content?.subtitle || "Data-driven insights for retail investors seeking exceptional real estate opportunities in Dubai's dynamic market";
   const imageUrl = content?.imageUrl || "/landing-assets/dubai-skyline.jpg";
   const ctaPrimary = content?.ctaPrimary || "Get Started";
