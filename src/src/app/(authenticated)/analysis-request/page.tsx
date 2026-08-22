@@ -704,6 +704,9 @@ export default function AnalysisRequestPage() {
     const pricePerSqft = text(analysis.pricePerSqft);
     const marketPosition = text(analysis.marketPosition);
     const dubaiComparison = text(analysis.dubaiComparison);
+    // Caveat from the analysis module about what the estimate could not account for. Rendered
+    // at the end of Price Analysis, so it sits with the figures it qualifies.
+    const valuationWarning = analysis.valuationWarning || null;
 
     // Property details. Fields the module leaves empty are dropped rather than shown blank.
     const propertyDetails = [
@@ -800,6 +803,18 @@ export default function AnalysisRequestPage() {
                   </div>
                 </div>
 
+                {valuationWarning && (valuationWarning.title || valuationWarning.message) && (
+                  <div className="valuation-warning">
+                    {valuationWarning.title && (
+                      <div className="valuation-warning-title">
+                        <span aria-hidden="true">⚠️</span> {valuationWarning.title}
+                      </div>
+                    )}
+                    {valuationWarning.message && (
+                      <p className="valuation-warning-message">{valuationWarning.message}</p>
+                    )}
+                  </div>
+                )}
               </section>
 
               {propertyDetails.length > 0 && (

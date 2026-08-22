@@ -627,3 +627,35 @@ textarea {
   color: #94a3b8;
   pointer-events: none;
 }
+
+/* ============================================================
+   valuation_warning, at the end of Price Analysis
+   A caveat on the estimate, so it sits with the figures it
+   qualifies. Amber rather than red: it qualifies the numbers,
+   it does not report a failure.
+   ============================================================ */
+
+.valuation-warning {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid #f59e0b;
+  border-radius: 10px;
+  background: #fffbeb;
+}
+
+.valuation-warning-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #92400e;
+  font-size: 0.95rem;
+}
+
+.valuation-warning-message {
+  margin: 6px 0 0;
+  color: #78350f;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
