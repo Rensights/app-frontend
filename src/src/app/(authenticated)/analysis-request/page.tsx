@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { apiClient, BuildingSuggestion } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 import { trackEvent } from "@/lib/analytics";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -1047,15 +1047,7 @@ export default function AnalysisRequestPage() {
                   required
                   className="full-width"
                   value={formState.buildingName}
-                  area={formState.area}
                   onChange={(value) => handleInputChange("buildingName", value)}
-                  onSelectSuggestion={(suggestion) => {
-                    // The catalogue knows which district the building is in, so fill the area in
-                    // rather than making the user find it in a list of hundreds.
-                    if (suggestion.area && areaOptions.includes(suggestion.area)) {
-                      handleInputChange("area", suggestion.area);
-                    }
-                  }}
                 />
                 <FormInput
                   label="Property Listing URL"
@@ -1391,15 +1383,13 @@ export default function AnalysisRequestPage() {
  * Building name field with type-ahead suggestions from the admin-managed catalogue.
  *
  * Free text on purpose: the catalogue is a convenience, not a whitelist, so a building that has
- * not been imported yet must still be submittable. Picking a suggestion also reports the area
- * back, so the form can fill that in for the user.
+ * not been imported yet must still be submittable. The catalogue holds names only, so a
+ * suggestion fills in this field and nothing else.
  */
 const BuildingNameInput = ({
   label,
   value,
   onChange,
-  onSelectSuggestion,
-  area,
   placeholder,
   required,
   className,
@@ -1407,14 +1397,11 @@ const BuildingNameInput = ({
   label: string;
   value: string;
   onChange: (value: string) => void;
-  onSelectSuggestion?: (suggestion: BuildingSuggestion) => void;
-  /** Currently selected district, used to bias the suggestions. */
-  area?: string;
   placeholder?: string;
   required?: boolean;
   className?: string;
 }) => {
-  const [suggestions, setSuggestions] = useState<BuildingSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(-1);
   const [searching, setSearching] = useState(false);
@@ -1441,7 +1428,7 @@ const BuildingNameInput = ({
     setSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const results = await apiClient.searchBuildings(query, area);
+        const results = await apiClient.searchBuildings(query);
         if (!cancelled) {
           setSuggestions(results);
           setOpen(results.length > 0);
@@ -1462,7 +1449,7 @@ const BuildingNameInput = ({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [value, area]);
+  }, [value]);
 
   // Clicking anywhere else dismisses the list.
   useEffect(() => {
@@ -1475,10 +1462,9 @@ const BuildingNameInput = ({
     return () => document.removeEventListener("mousedown", onDocumentClick);
   }, []);
 
-  const pick = (suggestion: BuildingSuggestion) => {
+  const pick = (name: string) => {
     justPickedRef.current = true;
-    onChange(suggestion.name);
-    onSelectSuggestion?.(suggestion);
+    onChange(name);
     setOpen(false);
     setHighlighted(-1);
   };
@@ -1528,9 +1514,9 @@ const BuildingNameInput = ({
 
       {open && (
         <ul className="building-suggestions" role="listbox">
-          {suggestions.map((suggestion, index) => (
+          {suggestions.map((name, index) => (
             <li
-              key={`${suggestion.name}-${suggestion.area}-${index}`}
+              key={`${name}-${index}`}
               role="option"
               aria-selected={index === highlighted}
               className={`building-suggestion ${index === highlighted ? "highlighted" : ""}`.trim()}
@@ -1538,15 +1524,10 @@ const BuildingNameInput = ({
               // mousedown, not click: the input's blur would close the list first.
               onMouseDown={(event) => {
                 event.preventDefault();
-                pick(suggestion);
+                pick(name);
               }}
             >
-              <span className="building-suggestion-name">{suggestion.name}</span>
-              {(suggestion.area || suggestion.developer) && (
-                <span className="building-suggestion-meta">
-                  {[suggestion.area, suggestion.developer].filter(Boolean).join(" · ")}
-                </span>
-              )}
+              <span className="building-suggestion-name">{name}</span>
             </li>
           ))}
         </ul>

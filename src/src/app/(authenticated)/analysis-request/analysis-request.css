@@ -605,9 +605,6 @@ textarea {
 }
 
 .building-suggestion {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
   padding: 10px 12px;
   border-radius: 8px;
   cursor: pointer;
@@ -620,11 +617,6 @@ textarea {
 .building-suggestion-name {
   font-size: 0.95rem;
   color: #0f172a;
-}
-
-.building-suggestion-meta {
-  font-size: 0.8rem;
-  color: #64748b;
 }
 
 .building-hint {
