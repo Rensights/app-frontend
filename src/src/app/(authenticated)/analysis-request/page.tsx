@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { apiClient } from "@/lib/api";
+import { apiClient, BuildingSuggestion } from "@/lib/api";
 import { trackEvent } from "@/lib/analytics";
 import { useToast } from "@/components/ui/Toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -1041,13 +1041,21 @@ export default function AnalysisRequestPage() {
                   ]}
                   onChange={(value) => handleInputChange("area", value)}
                 />
-                <FormInput
+                <BuildingNameInput
                   label="Building/Project Name"
-                  placeholder="e.g., Marina Pinnacle Tower"
+                  placeholder="Start typing to see suggestions…"
                   required
                   className="full-width"
                   value={formState.buildingName}
+                  area={formState.area}
                   onChange={(value) => handleInputChange("buildingName", value)}
+                  onSelectSuggestion={(suggestion) => {
+                    // The catalogue knows which district the building is in, so fill the area in
+                    // rather than making the user find it in a list of hundreds.
+                    if (suggestion.area && areaOptions.includes(suggestion.area)) {
+                      handleInputChange("area", suggestion.area);
+                    }
+                  }}
                 />
                 <FormInput
                   label="Property Listing URL"
@@ -1378,6 +1386,174 @@ export default function AnalysisRequestPage() {
     </div>
   );
 }
+
+/**
+ * Building name field with type-ahead suggestions from the admin-managed catalogue.
+ *
+ * Free text on purpose: the catalogue is a convenience, not a whitelist, so a building that has
+ * not been imported yet must still be submittable. Picking a suggestion also reports the area
+ * back, so the form can fill that in for the user.
+ */
+const BuildingNameInput = ({
+  label,
+  value,
+  onChange,
+  onSelectSuggestion,
+  area,
+  placeholder,
+  required,
+  className,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onSelectSuggestion?: (suggestion: BuildingSuggestion) => void;
+  /** Currently selected district, used to bias the suggestions. */
+  area?: string;
+  placeholder?: string;
+  required?: boolean;
+  className?: string;
+}) => {
+  const [suggestions, setSuggestions] = useState<BuildingSuggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(-1);
+  const [searching, setSearching] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Set while a suggestion is being applied, so the resulting value change does not immediately
+  // re-open the list with a single stale result.
+  const justPickedRef = useRef(false);
+
+  useEffect(() => {
+    if (justPickedRef.current) {
+      justPickedRef.current = false;
+      return;
+    }
+
+    const query = value.trim();
+    if (query.length < 2) {
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
+
+    // Debounced: this fires per keystroke otherwise.
+    let cancelled = false;
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const results = await apiClient.searchBuildings(query, area);
+        if (!cancelled) {
+          setSuggestions(results);
+          setOpen(results.length > 0);
+          setHighlighted(-1);
+        }
+      } catch {
+        // A failed lookup must never block typing - the field still accepts free text.
+        if (!cancelled) {
+          setSuggestions([]);
+          setOpen(false);
+        }
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [value, area]);
+
+  // Clicking anywhere else dismisses the list.
+  useEffect(() => {
+    const onDocumentClick = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocumentClick);
+    return () => document.removeEventListener("mousedown", onDocumentClick);
+  }, []);
+
+  const pick = (suggestion: BuildingSuggestion) => {
+    justPickedRef.current = true;
+    onChange(suggestion.name);
+    onSelectSuggestion?.(suggestion);
+    setOpen(false);
+    setHighlighted(-1);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!open || suggestions.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlighted((current) => (current + 1) % suggestions.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlighted((current) => (current <= 0 ? suggestions.length - 1 : current - 1));
+    } else if (event.key === "Enter" && highlighted >= 0) {
+      // Only intercept Enter when a suggestion is actually highlighted, so the form can still
+      // be submitted from this field.
+      event.preventDefault();
+      pick(suggestions[highlighted]);
+    } else if (event.key === "Escape") {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className={`form-group building-autocomplete ${className ?? ""}`.trim()} ref={containerRef}>
+      <label htmlFor="buildingNameInput">
+        {label} {required && <span className="required">*</span>}
+      </label>
+      <input
+        id="buildingNameInput"
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        required={required}
+        autoComplete="off"
+        role="combobox"
+        aria-expanded={open}
+        aria-autocomplete="list"
+        onChange={(event) => onChange(event.target.value)}
+        onFocus={() => suggestions.length > 0 && setOpen(true)}
+        onKeyDown={handleKeyDown}
+      />
+
+      {searching && value.trim().length >= 2 && !open && (
+        <div className="building-hint">Searching…</div>
+      )}
+
+      {open && (
+        <ul className="building-suggestions" role="listbox">
+          {suggestions.map((suggestion, index) => (
+            <li
+              key={`${suggestion.name}-${suggestion.area}-${index}`}
+              role="option"
+              aria-selected={index === highlighted}
+              className={`building-suggestion ${index === highlighted ? "highlighted" : ""}`.trim()}
+              onMouseEnter={() => setHighlighted(index)}
+              // mousedown, not click: the input's blur would close the list first.
+              onMouseDown={(event) => {
+                event.preventDefault();
+                pick(suggestion);
+              }}
+            >
+              <span className="building-suggestion-name">{suggestion.name}</span>
+              {(suggestion.area || suggestion.developer) && (
+                <span className="building-suggestion-meta">
+                  {[suggestion.area, suggestion.developer].filter(Boolean).join(" · ")}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const FormInput = ({
   label,

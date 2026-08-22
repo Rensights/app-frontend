@@ -112,6 +112,14 @@ export interface AuthResponse {
   lastName?: string;
 }
 
+/** One building suggestion for the analysis request form's type-ahead. */
+export interface BuildingSuggestion {
+  name: string;
+  area: string;
+  city: string;
+  developer: string;
+}
+
 export interface UserResponse {
   id: string;
   email: string;
@@ -814,6 +822,18 @@ class ApiClient {
     });
     
     return response.json();
+  }
+
+  /**
+   * Building name suggestions for the analysis request form.
+   *
+   * Returns at most 10, already ranked with prefix matches first. Fewer than 2 characters
+   * returns nothing — the backend does not answer queries that would match half the catalogue.
+   */
+  async searchBuildings(query: string, area?: string): Promise<BuildingSuggestion[]> {
+    const params = new URLSearchParams({ q: query });
+    if (area) params.set('area', area);
+    return this.request<BuildingSuggestion[]>(`/api/buildings/search?${params.toString()}`, {}, false);
   }
 
   async getMyAnalysisRequests(): Promise<any[]> {
