@@ -918,6 +918,16 @@ class ApiClient {
   }
 
   /**
+   * Categories behind the Insights filter pills, in the order admins arranged them.
+   *
+   * Returns every category, including ones no article uses yet, so a pill can legitimately
+   * show a count of zero rather than disappearing.
+   */
+  async getArticleCategories(): Promise<any[]> {
+    return this.request<any[]>('/api/articles/categories', {}, false);
+  }
+
+  /**
    * Lightweight check for whether any articles exist, used only to gate the
    * "Insights" nav link. Public (no auth). Never throws - returns false on any
    * error or non-ok response so callers can safely decide the nav visibility.
