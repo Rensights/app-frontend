@@ -786,12 +786,6 @@ export default function AnalysisRequestPage() {
                     <div className="price-value price-estimate">{estimateRange || "N/A"}</div>
                   </div>
                   <div className="price-section">
-                    <div className="price-label">Potential Savings</div>
-                    <div className="price-value">
-                      <span className="savings-amount">{potentialSavings || "N/A"}</span>
-                    </div>
-                  </div>
-                  <div className="price-section">
                     <div className="price-label">Price per sq ft</div>
                     <div className="price-value">{pricePerSqft || "N/A"}</div>
                     {marketGapPercentage && (
