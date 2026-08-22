@@ -88,14 +88,6 @@ const defaultCenters = {
 };
 
 /**
- * Fallback area list.
- *
- * Areas are maintained in the admin app now (GET /api/areas). This copy of the original
- * hardcoded list is kept only so the form still works if that call fails or the catalogue has
- * not been populated yet — an empty dropdown would make the form unusable. Once the admin list
- * is in place and proven, this can go.
- */
-/**
  * A-Z, ignoring case and accents. The backend already orders the list, but sorting here as well
  * keeps the fallback list tidy too and makes the dropdown's order independent of where the names
  * came from.
@@ -103,6 +95,14 @@ const defaultCenters = {
 const sortAreas = (areas: string[]) =>
   [...areas].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
+/**
+ * Fallback area list.
+ *
+ * Areas are maintained in the admin app now (GET /api/areas). This copy of the original
+ * hardcoded list is kept only so the form still works if that call fails or the catalogue has
+ * not been populated yet — an empty dropdown would make the form unusable. Once the admin list
+ * is in place and proven, this can go.
+ */
 const fallbackAreaOptions = [
   "Abu Hail",
   "Al Asbaq",
@@ -680,7 +680,9 @@ export default function AnalysisRequestPage() {
     const area = text(analysis.area, text(report?.area));
     const city = text(analysis.city, text(report?.city));
     const bedrooms = text(analysis.bedrooms, text(report?.bedrooms, "N/A"));
-    const size = text(analysis.size, text(report?.size, "N/A"));
+    // The tile's label carries the unit ("Size, sq ft"), so it is stripped from the value here
+    // rather than reading "520 sq ft" under a label that already says sq ft.
+    const size = text(analysis.size, text(report?.size, "N/A")).replace(/\s*sq\s*\.?\s*ft\.?$/i, "");
     const buildingStatusLabel = text(analysis.buildingStatus, text(report?.buildingStatus));
     const isReady = /ready|completed/i.test(buildingStatusLabel);
     const handoverLabel = buildingStatusLabel || (isReady ? "Ready" : "Off-Plan");
@@ -761,7 +763,7 @@ export default function AnalysisRequestPage() {
               <section className="key-metrics">
                 {[
                   { value: bedrooms, label: "Bedrooms" },
-                  { value: size, label: "Size" },
+                  { value: size, label: "Size, sq ft" },
                   { value: handoverLabel || "N/A", label: "Handover" },
                   { value: rentalYield || "N/A", label: "Rental Yield" },
                 ].map((metric) => (
@@ -803,6 +805,7 @@ export default function AnalysisRequestPage() {
                     <div className="price-value">{rentalYield || "N/A"}</div>
                   </div>
                 </div>
+
               </section>
 
               {propertyDetails.length > 0 && (
