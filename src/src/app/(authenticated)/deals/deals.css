@@ -616,8 +616,13 @@
 }
 
 .price-estimate {
-  font-size: 0.75rem;
+  /* No font-size: matches .price-current by inheriting the row's size. It used to be stepped
+     down to 0.75rem so a long range would fit the fixed-width column; it now wraps instead,
+     which keeps the value readable at the same size as its neighbours without truncating it. */
   color: #666;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .delta-positive {
@@ -699,8 +704,7 @@
     font-size: 0.72rem;
   }
 
-  .property-location,
-  .price-estimate {
+  .property-location {
     font-size: 0.66rem;
   }
 
