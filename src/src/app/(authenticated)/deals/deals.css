@@ -619,7 +619,9 @@
   /* No font-size: matches .price-current by inheriting the row's size. It used to be stepped
      down to 0.75rem so a long range would fit the fixed-width column; it now wraps instead,
      which keeps the value readable at the same size as its neighbours without truncating it. */
-  color: #666;
+  /* A step darker than the old #666: same muted role next to the black Listed Price, but
+     legible at the row's font size. */
+  color: #555;
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
