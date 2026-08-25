@@ -191,8 +191,21 @@
   color: #333;
 }
 
-.price-estimate {
+/*
+ * Two classes on purpose. deals.css is a global stylesheet, so its `.price-estimate` rules
+ * (0.75rem, and 0.66rem under 1024px, plus nowrap + ellipsis) also apply here and were
+ * shrinking and truncating this value while its siblings stayed at 1.3rem. A two-class
+ * selector outranks them at every breakpoint — media queries add no specificity.
+ */
+.price-value.price-estimate {
+  font-size: 1.3rem;
+  font-weight: 700;
   color: #f39c12;
+  /* Undo the single-line ellipsis deals.css applies, so "AED 1.38M - 1.46M" can wrap. */
+  max-width: none;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .savings-amount {
