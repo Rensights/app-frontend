@@ -665,12 +665,6 @@ export default function AnalysisRequestPage() {
       return value || fallback;
     };
 
-    const parsePercent = (raw: string) => {
-      if (!raw) return null;
-      const match = raw.match(/(\d+\.?\d*)/);
-      return match ? parseFloat(match[1]) : null;
-    };
-
     const comparableDetails = (item: Comparable) =>
       [item.bedrooms, item.sizeDisplay, item.area].map((part) => text(part)).filter(Boolean).join(" • ") ||
       "N/A";
@@ -690,7 +684,6 @@ export default function AnalysisRequestPage() {
     // Market gap: the percentage and its "Above Market" / "Below Market" wording both come
     // from the module; the percentage is no longer derived from price-vs-market fields.
     const marketGapPercentage = text(analysis.marketGapPercentage);
-    const marketGapNumber = parsePercent(marketGapPercentage);
     const marketDirectionLabel = text(analysis.marketDirectionLabel);
     const isAboveMarket = marketDirectionLabel.toLowerCase().includes("above");
     const marketDirectionWord = isAboveMarket ? "above" : "below";
@@ -948,12 +941,6 @@ export default function AnalysisRequestPage() {
                       <div className="score-value">
                         {marketGapPercentage}<span> {marketDirectionLabel || "Below Market"}</span>
                       </div>
-                      {marketGapNumber !== null && !isAboveMarket && (
-                        <div className="score-subtitle">
-                          {marketGapNumber >= 15 ? "Excellent" : marketGapNumber >= 10 ? "Good" : "Fair"} Investment
-                          Opportunity
-                        </div>
-                      )}
                       <p>
                         Based on price analysis, market trends, location score, rental
                         potential, and liquidity in {area || "the area"} market.
