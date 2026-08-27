@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useUser } from "@/context/UserContext";
 import { useTranslations } from "@/hooks/useTranslations";
 import { GoogleSignInButton, getGoogleClientId } from "@/components/auth/GoogleSignInButton";
+import { REDIRECT_PARAM, resolveAfterLogin, readRedirectTarget } from "@/lib/authRedirect";
 import "../../login.css";
 
 type Step = "login" | "verification" | "success";
@@ -78,7 +79,7 @@ export default function LoginPage() {
   // Redirect fully registered users away from login
   useEffect(() => {
     if (!loading && user && user.registrationProfileComplete !== false) {
-      router.push("/city-analysis");
+      router.push(resolveAfterLogin());
     }
   }, [loading, user, router]);
 
@@ -115,7 +116,13 @@ export default function LoginPage() {
     // Remove any URL parameters (like cache busting parameter from logout)
     if (window.location.search) {
       const url = new URL(window.location.href);
+      // Keep the pending deep link; only the transient params (e.g. the logout
+      // cache buster) are dropped here.
+      const pendingRedirect = readRedirectTarget();
       url.search = '';
+      if (pendingRedirect) {
+        url.searchParams.set(REDIRECT_PARAM, pendingRedirect);
+      }
       window.history.replaceState({}, '', url.toString());
     }
   }, [user]);
@@ -195,13 +202,15 @@ export default function LoginPage() {
         // Clear any cached auth state to force fresh load after redirect
         // Don't clear cache here - let UserContext fetch fresh data after redirect
         // Wait longer to ensure cookie is fully set and propagated in browser
+        // Resolve before the timeout: the URL is still intact at this point.
+        const afterLogin = resolveAfterLogin();
         setTimeout(() => {
           if (typeof window !== 'undefined') {
             // Use location.replace to ensure clean navigation (no back button to login)
             // This forces a full page reload, ensuring UserContext remounts with fresh state
-            window.location.replace("/city-analysis");
+            window.location.replace(afterLogin);
           } else {
-            router.push("/city-analysis");
+            router.push(afterLogin);
           }
         }, 300); // Reduced delay - cookie should be available quickly
       }
@@ -307,10 +316,11 @@ export default function LoginPage() {
       
       // SECURITY: Cookie is set by backend, wait a moment for it to be set before redirect
       // Redirect to city analysis after a short delay to ensure cookie is set
+      const afterLogin = resolveAfterLogin();
       setTimeout(() => {
         // Use window.location.replace for hard navigation to ensure cookie is sent
         // This prevents back button issues
-        window.location.replace("/city-analysis");
+        window.location.replace(afterLogin);
       }, 1000);
     } catch (error: any) {
       setErrors((prev) => ({
@@ -454,8 +464,9 @@ export default function LoginPage() {
           window.localStorage.removeItem("rensights-auth-sync");
           window.dispatchEvent(new Event("auth-state-changed"));
         }
+        const afterLogin = resolveAfterLogin();
         setTimeout(() => {
-          window.location.replace("/city-analysis");
+          window.location.replace(afterLogin);
         }, 300);
       } catch (error: unknown) {
         const msg =

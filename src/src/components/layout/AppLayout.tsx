@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { AppSidebar } from "./AppSidebar";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { buildLoginUrl } from "@/lib/authRedirect";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -86,13 +87,17 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
         // Double-check we're still on an authenticated route and still no user
         // This prevents redirect loops if user state changes during the delay
         if (!user && !loading) {
-          router.push('/portal/login');
+          // Carry the requested URL (path + query) across the login hop so deep
+          // links such as the report-ready email's /analysis-request?id=<uuid>
+          // survive the redirect instead of dumping the user on the dashboard.
+          const search = typeof window !== 'undefined' ? window.location.search : '';
+          router.push(buildLoginUrl(`${pathname ?? ''}${search}`));
         }
       }, 300); // Increased delay for new tab scenarios
-      
+
       return () => clearTimeout(timer);
     }
-  }, [loading, requireAuth, user, router]);
+  }, [loading, requireAuth, user, router, pathname]);
 
   // Show loading spinner while checking authentication
   if (loading) {
