@@ -778,7 +778,7 @@ export default function AnalysisRequestPage() {
                     <div className="price-value">{listedPrice}</div>
                   </div>
                   <div className="price-section">
-                    <div className="price-label">Our Estimate Range</div>
+                    <div className="price-label">Comparable Benchmarks Price Range</div>
                     <div className="price-value price-estimate">{estimateRange || "N/A"}</div>
                   </div>
                   <div className="price-section">
@@ -791,7 +791,7 @@ export default function AnalysisRequestPage() {
                     )}
                   </div>
                   <div className="price-section">
-                    <div className="price-label">Estimated Rental Yield</div>
+                    <div className="price-label">Indicative Rental Yield</div>
                     <div className="price-value">{rentalYield || "N/A"}</div>
                   </div>
                 </div>
@@ -837,7 +837,7 @@ export default function AnalysisRequestPage() {
                         : "N/A"),
                   },
                   { label: "Rental Yield", value: rentalYield || "N/A" },
-                  { label: "Estimate Range", value: estimateRange || "N/A" },
+                  { label: "Comparable Benchmarks Price Range", value: estimateRange || "N/A" },
                 ].map((row) => (
                   <div key={row.label} className="comparison-row">
                     <span className="comparison-label">{row.label}</span>
@@ -847,7 +847,7 @@ export default function AnalysisRequestPage() {
               </section>
 
               <section className="investment-insights">
-                <h3>Investment Insights</h3>
+                <h3>Data Insights</h3>
                 {[
                   marketGapPercentage
                     ? `Property is priced ${marketGapPercentage} ${marketDirectionWord} similar units in ${area || "the area"}${isAboveMarket ? "." : ", indicating strong value opportunity."}`
@@ -932,7 +932,7 @@ export default function AnalysisRequestPage() {
               <div className="sidebar-card">
                 <div className="card-title">
                   <div className="card-icon">⭐</div>
-                  Investment Analysis
+                  Property Benchmark Summary
                 </div>
 
                 <div className="score-section">
@@ -953,12 +953,12 @@ export default function AnalysisRequestPage() {
                         )}
                         {estimateRange && (
                           <p>
-                            <strong>Market Estimate:</strong> {estimateRange}
+                            <strong>Comparable Range:</strong> {estimateRange}
                           </p>
                         )}
                         {potentialSavings && (
                           <p>
-                            <strong>Potential Savings:</strong> {potentialSavings}
+                            <strong>Difference vs Comparable Range:</strong> {potentialSavings}
                           </p>
                         )}
                         {rentalYield && (
@@ -970,7 +970,7 @@ export default function AnalysisRequestPage() {
 
                       <ul className="score-components">
                         <li>
-                          <span>Price vs Market</span>
+                          <span>Price vs Comparable Range</span>
                           <strong>{marketGapPercentage}</strong>
                         </li>
                         {rentalYield && (
@@ -1008,7 +1008,7 @@ export default function AnalysisRequestPage() {
                 )}
 
                 <p className="benefits-text">
-                  <strong>Key Benefits:</strong> Property located in {area || "the area"}, {city || "the city"}.
+                  <strong>Property Data Highlights:</strong> Property located in {area || "the area"}, {city || "the city"}.
                   {isReady ? " Ready property allows immediate occupancy and rental income." : " Off-plan property offers potential for capital appreciation."}
                   {rentalYield && ` Rental yield of ${rentalYield} provides attractive returns for investors.`}
                 </p>

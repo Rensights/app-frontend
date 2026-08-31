@@ -237,14 +237,14 @@ function PropertyDetailsPageContent() {
                   <div className="price-value">{formatListedPriceAed(deal.listedPrice ?? deal.priceValue)}</div>
                 </div>
                 <div className="price-section">
-                  <div className="price-label">Our Estimate Range</div>
+                  <div className="price-label">Comparable Benchmarks Price Range</div>
                   <div className="price-value price-estimate">
                     {deal.estimateRange || "N/A"}
                   </div>
                 </div>
                 {savingsMin > 0 && savingsMax > 0 && (
                   <div className="price-section">
-                    <div className="price-label">Potential Savings</div>
+                    <div className="price-label">Difference vs Comparable Range</div>
                     <div className="price-value">
                       <span className="savings-amount">
                         AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
@@ -317,7 +317,7 @@ function PropertyDetailsPageContent() {
                 { label: "Listed Price", value: formatListedPriceAed(deal.listedPrice ?? deal.priceValue) },
                 { label: "Market Position", value: deal.marketGapPercentage ? `${deal.marketGapPercentage} ${deal.marketDirectionLabel}` : "N/A" },
                 { label: "Rental Yield", value: deal.rentalYield || "N/A" },
-                { label: "Estimate Range", value: deal.estimateRange || "N/A" },
+                { label: "Comparable Benchmarks Price Range", value: deal.estimateRange || "N/A" },
               ].map((row) => (
                 <div key={row.label} className="comparison-row">
                   <span className="comparison-label">{row.label}</span>
@@ -327,7 +327,7 @@ function PropertyDetailsPageContent() {
             </section>
 
             <section className="investment-insights">
-              <h3>Investment Insights</h3>
+              <h3>Data Insights</h3>
               {[
                 `Property is priced ${!isNaN(discountPercentAbs) && isFinite(discountPercentAbs) && discountPercentAbs > 0 ? `${discountPercentAbs.toFixed(1)}% ` : ""}${marketDirectionWord} similar ${deal.bedrooms ? `${deal.bedrooms} ` : ""}units in ${deal.area || deal.location || deal.city || "this area"}${isAboveMarket ? "." : ", indicating strong value opportunity."}`,
                 deal.marketPosition || "This unit holds a strong market position based on current pricing and demand.",
@@ -420,7 +420,7 @@ function PropertyDetailsPageContent() {
             <div className="sidebar-card">
               <div className="card-title">
                 <div className="card-icon">⭐</div>
-                Investment Analysis
+                Property Benchmark Summary
               </div>
 
               <div className="score-section">
@@ -439,12 +439,12 @@ function PropertyDetailsPageContent() {
                       </p>
                       {deal.estimateRange && (
                         <p>
-                          <strong>Market Estimate:</strong> {deal.estimateRange}
+                          <strong>Comparable Range:</strong> {deal.estimateRange}
                         </p>
                       )}
                       {savingsMin > 0 && savingsMax > 0 && (
                         <p>
-                          <strong>Potential Savings:</strong> AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
+                          <strong>Difference vs Comparable Range:</strong> AED {Math.round(savingsMin).toLocaleString()} - {Math.round(savingsMax).toLocaleString()}
                         </p>
                       )}
                       {deal.rentalYield && (
@@ -456,7 +456,7 @@ function PropertyDetailsPageContent() {
 
                     <ul className="score-components">
                       <li>
-                        <span>Price vs Market</span>
+                        <span>Price vs Comparable Range</span>
                         <strong>
                           {!isNaN(discountPercent) && isFinite(discountPercent) ? discountPercentAbs.toFixed(1) : "0.0"}%
                           {!isNaN(discountPercent) && isFinite(discountPercent) && deal.marketDirectionLabel ? ` ${deal.marketDirectionLabel}` : ""}
@@ -501,7 +501,7 @@ function PropertyDetailsPageContent() {
               )}
 
               <p className="benefits-text">
-                <strong>Key Benefits:</strong> Property located in {deal.location || "the area"}, {deal.city || "the city"}. 
+                <strong>Property Data Highlights:</strong> Property located in {deal.location || "the area"}, {deal.city || "the city"}. 
                 {(deal.buildingStatus === "READY" || deal.buildingStatus === "ready") ? " Ready property allows immediate occupancy and rental income." : " Off-plan property offers potential for capital appreciation."}
                 {deal.rentalYield && ` Rental yield of ${deal.rentalYield} provides attractive returns for investors.`}
               </p>
