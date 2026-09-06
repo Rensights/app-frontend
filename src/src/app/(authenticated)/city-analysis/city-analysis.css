@@ -85,12 +85,16 @@ html {
 .documents-title h1 {
   font-size: 1.6rem;
   font-weight: 700;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .documents-hero p {
   margin-top: 6px;
   opacity: 0.9;
   font-size: 0.95rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .documents-nav {
@@ -210,6 +214,9 @@ html {
   font-weight: 600;
   color: #1f2937;
   flex-wrap: wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .document-tag {
@@ -224,6 +231,8 @@ html {
   font-size: 0.85rem;
   color: #6b7280;
   margin: 6px 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .document-meta {
@@ -232,6 +241,7 @@ html {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .document-meta .dot {
@@ -305,7 +315,12 @@ html {
 
   .document-file {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+  }
+
+  .document-file-body {
+    min-width: 0;
+    width: 100%;
   }
 
   .document-actions {
@@ -344,6 +359,19 @@ html {
 
   .document-card {
     padding: 16px;
+  }
+
+  .document-file {
+    padding: 12px;
+  }
+
+  /* Keep the locked-section overlay inside the narrow card */
+  .section-upgrade-shadow {
+    padding: 10px;
+  }
+
+  .upgrade-shadow-card {
+    padding: 18px 14px;
   }
 }
 

@@ -813,6 +813,9 @@
 
   .main-content {
     padding: 18px;
+    /* Keep clear of the fixed hamburger toggle — the shorthand above would
+       otherwise wipe the padding-top: 70px set in the 1024px breakpoint. */
+    padding-top: 70px;
   }
 
   .city-analysis-header {
